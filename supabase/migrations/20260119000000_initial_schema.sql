@@ -1,0 +1,963 @@
+-- =====================================================
+-- Trip Planner - Initial Database Schema (MVP v1.2)
+-- =====================================================
+-- This migration creates the complete database schema for
+-- a collaborative travel planning application with:
+-- - Real-time collaboration features
+-- - Social discovery (likes, bookmarks, reviews)
+-- - Place caching from external APIs
+-- - Invitation system
+-- - AI query suggestions
+-- =====================================================
+
+-- Enable required extensions
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+-- =====================================================
+-- HELPER FUNCTIONS (must be created before RLS policies)
+-- =====================================================
+
+-- Function: is_trip_member
+-- Returns true if the current user is a member of the trip
+CREATE OR REPLACE FUNCTION is_trip_member(p_trip_id uuid)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+STABLE
+AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM trip_members
+    WHERE trip_id = p_trip_id
+    AND user_id = auth.uid()
+  );
+END;
+$$;
+
+-- Function: can_edit_trip
+-- Returns true if the current user can edit the trip (owner or editor)
+CREATE OR REPLACE FUNCTION can_edit_trip(p_trip_id uuid)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+STABLE
+AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM trip_members
+    WHERE trip_id = p_trip_id
+    AND user_id = auth.uid()
+    AND role IN ('owner', 'editor')
+  );
+END;
+$$;
+
+-- Function: is_trip_owner
+-- Returns true if the current user is the owner of the trip
+CREATE OR REPLACE FUNCTION is_trip_owner(p_trip_id uuid)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+STABLE
+AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM trip_members
+    WHERE trip_id = p_trip_id
+    AND user_id = auth.uid()
+    AND role = 'owner'
+  );
+END;
+$$;
+
+-- Function: get_trip_visibility
+-- Returns the visibility of a trip
+CREATE OR REPLACE FUNCTION get_trip_visibility(p_trip_id uuid)
+RETURNS text
+LANGUAGE plpgsql
+SECURITY DEFINER
+STABLE
+AS $$
+DECLARE
+  v_visibility text;
+BEGIN
+  SELECT visibility INTO v_visibility
+  FROM trips
+  WHERE id = p_trip_id;
+
+  RETURN v_visibility;
+END;
+$$;
+
+-- Function: can_view_trip
+-- Returns true if the current user can view the trip
+CREATE OR REPLACE FUNCTION can_view_trip(p_trip_id uuid)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+STABLE
+AS $$
+DECLARE
+  v_visibility text;
+BEGIN
+  v_visibility := get_trip_visibility(p_trip_id);
+
+  -- Public trips can be viewed by anyone
+  IF v_visibility = 'public' THEN
+    RETURN true;
+  END IF;
+
+  -- Unlisted and private trips require membership
+  RETURN is_trip_member(p_trip_id);
+END;
+$$;
+
+-- =====================================================
+-- CORE TABLES
+-- =====================================================
+
+-- Table: profiles
+-- 1:1 with auth.users, stores user profile information
+CREATE TABLE profiles (
+  id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  username text UNIQUE NOT NULL,
+  full_name text,
+  avatar_url text,
+  bio text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+
+  CONSTRAINT username_length CHECK (char_length(username) >= 3 AND char_length(username) <= 30),
+  CONSTRAINT username_format CHECK (username ~ '^[a-zA-Z0-9_-]+$')
+);
+
+CREATE INDEX idx_profiles_username ON profiles(username);
+CREATE INDEX idx_profiles_created_at ON profiles(created_at DESC);
+
+-- Table: trips
+-- Main entity representing a travel plan (collaborative document)
+CREATE TABLE trips (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  title text NOT NULL,
+  summary text,
+  start_date date NOT NULL,
+  end_date date NOT NULL,
+  cover_image_url text,
+  visibility text NOT NULL DEFAULT 'private',
+  created_by uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  updated_by uuid REFERENCES profiles(id),
+
+  CONSTRAINT title_not_empty CHECK (char_length(trim(title)) > 0),
+  CONSTRAINT valid_date_range CHECK (end_date >= start_date),
+  CONSTRAINT valid_visibility CHECK (visibility IN ('public', 'unlisted', 'private'))
+);
+
+CREATE INDEX idx_trips_visibility ON trips(visibility);
+CREATE INDEX idx_trips_created_by ON trips(created_by);
+CREATE INDEX idx_trips_created_at ON trips(created_at DESC);
+CREATE INDEX idx_trips_dates ON trips(start_date, end_date);
+CREATE INDEX idx_trips_updated_at ON trips(updated_at DESC);
+
+-- Table: trip_members
+-- Defines who has access to a trip and their role
+CREATE TABLE trip_members (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  trip_id uuid NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  role text NOT NULL,
+  joined_at timestamptz NOT NULL DEFAULT now(),
+
+  CONSTRAINT valid_role CHECK (role IN ('owner', 'editor')),
+  CONSTRAINT unique_trip_member UNIQUE (trip_id, user_id)
+);
+
+CREATE INDEX idx_trip_members_trip_id ON trip_members(trip_id);
+CREATE INDEX idx_trip_members_user_id ON trip_members(user_id);
+CREATE INDEX idx_trip_members_role ON trip_members(trip_id, role);
+
+-- Table: places
+-- Shared master table for all places (cached from external APIs)
+CREATE TABLE places (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  provider text NOT NULL,
+  provider_place_id text NOT NULL,
+  name text NOT NULL,
+  category text,
+  address text,
+  road_address text,
+  phone text,
+  latitude numeric(10, 7) NOT NULL,
+  longitude numeric(10, 7) NOT NULL,
+  raw_data jsonb,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+
+  CONSTRAINT unique_provider_place UNIQUE (provider, provider_place_id),
+  CONSTRAINT valid_coordinates CHECK (
+    latitude >= -90 AND latitude <= 90 AND
+    longitude >= -180 AND longitude <= 180
+  )
+);
+
+CREATE INDEX idx_places_provider ON places(provider, provider_place_id);
+CREATE INDEX idx_places_coordinates ON places(latitude, longitude);
+CREATE INDEX idx_places_name ON places(name);
+
+-- Table: trip_days
+-- Represents individual day pages within a trip (must be continuous dates)
+CREATE TABLE trip_days (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  trip_id uuid NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
+  date date NOT NULL,
+  notes text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  updated_by uuid REFERENCES profiles(id),
+
+  CONSTRAINT unique_trip_date UNIQUE (trip_id, date)
+);
+
+CREATE INDEX idx_trip_days_trip_id ON trip_days(trip_id, date);
+
+-- Table: schedule_items
+-- Individual items in a day's schedule (always references a place)
+CREATE TABLE schedule_items (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  trip_day_id uuid NOT NULL REFERENCES trip_days(id) ON DELETE CASCADE,
+  place_id uuid NOT NULL REFERENCES places(id) ON DELETE RESTRICT,
+  time time,
+  duration_minutes integer,
+  notes text,
+  order_index integer NOT NULL DEFAULT 0,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  updated_by uuid REFERENCES profiles(id),
+
+  CONSTRAINT valid_duration CHECK (duration_minutes IS NULL OR duration_minutes > 0)
+);
+
+CREATE INDEX idx_schedule_items_trip_day_id ON schedule_items(trip_day_id);
+CREATE INDEX idx_schedule_items_place_id ON schedule_items(place_id);
+CREATE INDEX idx_schedule_items_sorting ON schedule_items(trip_day_id, time NULLS FIRST, order_index);
+
+-- =====================================================
+-- TAXONOMY TABLES
+-- =====================================================
+
+-- Table: themes
+-- Predefined travel themes
+CREATE TABLE themes (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name text UNIQUE NOT NULL,
+  slug text UNIQUE NOT NULL,
+  icon text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+
+  CONSTRAINT slug_format CHECK (slug ~ '^[a-z0-9-]+$')
+);
+
+CREATE INDEX idx_themes_slug ON themes(slug);
+
+-- Table: regions
+-- Predefined geographical regions
+CREATE TABLE regions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name text UNIQUE NOT NULL,
+  slug text UNIQUE NOT NULL,
+  country_code text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+
+  CONSTRAINT slug_format CHECK (slug ~ '^[a-z0-9-]+$')
+);
+
+CREATE INDEX idx_regions_slug ON regions(slug);
+CREATE INDEX idx_regions_country ON regions(country_code);
+
+-- Table: trip_themes
+-- Many-to-many relationship between trips and themes
+CREATE TABLE trip_themes (
+  trip_id uuid NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
+  theme_id uuid NOT NULL REFERENCES themes(id) ON DELETE CASCADE,
+  created_at timestamptz NOT NULL DEFAULT now(),
+
+  PRIMARY KEY (trip_id, theme_id)
+);
+
+CREATE INDEX idx_trip_themes_trip ON trip_themes(trip_id);
+CREATE INDEX idx_trip_themes_theme ON trip_themes(theme_id);
+
+-- Table: trip_regions
+-- Many-to-many relationship between trips and regions
+CREATE TABLE trip_regions (
+  trip_id uuid NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
+  region_id uuid NOT NULL REFERENCES regions(id) ON DELETE CASCADE,
+  created_at timestamptz NOT NULL DEFAULT now(),
+
+  PRIMARY KEY (trip_id, region_id)
+);
+
+CREATE INDEX idx_trip_regions_trip ON trip_regions(trip_id);
+CREATE INDEX idx_trip_regions_region ON trip_regions(region_id);
+
+-- =====================================================
+-- SOCIAL TABLES
+-- =====================================================
+
+-- Table: trip_likes
+-- Public metric for trip popularity
+CREATE TABLE trip_likes (
+  trip_id uuid NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  created_at timestamptz NOT NULL DEFAULT now(),
+
+  PRIMARY KEY (trip_id, user_id)
+);
+
+CREATE INDEX idx_trip_likes_trip ON trip_likes(trip_id);
+CREATE INDEX idx_trip_likes_user ON trip_likes(user_id);
+CREATE INDEX idx_trip_likes_created_at ON trip_likes(created_at DESC);
+
+-- Table: trip_bookmarks
+-- Private saved list for users
+CREATE TABLE trip_bookmarks (
+  trip_id uuid NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  created_at timestamptz NOT NULL DEFAULT now(),
+
+  PRIMARY KEY (trip_id, user_id)
+);
+
+CREATE INDEX idx_trip_bookmarks_user ON trip_bookmarks(user_id, created_at DESC);
+CREATE INDEX idx_trip_bookmarks_trip ON trip_bookmarks(trip_id);
+
+-- Table: reviews
+-- Unified review system for both trips and places
+CREATE TABLE reviews (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  author_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  target_type text NOT NULL,
+  trip_id uuid REFERENCES trips(id) ON DELETE CASCADE,
+  place_id uuid REFERENCES places(id) ON DELETE CASCADE,
+  rating integer NOT NULL,
+  content text,
+  visited_on date,
+  photo_urls text[],
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+
+  CONSTRAINT valid_target_type CHECK (target_type IN ('trip', 'place')),
+  CONSTRAINT valid_rating CHECK (rating >= 1 AND rating <= 5),
+  CONSTRAINT valid_target CHECK (
+    (target_type = 'trip' AND trip_id IS NOT NULL AND place_id IS NULL) OR
+    (target_type = 'place' AND place_id IS NOT NULL AND trip_id IS NULL)
+  ),
+  CONSTRAINT one_review_per_target UNIQUE (author_id, target_type, trip_id, place_id)
+);
+
+CREATE INDEX idx_reviews_trip ON reviews(trip_id) WHERE trip_id IS NOT NULL;
+CREATE INDEX idx_reviews_place ON reviews(place_id) WHERE place_id IS NOT NULL;
+CREATE INDEX idx_reviews_author ON reviews(author_id);
+CREATE INDEX idx_reviews_created_at ON reviews(created_at DESC);
+CREATE INDEX idx_reviews_rating ON reviews(rating);
+
+-- =====================================================
+-- UTILITY TABLES
+-- =====================================================
+
+-- Table: trip_invite_links
+-- Link-based invitation system for trips
+CREATE TABLE trip_invite_links (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  trip_id uuid NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
+  token text UNIQUE NOT NULL DEFAULT gen_random_uuid()::text,
+  created_by uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  expires_at timestamptz,
+  max_uses integer,
+  use_count integer NOT NULL DEFAULT 0,
+  created_at timestamptz NOT NULL DEFAULT now(),
+
+  CONSTRAINT valid_max_uses CHECK (max_uses IS NULL OR max_uses > 0),
+  CONSTRAINT valid_use_count CHECK (use_count >= 0)
+);
+
+CREATE INDEX idx_invite_links_trip ON trip_invite_links(trip_id);
+CREATE INDEX idx_invite_links_token ON trip_invite_links(token);
+CREATE INDEX idx_invite_links_expires ON trip_invite_links(expires_at) WHERE expires_at IS NOT NULL;
+
+-- Table: ai_query_suggestions
+-- Logs AI-generated query suggestions and normalizations
+CREATE TABLE ai_query_suggestions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES profiles(id) ON DELETE SET NULL,
+  original_query text NOT NULL,
+  normalized_query text NOT NULL,
+  suggestions jsonb,
+  model text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+
+  CONSTRAINT original_query_not_empty CHECK (char_length(trim(original_query)) > 0)
+);
+
+CREATE INDEX idx_ai_suggestions_user ON ai_query_suggestions(user_id);
+CREATE INDEX idx_ai_suggestions_created_at ON ai_query_suggestions(created_at DESC);
+
+-- Table: rate_limits
+-- Simple rate limiting for API operations
+CREATE TABLE rate_limits (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES profiles(id) ON DELETE CASCADE,
+  operation text NOT NULL,
+  count integer NOT NULL DEFAULT 1,
+  window_start timestamptz NOT NULL DEFAULT now(),
+
+  CONSTRAINT unique_rate_limit UNIQUE (user_id, operation, window_start)
+);
+
+CREATE INDEX idx_rate_limits_user_op ON rate_limits(user_id, operation, window_start DESC);
+
+-- =====================================================
+-- TRIGGERS FOR updated_at
+-- =====================================================
+
+-- Generic trigger function to update updated_at timestamp
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$;
+
+-- Apply updated_at trigger to all relevant tables
+CREATE TRIGGER update_profiles_updated_at
+  BEFORE UPDATE ON profiles
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_trips_updated_at
+  BEFORE UPDATE ON trips
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_places_updated_at
+  BEFORE UPDATE ON places
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_trip_days_updated_at
+  BEFORE UPDATE ON trip_days
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_schedule_items_updated_at
+  BEFORE UPDATE ON schedule_items
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_reviews_updated_at
+  BEFORE UPDATE ON reviews
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+-- =====================================================
+-- TRIGGERS FOR updated_by
+-- =====================================================
+
+-- Trigger function to set updated_by to current user
+CREATE OR REPLACE FUNCTION set_updated_by()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  NEW.updated_by = auth.uid();
+  RETURN NEW;
+END;
+$$;
+
+-- Apply updated_by trigger to tables with updated_by column
+CREATE TRIGGER set_trips_updated_by
+  BEFORE UPDATE ON trips
+  FOR EACH ROW
+  EXECUTE FUNCTION set_updated_by();
+
+CREATE TRIGGER set_trip_days_updated_by
+  BEFORE UPDATE ON trip_days
+  FOR EACH ROW
+  EXECUTE FUNCTION set_updated_by();
+
+CREATE TRIGGER set_schedule_items_updated_by
+  BEFORE UPDATE ON schedule_items
+  FOR EACH ROW
+  EXECUTE FUNCTION set_updated_by();
+
+-- =====================================================
+-- TRIGGER FOR trip_members: Auto-create owner on trip insert
+-- =====================================================
+
+CREATE OR REPLACE FUNCTION create_trip_owner_member()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  INSERT INTO trip_members (trip_id, user_id, role)
+  VALUES (NEW.id, NEW.created_by, 'owner');
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER auto_create_trip_owner
+  AFTER INSERT ON trips
+  FOR EACH ROW
+  EXECUTE FUNCTION create_trip_owner_member();
+
+-- =====================================================
+-- ROW LEVEL SECURITY (RLS) POLICIES
+-- =====================================================
+
+-- Enable RLS on all tables
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE trips ENABLE ROW LEVEL SECURITY;
+ALTER TABLE trip_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE trip_days ENABLE ROW LEVEL SECURITY;
+ALTER TABLE schedule_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE places ENABLE ROW LEVEL SECURITY;
+ALTER TABLE themes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE regions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE trip_themes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE trip_regions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE trip_likes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE trip_bookmarks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
+ALTER TABLE trip_invite_links ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ai_query_suggestions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE rate_limits ENABLE ROW LEVEL SECURITY;
+
+-- =====================================================
+-- RLS POLICIES: profiles
+-- =====================================================
+
+-- Anyone can view profiles
+CREATE POLICY profiles_select_policy ON profiles
+  FOR SELECT
+  USING (true);
+
+-- Users can insert their own profile
+CREATE POLICY profiles_insert_policy ON profiles
+  FOR INSERT
+  WITH CHECK (auth.uid() = id);
+
+-- Users can update their own profile
+CREATE POLICY profiles_update_policy ON profiles
+  FOR UPDATE
+  USING (auth.uid() = id)
+  WITH CHECK (auth.uid() = id);
+
+-- Users can delete their own profile
+CREATE POLICY profiles_delete_policy ON profiles
+  FOR DELETE
+  USING (auth.uid() = id);
+
+-- =====================================================
+-- RLS POLICIES: trips
+-- =====================================================
+
+-- Public trips can be viewed by anyone
+-- Unlisted/private trips require membership
+CREATE POLICY trips_select_policy ON trips
+  FOR SELECT
+  USING (
+    visibility = 'public' OR
+    can_view_trip(id)
+  );
+
+-- Authenticated users can create trips
+CREATE POLICY trips_insert_policy ON trips
+  FOR INSERT
+  WITH CHECK (auth.uid() = created_by);
+
+-- Only owner/editor can update trips
+CREATE POLICY trips_update_policy ON trips
+  FOR UPDATE
+  USING (can_edit_trip(id))
+  WITH CHECK (can_edit_trip(id));
+
+-- Only owner can delete trips
+CREATE POLICY trips_delete_policy ON trips
+  FOR DELETE
+  USING (is_trip_owner(id));
+
+-- =====================================================
+-- RLS POLICIES: trip_members
+-- =====================================================
+
+-- Members can view membership of their trips
+CREATE POLICY trip_members_select_policy ON trip_members
+  FOR SELECT
+  USING (is_trip_member(trip_id));
+
+-- Only owners can add members (handled by invite system)
+CREATE POLICY trip_members_insert_policy ON trip_members
+  FOR INSERT
+  WITH CHECK (
+    is_trip_owner(trip_id) OR
+    user_id = auth.uid() -- Allow self-insertion via invite acceptance
+  );
+
+-- Only owners can update member roles
+CREATE POLICY trip_members_update_policy ON trip_members
+  FOR UPDATE
+  USING (is_trip_owner(trip_id))
+  WITH CHECK (is_trip_owner(trip_id));
+
+-- Owners can remove members, members can remove themselves
+CREATE POLICY trip_members_delete_policy ON trip_members
+  FOR DELETE
+  USING (
+    is_trip_owner(trip_id) OR
+    user_id = auth.uid()
+  );
+
+-- =====================================================
+-- RLS POLICIES: trip_days
+-- =====================================================
+
+-- Can view days if can view trip
+CREATE POLICY trip_days_select_policy ON trip_days
+  FOR SELECT
+  USING (can_view_trip(trip_id));
+
+-- Owner/editor can create days
+CREATE POLICY trip_days_insert_policy ON trip_days
+  FOR INSERT
+  WITH CHECK (can_edit_trip(trip_id));
+
+-- Owner/editor can update days
+CREATE POLICY trip_days_update_policy ON trip_days
+  FOR UPDATE
+  USING (can_edit_trip(trip_id))
+  WITH CHECK (can_edit_trip(trip_id));
+
+-- Owner/editor can delete days
+CREATE POLICY trip_days_delete_policy ON trip_days
+  FOR DELETE
+  USING (can_edit_trip(trip_id));
+
+-- =====================================================
+-- RLS POLICIES: schedule_items
+-- =====================================================
+
+-- Can view schedule items if can view the trip
+CREATE POLICY schedule_items_select_policy ON schedule_items
+  FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM trip_days td
+      WHERE td.id = trip_day_id
+      AND can_view_trip(td.trip_id)
+    )
+  );
+
+-- Owner/editor can create schedule items
+CREATE POLICY schedule_items_insert_policy ON schedule_items
+  FOR INSERT
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM trip_days td
+      WHERE td.id = trip_day_id
+      AND can_edit_trip(td.trip_id)
+    )
+  );
+
+-- Owner/editor can update schedule items
+CREATE POLICY schedule_items_update_policy ON schedule_items
+  FOR UPDATE
+  USING (
+    EXISTS (
+      SELECT 1 FROM trip_days td
+      WHERE td.id = trip_day_id
+      AND can_edit_trip(td.trip_id)
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM trip_days td
+      WHERE td.id = trip_day_id
+      AND can_edit_trip(td.trip_id)
+    )
+  );
+
+-- Owner/editor can delete schedule items
+CREATE POLICY schedule_items_delete_policy ON schedule_items
+  FOR DELETE
+  USING (
+    EXISTS (
+      SELECT 1 FROM trip_days td
+      WHERE td.id = trip_day_id
+      AND can_edit_trip(td.trip_id)
+    )
+  );
+
+-- =====================================================
+-- RLS POLICIES: places
+-- =====================================================
+
+-- Anyone can view places
+CREATE POLICY places_select_policy ON places
+  FOR SELECT
+  USING (true);
+
+-- Only authenticated users can insert places (via API)
+CREATE POLICY places_insert_policy ON places
+  FOR INSERT
+  WITH CHECK (auth.uid() IS NOT NULL);
+
+-- Places are immutable after creation (only updates via API for cache refresh)
+CREATE POLICY places_update_policy ON places
+  FOR UPDATE
+  USING (auth.uid() IS NOT NULL)
+  WITH CHECK (auth.uid() IS NOT NULL);
+
+-- =====================================================
+-- RLS POLICIES: themes and regions
+-- =====================================================
+
+-- Anyone can view themes
+CREATE POLICY themes_select_policy ON themes
+  FOR SELECT
+  USING (true);
+
+-- Anyone can view regions
+CREATE POLICY regions_select_policy ON regions
+  FOR SELECT
+  USING (true);
+
+-- =====================================================
+-- RLS POLICIES: trip_themes and trip_regions
+-- =====================================================
+
+-- Can view if can view trip
+CREATE POLICY trip_themes_select_policy ON trip_themes
+  FOR SELECT
+  USING (can_view_trip(trip_id));
+
+-- Owner/editor can manage themes
+CREATE POLICY trip_themes_insert_policy ON trip_themes
+  FOR INSERT
+  WITH CHECK (can_edit_trip(trip_id));
+
+CREATE POLICY trip_themes_delete_policy ON trip_themes
+  FOR DELETE
+  USING (can_edit_trip(trip_id));
+
+-- Can view if can view trip
+CREATE POLICY trip_regions_select_policy ON trip_regions
+  FOR SELECT
+  USING (can_view_trip(trip_id));
+
+-- Owner/editor can manage regions
+CREATE POLICY trip_regions_insert_policy ON trip_regions
+  FOR INSERT
+  WITH CHECK (can_edit_trip(trip_id));
+
+CREATE POLICY trip_regions_delete_policy ON trip_regions
+  FOR DELETE
+  USING (can_edit_trip(trip_id));
+
+-- =====================================================
+-- RLS POLICIES: trip_likes
+-- =====================================================
+
+-- Anyone can view likes for public trips
+CREATE POLICY trip_likes_select_policy ON trip_likes
+  FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM trips t
+      WHERE t.id = trip_id
+      AND (t.visibility = 'public' OR can_view_trip(t.id))
+    )
+  );
+
+-- Authenticated users can like public trips
+CREATE POLICY trip_likes_insert_policy ON trip_likes
+  FOR INSERT
+  WITH CHECK (
+    auth.uid() = user_id AND
+    EXISTS (
+      SELECT 1 FROM trips t
+      WHERE t.id = trip_id
+      AND t.visibility = 'public'
+    )
+  );
+
+-- Users can remove their own likes
+CREATE POLICY trip_likes_delete_policy ON trip_likes
+  FOR DELETE
+  USING (auth.uid() = user_id);
+
+-- =====================================================
+-- RLS POLICIES: trip_bookmarks
+-- =====================================================
+
+-- Users can only view their own bookmarks
+CREATE POLICY trip_bookmarks_select_policy ON trip_bookmarks
+  FOR SELECT
+  USING (auth.uid() = user_id);
+
+-- Users can bookmark trips they can view
+CREATE POLICY trip_bookmarks_insert_policy ON trip_bookmarks
+  FOR INSERT
+  WITH CHECK (
+    auth.uid() = user_id AND
+    can_view_trip(trip_id)
+  );
+
+-- Users can remove their own bookmarks
+CREATE POLICY trip_bookmarks_delete_policy ON trip_bookmarks
+  FOR DELETE
+  USING (auth.uid() = user_id);
+
+-- =====================================================
+-- RLS POLICIES: reviews
+-- =====================================================
+
+-- Review visibility rules:
+-- - Place reviews: public
+-- - Trip reviews: public for public trips, members-only for unlisted/private
+CREATE POLICY reviews_select_policy ON reviews
+  FOR SELECT
+  USING (
+    target_type = 'place' OR
+    (target_type = 'trip' AND (
+      EXISTS (
+        SELECT 1 FROM trips t
+        WHERE t.id = trip_id
+        AND (t.visibility = 'public' OR can_view_trip(t.id))
+      )
+    ))
+  );
+
+-- Authenticated users can create reviews
+CREATE POLICY reviews_insert_policy ON reviews
+  FOR INSERT
+  WITH CHECK (
+    auth.uid() = author_id AND
+    (
+      target_type = 'place' OR
+      (target_type = 'trip' AND can_view_trip(trip_id))
+    )
+  );
+
+-- Authors can update their own reviews
+CREATE POLICY reviews_update_policy ON reviews
+  FOR UPDATE
+  USING (auth.uid() = author_id)
+  WITH CHECK (auth.uid() = author_id);
+
+-- Authors can delete their own reviews
+CREATE POLICY reviews_delete_policy ON reviews
+  FOR DELETE
+  USING (auth.uid() = author_id);
+
+-- =====================================================
+-- RLS POLICIES: trip_invite_links
+-- =====================================================
+
+-- Trip members can view invite links
+CREATE POLICY invite_links_select_policy ON trip_invite_links
+  FOR SELECT
+  USING (is_trip_member(trip_id));
+
+-- Owner/editor can create invite links
+CREATE POLICY invite_links_insert_policy ON trip_invite_links
+  FOR INSERT
+  WITH CHECK (
+    auth.uid() = created_by AND
+    can_edit_trip(trip_id)
+  );
+
+-- Owner can delete invite links
+CREATE POLICY invite_links_delete_policy ON trip_invite_links
+  FOR DELETE
+  USING (is_trip_owner(trip_id));
+
+-- =====================================================
+-- RLS POLICIES: ai_query_suggestions
+-- =====================================================
+
+-- Users can view their own suggestions
+CREATE POLICY ai_suggestions_select_policy ON ai_query_suggestions
+  FOR SELECT
+  USING (auth.uid() = user_id);
+
+-- System can insert suggestions
+CREATE POLICY ai_suggestions_insert_policy ON ai_query_suggestions
+  FOR INSERT
+  WITH CHECK (true); -- Handled by Edge Function
+
+-- =====================================================
+-- RLS POLICIES: rate_limits
+-- =====================================================
+
+-- Users can view their own rate limits
+CREATE POLICY rate_limits_select_policy ON rate_limits
+  FOR SELECT
+  USING (auth.uid() = user_id);
+
+-- System can manage rate limits
+CREATE POLICY rate_limits_insert_policy ON rate_limits
+  FOR INSERT
+  WITH CHECK (true); -- Handled by Edge Function
+
+CREATE POLICY rate_limits_update_policy ON rate_limits
+  FOR UPDATE
+  USING (true); -- Handled by Edge Function
+
+-- =====================================================
+-- SEED DATA: themes and regions
+-- =====================================================
+
+-- Insert default themes
+INSERT INTO themes (name, slug, icon) VALUES
+  ('Adventure', 'adventure', '🏔️'),
+  ('Beach', 'beach', '🏖️'),
+  ('City', 'city', '🏙️'),
+  ('Cultural', 'cultural', '🎭'),
+  ('Food & Dining', 'food-dining', '🍽️'),
+  ('Nature', 'nature', '🌲'),
+  ('Relaxation', 'relaxation', '🧘'),
+  ('Road Trip', 'road-trip', '🚗'),
+  ('Shopping', 'shopping', '🛍️'),
+  ('Wildlife', 'wildlife', '🦁')
+ON CONFLICT (slug) DO NOTHING;
+
+-- Insert default regions (sample - adjust based on target market)
+INSERT INTO regions (name, slug, country_code) VALUES
+  ('Seoul', 'seoul', 'KR'),
+  ('Busan', 'busan', 'KR'),
+  ('Jeju', 'jeju', 'KR'),
+  ('Gyeonggi', 'gyeonggi', 'KR'),
+  ('Gangwon', 'gangwon', 'KR'),
+  ('Tokyo', 'tokyo', 'JP'),
+  ('Osaka', 'osaka', 'JP'),
+  ('Bangkok', 'bangkok', 'TH'),
+  ('Singapore', 'singapore', 'SG'),
+  ('Paris', 'paris', 'FR')
+ON CONFLICT (slug) DO NOTHING;
+
+-- =====================================================
+-- MATERIALIZED VIEW: Trip statistics (optional optimization)
+-- =====================================================
+
+-- This can be created later for performance optimization
+-- Tracks aggregate stats per trip (like count, bookmark count, review stats)
+
+-- =====================================================
+-- END OF MIGRATION
+-- =====================================================
