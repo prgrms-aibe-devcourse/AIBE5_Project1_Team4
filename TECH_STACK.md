@@ -20,11 +20,15 @@ Trip Planner는 협업 기반의 여행 계획 서비스로, 실시간 편집 �
   - HMR (Hot Module Replacement)
   - 최적화된 프로덕션 빌드
 
+- **@vitejs/plugin-react-swc 4.2.2**
+  - SWC 기반 빠른 컴파일
+  - Babel 대비 빌드 속도 향상
+
 ### Language
-- **TypeScript 5.9.3**
-  - 정적 타입 체크
-  - 향상된 개발자 경험
-  - 컴파일 타임 오류 감지
+- **JavaScript (ES6+)**
+  - 최신 ECMAScript 문법
+  - 모듈 시스템 (ESM)
+  - 빠른 개발 속도
 
 ### Routing
 - **React Router DOM 7.12.0**
@@ -32,34 +36,40 @@ Trip Planner는 협업 기반의 여행 계획 서비스로, 실시간 편집 �
   - 중첩 라우팅 지원
   - 동적 경로 매칭
 
-### UI Components & Icons
-- **Lucide React 0.562.0**
-  - 일관성 있는 아이콘 세트
-  - Tree-shakeable
-  - 가볍고 커스터마이징 가능
+### UI Framework
+- **Bootstrap 5.3.8**
+  - 반응형 그리드 시스템
+  - 풍부한 UI 컴포넌트
+  - 유틸리티 클래스 기반 스타일링
+
+- **React Bootstrap 2.10.10**
+  - Bootstrap의 React 컴포넌트 래퍼
+  - JSX 친화적 API
+  - 완전한 Bootstrap 기능 지원
 
 ### Map Integration
-- **Leaflet 1.9.4**
-  - 오픈소스 지도 라이브러리
-  - 경량화된 지도 렌더링
-  - 다양한 플러그인 생태계
+- **Kakao Map API**
+  - 한국 지도 서비스
+  - 장소 검색 연동
+  - 마커, 폴리라인 등 지원
+  - 사용자 친화적 한국어 지원
 
-- **React Leaflet 5.0.0**
-  - Leaflet의 React 래퍼
-  - React 컴포넌트 기반 지도 제어
-  - 선언적 지도 UI
-
-### Utilities
-- **date-fns 4.1.0**
+### Utilities (추후 추가 예정)
+- **date-fns**
   - 날짜 포맷팅 및 조작
   - 경량화된 라이브러리
   - 트리 셰이킹 지원
+
+- **@supabase/supabase-js**
+  - Supabase 클라이언트 라이브러리
+  - 실시간 구독 지원
 
 ### Code Quality
 - **ESLint 9.39.1**
   - 코드 품질 검사
   - 일관된 코딩 스타일
-  - React/TypeScript 플러그인
+  - eslint-plugin-react-hooks
+  - eslint-plugin-react-refresh
 
 ---
 
@@ -95,7 +105,7 @@ Trip Planner는 협업 기반의 여행 계획 서비스로, 실시간 편집 �
 
 ### Edge Functions
 - **Deno Runtime**
-  - TypeScript 네이티브 지원
+  - TypeScript/JavaScript 지원
   - 보안 샌드박스 환경
   - 빠른 콜드 스타트
 
@@ -120,10 +130,9 @@ Trip Planner는 협업 기반의 여행 계획 서비스로, 실시간 편집 �
    - 초대 링크 처리
    - 멤버십 생성
 
-### Client SDK
-- **@supabase/supabase-js 2.90.1**
+### Client SDK (추후 추가 예정)
+- **@supabase/supabase-js**
   - Supabase 클라이언트 라이브러리
-  - 타입 안전한 쿼리
   - 실시간 구독 지원
 
 ---
@@ -131,6 +140,11 @@ Trip Planner는 협업 기반의 여행 계획 서비스로, 실시간 편집 �
 ## External APIs
 
 ### Map & Location
+- **Kakao Map API**
+  - 한국 지도 렌더링
+  - 마커 및 인포윈도우
+  - 지도 컨트롤
+
 - **Kakao Local Search API**
   - 한국 내 장소 검색
   - 상세 정보 조회
@@ -246,10 +260,10 @@ Trip Planner는 협업 기반의 여행 계획 서비스로, 실시간 편집 �
 ## Production Stack Summary
 
 ```
-Frontend:  React 19 + Vite + TypeScript + Leaflet
+Frontend:  React 19 + Vite + JavaScript + React Bootstrap
 Backend:   Supabase (Postgres + Auth + Storage + Realtime)
 Runtime:   Deno (Edge Functions)
-Map:       Leaflet + React Leaflet
+Map:       Kakao Map API
 Search:    Kakao Local API
 AI:        OpenAI/Claude (검색 보조)
 ```
@@ -258,11 +272,18 @@ AI:        OpenAI/Claude (검색 보조)
 
 ## Version Information
 
-- Node.js: >= 18.0.0 (권장)
-- TypeScript: 5.9.3
-- React: 19.2.0
-- Supabase: Latest
-- Deno: Latest (Edge Functions)
+| Package | Version |
+|---------|---------|
+| Node.js | >= 18.0.0 (권장) |
+| React | 19.2.0 |
+| React DOM | 19.2.0 |
+| React Router DOM | 7.12.0 |
+| Vite | 7.2.4 |
+| Bootstrap | 5.3.8 |
+| React Bootstrap | 2.10.10 |
+| ESLint | 9.39.1 |
+| Supabase | Latest |
+| Deno | Latest (Edge Functions) |
 
 ---
 

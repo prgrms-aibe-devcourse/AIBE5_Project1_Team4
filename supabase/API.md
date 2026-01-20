@@ -17,7 +17,7 @@
 
 ### Supabase Client 초기화
 
-```typescript
+```javascript
 import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
@@ -39,7 +39,7 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
 
 ### 회원가입
 
-```typescript
+```javascript
 const { data, error } = await supabase.auth.signUp({
   email: 'user@example.com',
   password: 'password123',
@@ -54,7 +54,7 @@ const { data, error } = await supabase.auth.signUp({
 
 ### 로그인
 
-```typescript
+```javascript
 const { data, error } = await supabase.auth.signInWithPassword({
   email: 'user@example.com',
   password: 'password123'
@@ -63,7 +63,7 @@ const { data, error } = await supabase.auth.signInWithPassword({
 
 ### 소셜 로그인 (OAuth)
 
-```typescript
+```javascript
 const { data, error } = await supabase.auth.signInWithOAuth({
   provider: 'google' // 'kakao', 'github' 등
 })
@@ -71,19 +71,19 @@ const { data, error } = await supabase.auth.signInWithOAuth({
 
 ### 로그아웃
 
-```typescript
+```javascript
 const { error } = await supabase.auth.signOut()
 ```
 
 ### 현재 사용자 정보
 
-```typescript
+```javascript
 const { data: { user } } = await supabase.auth.getUser()
 ```
 
 ### 세션 상태 구독
 
-```typescript
+```javascript
 supabase.auth.onAuthStateChange((event, session) => {
   console.log(event, session)
 })
@@ -100,48 +100,50 @@ supabase.auth.onAuthStateChange((event, session) => {
 **Endpoint**: `POST /functions/v1/search-place`
 
 **Request**:
-```typescript
-interface SearchPlaceRequest {
-  query: string           // 검색어 (필수)
-  latitude?: number       // 현재 위도 (선택)
-  longitude?: number      // 현재 경도 (선택)
-  radius?: number         // 검색 반경 (m, 최대 20000)
-  page?: number           // 페이지 번호 (기본 1)
-  size?: number           // 페이지 크기 (최대 15)
+```javascript
+// Request 객체 구조
+{
+  query: '',           // 검색어 (필수, string)
+  latitude: 0,         // 현재 위도 (선택, number)
+  longitude: 0,        // 현재 경도 (선택, number)
+  radius: 0,           // 검색 반경 (m, 최대 20000, number)
+  page: 1,             // 페이지 번호 (기본 1, number)
+  size: 15             // 페이지 크기 (최대 15, number)
 }
 ```
 
 **Response**:
-```typescript
-interface SearchPlaceResponse {
+```javascript
+// Response 객체 구조
+{
   data: {
-    places: Place[]
+    places: [
+      {
+        id: '',                  // string
+        provider: '',            // string
+        provider_place_id: '',   // string
+        name: '',                // string
+        category: '',            // string
+        address: '',             // string
+        road_address: '',        // string
+        phone: '',               // string
+        latitude: 0,             // number
+        longitude: 0,            // number
+        raw_data: {}             // object
+      }
+    ],
     meta: {
-      total: number
-      page: number
-      size: number
-      is_end: boolean
+      total: 0,       // number
+      page: 1,        // number
+      size: 15,       // number
+      is_end: false   // boolean
     }
   }
-}
-
-interface Place {
-  id: string
-  provider: string
-  provider_place_id: string
-  name: string
-  category: string
-  address: string
-  road_address: string
-  phone: string
-  latitude: number
-  longitude: number
-  raw_data: object
 }
 ```
 
 **사용 예시**:
-```typescript
+```javascript
 const { data, error } = await supabase.functions.invoke('search-place', {
   body: {
     query: 'coffee shop gangnam',
@@ -182,20 +184,21 @@ const { data, error } = await supabase.functions.invoke('search-place', {
 - 허용 타입: JPEG, PNG, WebP, GIF
 
 **Response**:
-```typescript
-interface ProcessImageResponse {
+```javascript
+// Response 객체 구조
+{
   data: {
-    url: string       // 공개 URL
-    path: string      // Storage 경로
-    kind: string
-    trip_id?: string
-    review_id?: string
+    url: '',         // 공개 URL (string)
+    path: '',        // Storage 경로 (string)
+    kind: '',        // string
+    trip_id: '',     // string (optional)
+    review_id: ''    // string (optional)
   }
 }
 ```
 
 **사용 예시**:
-```typescript
+```javascript
 const formData = new FormData()
 formData.append('file', fileInput.files[0])
 formData.append('kind', 'cover')
@@ -222,35 +225,38 @@ const { data, error } = await supabase.functions.invoke('process-image', {
 **Endpoint**: `POST /functions/v1/create-review`
 
 **Request**:
-```typescript
-interface CreateReviewRequest {
-  target_type: 'trip' | 'place'  // 리뷰 대상 (필수)
-  trip_id?: string               // Trip UUID (target_type=trip일 때 필수)
-  place_id?: string              // Place UUID (target_type=place일 때 필수)
-  rating: number                 // 평점 1-5 (필수)
-  content?: string               // 리뷰 내용
-  visited_on?: string            // 방문일 (YYYY-MM-DD)
-  photo_urls?: string[]          // 사진 URL 배열
+```javascript
+// Request 객체 구조
+{
+  target_type: 'trip',    // 리뷰 대상 (필수, 'trip' | 'place')
+  trip_id: '',            // Trip UUID (target_type=trip일 때 필수)
+  place_id: '',           // Place UUID (target_type=place일 때 필수)
+  rating: 5,              // 평점 1-5 (필수, number)
+  content: '',            // 리뷰 내용 (string)
+  visited_on: '',         // 방문일 YYYY-MM-DD (string)
+  photo_urls: []          // 사진 URL 배열 (string[])
 }
 ```
 
 **Response**:
-```typescript
-interface CreateReviewResponse {
-  data: Review & {
+```javascript
+// Response 객체 구조
+{
+  data: {
+    // Review 데이터 + author 정보
     author: {
-      id: string
-      username: string
-      full_name: string
-      avatar_url: string
+      id: '',
+      username: '',
+      full_name: '',
+      avatar_url: ''
     }
-  }
-  message: string
+  },
+  message: ''
 }
 ```
 
 **사용 예시**:
-```typescript
+```javascript
 const { data, error } = await supabase.functions.invoke('create-review', {
   body: {
     target_type: 'trip',
@@ -279,25 +285,27 @@ AI 검색어 추천 (오타 교정 + 연관 검색어)
 **Endpoint**: `POST /functions/v1/ai-suggest-query`
 
 **Request**:
-```typescript
-interface SuggestQueryRequest {
-  q: string  // 검색어 (필수, 최대 200자)
+```javascript
+// Request 객체 구조
+{
+  q: ''  // 검색어 (필수, 최대 200자)
 }
 ```
 
 **Response**:
-```typescript
-interface SuggestQueryResponse {
+```javascript
+// Response 객체 구조
+{
   data: {
-    original_query: string      // 원본 쿼리
-    normalized_query: string    // 교정된 쿼리
-    suggestions: string[]       // 연관 검색어 (3-5개)
+    original_query: '',      // 원본 쿼리
+    normalized_query: '',    // 교정된 쿼리
+    suggestions: []          // 연관 검색어 (3-5개)
   }
 }
 ```
 
 **사용 예시**:
-```typescript
+```javascript
 const { data, error } = await supabase.functions.invoke('ai-suggest-query', {
   body: { q: 'coffe shop gangnam' }
 })
@@ -320,27 +328,29 @@ const { data, error } = await supabase.functions.invoke('ai-suggest-query', {
 **Endpoint**: `POST /functions/v1/accept-invite-link`
 
 **Request**:
-```typescript
-interface AcceptInviteRequest {
-  token: string  // 초대 토큰 (필수)
+```javascript
+// Request 객체 구조
+{
+  token: ''  // 초대 토큰 (필수)
 }
 ```
 
 **Response**:
-```typescript
-interface AcceptInviteResponse {
+```javascript
+// Response 객체 구조
+{
   data: {
-    trip: Trip              // Trip 정보
-    membership?: TripMember // 새로 생성된 멤버십
-    role: 'editor'          // 부여된 역할
-    already_member?: boolean // 이미 멤버인 경우 true
-  }
-  message: string
+    trip: {},              // Trip 정보
+    membership: {},        // 새로 생성된 멤버십
+    role: 'editor',        // 부여된 역할
+    already_member: false  // 이미 멤버인 경우 true
+  },
+  message: ''
 }
 ```
 
 **사용 예시**:
-```typescript
+```javascript
 const { data, error } = await supabase.functions.invoke('accept-invite-link', {
   body: { token: 'invitation-token-here' }
 })
@@ -363,7 +373,7 @@ RLS(Row Level Security)가 적용되어 권한에 따라 자동 필터링됩니�
 
 ### profiles (프로필)
 
-```typescript
+```javascript
 // 내 프로필 조회
 const { data } = await supabase
   .from('profiles')
@@ -396,7 +406,7 @@ const { data } = await supabase
 
 ### trips (여행 계획)
 
-```typescript
+```javascript
 // 내 Trip 목록
 const { data } = await supabase
   .from('trips')
@@ -463,7 +473,7 @@ const { data } = await supabase
 
 ### trip_members (Trip 멤버)
 
-```typescript
+```javascript
 // Trip 멤버 목록
 const { data } = await supabase
   .from('trip_members')
@@ -497,7 +507,7 @@ const { error } = await supabase
 
 ### trip_days (Day 페이지)
 
-```typescript
+```javascript
 // Trip의 Day 목록
 const { data } = await supabase
   .from('trip_days')
@@ -546,7 +556,7 @@ const { error } = await supabase
 
 ### schedule_items (일정 항목)
 
-```typescript
+```javascript
 // Day의 일정 목록 (정렬: time이 null인 것 먼저, 그 다음 time, 그 다음 order_index)
 const { data } = await supabase
   .from('schedule_items')
@@ -603,7 +613,7 @@ const updates = items.map((item, index) => ({
 
 ### places (장소)
 
-```typescript
+```javascript
 // 장소 조회 (ID로)
 const { data } = await supabase
   .from('places')
@@ -639,7 +649,7 @@ const { data } = await supabase
 
 ### themes / regions (테마 / 지역)
 
-```typescript
+```javascript
 // 전체 테마 목록
 const { data: themes } = await supabase
   .from('themes')
@@ -657,7 +667,7 @@ const { data: regions } = await supabase
 
 ### trip_themes / trip_regions (Trip-테마/지역 연결)
 
-```typescript
+```javascript
 // Trip에 테마 추가
 const { error } = await supabase
   .from('trip_themes')
@@ -677,7 +687,7 @@ const { error } = await supabase
 
 ### trip_likes (좋아요)
 
-```typescript
+```javascript
 // 좋아요 상태 확인
 const { data } = await supabase
   .from('trip_likes')
@@ -712,7 +722,7 @@ const { count } = await supabase
 
 ### trip_bookmarks (북마크)
 
-```typescript
+```javascript
 // 내 북마크 목록
 const { data } = await supabase
   .from('trip_bookmarks')
@@ -740,7 +750,7 @@ const { error } = await supabase
 
 ### reviews (리뷰)
 
-```typescript
+```javascript
 // Trip 리뷰 목록
 const { data } = await supabase
   .from('reviews')
@@ -794,7 +804,7 @@ const { error } = await supabase
 
 ### trip_invite_links (초대 링크)
 
-```typescript
+```javascript
 // Trip의 초대 링크 목록
 const { data } = await supabase
   .from('trip_invite_links')
@@ -836,7 +846,7 @@ const { error } = await supabase
 
 ### Postgres Changes (DB 변경 구독)
 
-```typescript
+```javascript
 // Trip 변경 구독
 const channel = supabase
   .channel('trip-changes')
@@ -883,7 +893,7 @@ supabase.removeChannel(channel)
 
 ### Presence (온라인 사용자)
 
-```typescript
+```javascript
 const channel = supabase.channel(`trip:${tripId}`)
 
 // Presence 상태 추적
@@ -929,7 +939,7 @@ supabase.removeChannel(channel)
 
 ### 이미지 버킷: `images`
 
-```typescript
+```javascript
 // 직접 업로드 (process-image Edge Function 권장)
 const { data, error } = await supabase.storage
   .from('images')
@@ -976,7 +986,7 @@ images/
 
 프론트엔드에서 RPC로 호출 가능한 헬퍼 함수들:
 
-```typescript
+```javascript
 // Trip 멤버 여부 확인
 const { data: isMember } = await supabase
   .rpc('is_trip_member', { p_trip_id: tripId })
@@ -992,25 +1002,4 @@ const { data: isOwner } = await supabase
 // Trip 열람 권한 확인
 const { data: canView } = await supabase
   .rpc('can_view_trip', { p_trip_id: tripId })
-```
-
----
-
-## TypeScript 타입 생성
-
-Supabase CLI로 자동 타입 생성:
-
-```bash
-supabase gen types typescript --local > src/types/database.types.ts
-# 또는 프로덕션에서
-supabase gen types typescript --project-id your-project-id > src/types/database.types.ts
-```
-
-사용 예시:
-```typescript
-import { Database } from './types/database.types'
-
-type Trip = Database['public']['Tables']['trips']['Row']
-type TripInsert = Database['public']['Tables']['trips']['Insert']
-type TripUpdate = Database['public']['Tables']['trips']['Update']
 ```
