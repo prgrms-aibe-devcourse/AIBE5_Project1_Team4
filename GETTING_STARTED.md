@@ -1,25 +1,78 @@
 # Getting Started with Trip Planner
 
-## Project Status ✅
+## Project Status
 
-All three phases are complete and ready to use:
+### Completed
 
 - ✅ Phase 1: Database schema with RLS
 - ✅ Phase 2: Edge Functions (5 functions)
-- ✅ Phase 3: Frontend application
+- ✅ Phase 3: Frontend 프로젝트 초기 설정
+- ✅ UI Preview 페이지
 
-## Quick Start (5 minutes)
+### In Progress
 
-### 1. Apply Database Migration
+- 🚧 Frontend 핵심 기능 개발
+
+---
+
+## Quick Start
+
+### 1. Prerequisites
+
+- Node.js >= 18.0.0
+- npm
+- Supabase CLI
+- Kakao Developers 계정 (Map & Local API용)
+
+### 2. Clone & Install
 
 ```bash
-# From project root
+# Clone repository
+git clone <repository-url>
+cd project1
+
+# Install frontend dependencies
+cd frontend
+npm install
+```
+
+### 3. Environment Setup
+
+**Frontend** (`frontend/.env`):
+
+```bash
+VITE_SUPABASE_URL=your-supabase-url
+VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
+VITE_KAKAO_MAP_API_KEY=your-kakao-javascript-key
+```
+
+**Edge Functions** (`supabase/functions/.env`):
+
+```bash
+SUPABASE_URL=your-supabase-url
+SUPABASE_ANON_KEY=your-supabase-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+KAKAO_REST_API_KEY=your-kakao-rest-api-key
+```
+
+**Optional (AI features)**:
+
+```bash
+OPENAI_API_KEY=your-openai-key
+# OR
+ANTHROPIC_API_KEY=your-anthropic-key
+```
+
+### 4. Database Setup
+
+```bash
+# Apply migrations
 supabase db push
 ```
 
 This creates all tables, policies, functions, and seed data.
 
-### 2. Deploy Edge Functions
+### 5. Deploy Edge Functions
 
 ```bash
 cd supabase/functions
@@ -32,7 +85,7 @@ supabase functions deploy ai-suggest-query
 supabase functions deploy accept-invite-link
 ```
 
-### 3. Create Storage Bucket
+### 6. Create Storage Bucket
 
 Via Supabase Dashboard:
 
@@ -40,7 +93,7 @@ Via Supabase Dashboard:
 2. Create bucket named `images`
 3. Make it **public**
 
-### 4. Run Frontend
+### 7. Run Frontend
 
 ```bash
 cd frontend
@@ -49,177 +102,170 @@ npm run dev
 
 Visit http://localhost:5173
 
-## What You Can Do Now
+---
 
-### For Users (MVP Features)
+## Project Structure
 
-1. **Sign up / Login**
-2. **Browse public trips** on homepage
-3. **View trip details** with full itinerary
-4. **Create a new trip** (needs UI - use Supabase Dashboard for now)
-5. **Edit trips** with real-time collaboration
-6. **See who's online** when editing
-
-### For Development
-
-1. **Test the API** via Edge Functions
-2. **Create trips manually** via Supabase Dashboard
-3. **Search places** via Kakao API
-4. **Upload images** for trip covers
-5. **Add reviews** for trips and places
-
-## Manual Testing Steps
-
-### Create Your First Trip
-
-Since the "Create Trip" UI isn't in the MVP, use Supabase Dashboard:
-
-1. Go to Supabase Dashboard > **Table Editor** > `trips`
-2. Click **Insert Row**
-3. Fill in:
-   ```
-   title: "Tokyo Adventure"
-   summary: "A week exploring Tokyo"
-   start_date: "2024-03-01"
-   end_date: "2024-03-07"
-   visibility: "public"
-   created_by: [your user ID from profiles table]
-   ```
-4. Save
-
-The trip will automatically:
-
-- Create you as the owner in `trip_members`
-- Show up on the homepage
-- Be editable in the Edit page
-
-### Test Real-time Collaboration
-
-1. Open the edit page for a trip: `/trips/[id]/edit`
-2. Open the same URL in another browser/tab (different user if possible)
-3. See presence indicators showing who's online
-4. Make changes and see them sync
-
-### Test Place Search
-
-```bash
-# Via curl (replace with your session token)
-curl -X POST https://your-project.functions.supabase.co/search-place \
-  -H "Authorization: Bearer YOUR_SESSION_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"query": "coffee shop gangnam", "page": 1}'
+```
+project1/
+├── frontend/                 # React 프론트엔드
+│   ├── src/
+│   │   ├── api/             # API 통신 레이어
+│   │   ├── components/      # 공통 컴포넌트
+│   │   ├── features/        # 기능별 모듈
+│   │   ├── hooks/           # 커스텀 훅
+│   │   ├── pages/           # 페이지 컴포넌트
+│   │   ├── styles/          # 스타일 파일
+│   │   ├── ui-preview/      # UI 프리뷰 컴포넌트
+│   │   ├── App.jsx
+│   │   └── main.jsx
+│   └── package.json
+│
+├── supabase/
+│   ├── functions/           # Edge Functions
+│   └── migrations/          # Database migrations
+│
+└── docs/
 ```
 
-## Environment Variables
+---
 
-### Already Configured ✅
+## Tech Stack
 
-**Frontend** (`.env`):
+### Frontend
 
-```bash
-VITE_SUPABASE_URL=https://luahhgcbrlkfbbawcult.supabase.co
-VITE_SUPABASE_ANON_KEY=sb_publishable_SDDa1xzlYCu7OfeWJYSVAA_ap_q1gwU
-```
+- **React 19** + **Vite** + **JavaScript (ES6+)**
+- **React Bootstrap** - UI 컴포넌트
+- **React Router DOM** - 클라이언트 라우팅
+- **Kakao Map API** - 지도 서비스
 
-**Edge Functions** (`supabase/functions/.env`):
+### Backend (Supabase)
 
-```bash
-SUPABASE_URL=https://luahhgcbrlkfbbawcult.supabase.co
-SUPABASE_ANON_KEY=sb_publishable_SDDa1xzlYCu7OfeWJYSVAA_ap_q1gwU
-SUPABASE_SERVICE_ROLE_KEY=sb_secret_6OzkE-6CH066-8PANo_jFg_sfRkGCIs
-KAKAO_REST_API_KEY=adf4d53a313aa60e9213476773d61199
-```
+- **PostgreSQL** with RLS
+- **Supabase Auth** - 인증
+- **Supabase Realtime** - 실시간 협업
+- **Supabase Storage** - 이미지 저장
+- **Edge Functions** (Deno)
 
-### Optional (for AI features)
+### External APIs
 
-Add to `supabase/functions/.env`:
+- **Kakao Map API** - 지도 렌더링
+- **Kakao Local API** - 장소 검색
+- **OpenAI/Claude** - AI 검색 보조 (선택)
 
-```bash
-OPENAI_API_KEY=your-openai-key
-# OR
-ANTHROPIC_API_KEY=your-anthropic-key
-```
+---
 
 ## Development Commands
 
 ```bash
 # Frontend
 cd frontend
-npm run dev          # Start dev server
-npm run build        # Production build
-npm run preview      # Preview production build
+npm run dev          # 개발 서버 시작 (http://localhost:5173)
+npm run build        # 프로덕션 빌드
+npm run preview      # 프로덕션 빌드 프리뷰
+npm run lint         # ESLint 실행
 
 # Database
-supabase db push     # Apply migrations
-supabase db reset    # Reset database (⚠️ destroys data)
+supabase db push     # 마이그레이션 적용
+supabase db reset    # 데이터베이스 리셋 (⚠️ 데이터 삭제됨)
 
 # Edge Functions
-supabase functions serve              # Serve locally
-supabase functions logs search-place  # View logs
-supabase secrets list                 # List secrets
+supabase functions serve              # 로컬 실행
+supabase functions logs search-place  # 로그 확인
+supabase secrets list                 # 시크릿 목록
 ```
 
-## Architecture Overview
+---
 
-### Frontend Stack
+## Kakao API Setup
 
-- React 18 + TypeScript + Vite
-- React Router for navigation
-- Supabase client for backend
-- date-fns for dates
-- lucide-react for icons
+### 1. Kakao Developers 등록
 
-### Backend Stack
+1. [Kakao Developers](https://developers.kakao.com/) 접속
+2. 애플리케이션 생성
+3. **JavaScript 키** 복사 → `VITE_KAKAO_MAP_API_KEY`
+4. **REST API 키** 복사 → `KAKAO_REST_API_KEY`
 
-- Supabase Postgres with RLS
-- Supabase Realtime for collaboration
-- Edge Functions (Deno runtime)
-- Kakao Local Search API
-- Optional: OpenAI/Claude for AI
+### 2. 플랫폼 등록
 
-### Key Features
+1. **내 애플리케이션** > **플랫폼**
+2. **Web 플랫폼 등록**
+3. 사이트 도메인 추가:
+   - `http://localhost:5173` (개발용)
+   - 프로덕션 도메인
 
-- **Real-time collaboration** - See who's editing
-- **Row Level Security** - All access controlled by Postgres
-- **Place caching** - Kakao API results cached in database
-- **Review system** - Unified for trips and places
-- **Link invitations** - Share trips with teammates
+### 3. API 활성화
 
-## Known Limitations (MVP)
+1. **내 애플리케이션** > **제품 설정**
+2. **지도/로컬** 활성화
 
-These features are designed but not implemented:
+---
 
-- ❌ Create Trip UI (use Supabase Dashboard)
-- ❌ Add/Edit schedule items UI
-- ❌ Place search in frontend
-- ❌ Drag-and-drop itinerary
-- ❌ Map integration (Leaflet)
-- ❌ Review UI components
-- ❌ Bookmark/Like UI (API exists)
-- ❌ My Trips page
-- ❌ Bookmarks page
+## Key Features
 
-These can be added in future iterations.
+### Real-time Collaboration
+
+- Supabase Realtime 기반
+- Presence로 온라인 사용자 표시
+- Optimistic UI 업데이트
+
+### Row Level Security
+
+- 모든 데이터 접근은 Postgres RLS로 제어
+- Helper functions: `is_trip_member()`, `can_edit_trip()`, `is_trip_owner()`
+
+### Place Caching
+
+- Kakao API 검색 결과 DB에 캐싱
+- 중복 API 호출 방지
+
+### Review System
+
+- Trip과 Place 통합 리뷰 시스템
+- 별점 (1-5) + 텍스트 + 사진
+
+---
+
+## Planned Features (MVP)
+
+- [ ] 회원가입 / 로그인
+- [ ] 홈페이지 (공개 여행 목록)
+- [ ] 여행 상세 보기
+- [ ] 여행 생성 / 편집
+- [ ] 실시간 협업 편집
+- [ ] 장소 검색 (Kakao)
+- [ ] 지도 연동 (Kakao Map)
+- [ ] 리뷰 작성
+- [ ] 좋아요 / 북마크
+- [ ] 초대 링크
+
+---
 
 ## Troubleshooting
 
 ### "Failed to load trips"
 
-- Check if database migration was applied
-- Verify Supabase URL and keys in `.env`
-- Check browser console for errors
+- 데이터베이스 마이그레이션 적용 확인
+- `.env` 파일의 Supabase URL/Key 확인
+- 브라우저 콘솔 에러 확인
 
 ### "Missing authorization header"
 
-- Make sure you're logged in
-- Check if session is valid
-- Try logging out and back in
+- 로그인 상태 확인
+- 세션 유효성 확인
+- 로그아웃 후 재로그인
+
+### "Kakao Map not loading"
+
+- `VITE_KAKAO_MAP_API_KEY` 설정 확인
+- Kakao Developers 플랫폼에 도메인 등록 확인
+- 브라우저 콘솔에서 API 에러 확인
 
 ### "Search place not working"
 
-- Verify Edge Function is deployed
-- Check Kakao API key is set
-- Look at function logs: `supabase functions logs search-place`
+- Edge Function 배포 확인
+- `KAKAO_REST_API_KEY` 설정 확인
+- 함수 로그 확인: `supabase functions logs search-place`
 
 ### Build errors
 
@@ -230,37 +276,19 @@ npm install
 npm run build
 ```
 
-## Next Steps
-
-1. **Add Create Trip UI** - Form to create trips from frontend
-2. **Add Schedule Editor** - Drag-and-drop interface for days/items
-3. **Add Place Search** - Frontend for searching and adding places
-4. **Add Map** - Leaflet/Mapbox integration
-5. **Add Reviews** - UI for reviewing trips and places
-6. **Add Social Features** - Likes, bookmarks, sharing
-7. **Add Filters** - Search by region, theme, dates
-8. **Add User Profile** - Edit profile, avatar upload
-9. **Add Notifications** - Real-time updates
-10. **Add Mobile Responsiveness** - Better mobile UX
+---
 
 ## Resources
 
-- **Supabase Dashboard**: https://luahhgcbrlkfbbawcult.supabase.co
-- **Database Schema**: `/supabase/README.md`
-- **Edge Functions**: `/supabase/functions/README.md`
-- **Security Guide**: `/SECURITY.md`
-- **Main README**: `/README.md`
-
-## Support
-
-If you encounter issues:
-
-1. Check the console for errors
-2. Review the documentation
-3. Check Supabase logs
-4. Verify environment variables
-5. Try resetting the database (dev only!)
+- [Supabase Documentation](https://supabase.com/docs)
+- [React Bootstrap Documentation](https://react-bootstrap.github.io/)
+- [Kakao Map API Documentation](https://apis.map.kakao.com/web/documentation/)
+- [Kakao Local API Documentation](https://developers.kakao.com/docs/latest/ko/local/dev-guide)
 
 ---
 
-**Happy trip planning!** 🗺️✈️
+## Related Documentation
+
+- [TECH_STACK.md](./TECH_STACK.md) - 기술 스택 상세
+- [SECURITY.md](./SECURITY.md) - 보안 정책
+- [SUPABASE_SETUP_COMPLETE.md](./supabase/SUPABASE_SETUP_COMPLETE.md) - Supabase 설정 가이드
