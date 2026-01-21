@@ -1,6 +1,6 @@
 # Trip Planner - Collaborative Travel Planning Application
 
-A production-grade collaborative travel planning application built with React, TypeScript, and Supabase.
+A production-grade collaborative travel planning application built with React and Supabase.
 
 ## Project Vision
 
@@ -13,11 +13,10 @@ Trip Planner is "Google Docs + Figma + Map + Travel Itinerary" - a real-time col
 ## Tech Stack
 
 ### Frontend
-- **React 18** + **TypeScript** + **Vite**
+- **React 19** + **Vite**
 - **React Router** for navigation
-- **Leaflet** for maps
-- **date-fns** for date handling
-- **lucide-react** for icons
+- **Bootstrap 5** + **React-Bootstrap** for UI
+- **Kakao Map API** for maps
 
 ### Backend
 - **Supabase**
@@ -37,29 +36,88 @@ Trip Planner is "Google Docs + Figma + Map + Travel Itinerary" - a real-time col
 project1/
 ├── frontend/                # React frontend application
 │   ├── src/
-│   │   ├── api/            # API layer (trips, places, reviews)
-│   │   ├── components/      # React components
-│   │   ├── context/        # React context (Auth)
+│   │   ├── api/            # API layer
+│   │   ├── components/     # React components
+│   │   ├── features/       # Feature modules
 │   │   ├── hooks/          # Custom React hooks
-│   │   ├── lib/            # Supabase client
 │   │   ├── pages/          # Page components
-│   │   ├── types/          # TypeScript types
-│   │   └── utils/          # Utility functions
-│   ├── .env               # Environment variables (gitignored)
+│   │   ├── styles/         # CSS styles
+│   │   └── ui-preview/     # UI component preview
 │   └── package.json
 │
-├── supabase/              # Supabase configuration
+├── supabase/               # Supabase configuration
 │   ├── functions/          # Edge Functions
-│   │   ├── search-place/  # Kakao API integration
-│   │   ├── process-image/ # Image upload
-│   │   ├── create-review/ # Review creation
+│   │   ├── search-place/   # Kakao API integration
+│   │   ├── process-image/  # Image upload
+│   │   ├── create-review/  # Review creation
 │   │   ├── ai-suggest-query/ # AI query normalization
 │   │   └── accept-invite-link/ # Invitation system
 │   └── migrations/         # Database schema
-│       └── 20260119000000_initial_schema.sql
+│
+├── .claude/                # Project documentation
+│   ├── CLAUDE.md          # AI instructions
+│   ├── WBS.md             # Work breakdown structure
+│   └── CHECKLIST.md       # Progress tracking
 │
 └── README.md              # This file
 ```
+
+## Progress Overview
+
+| Phase | Status | Progress |
+|-------|--------|----------|
+| EPIC 0: 기획/설계 | ✅ 완료 | 100% |
+| EPIC 1: UI/UX (Figma) | ✅ 완료 | 100% |
+| EPIC 2: DB/Supabase | ✅ 완료 | 100% |
+| EPIC 3: 인프라/세팅 | 🔄 진행중 | 33% |
+| EPIC 4: MVP 읽기 | ⏳ 대기 | 0% |
+| EPIC 5: MVP 편집 | ⏳ 대기 | 0% |
+| EPIC 6: MVP 협업 | ⏳ 대기 | 0% |
+| EPIC 7: Social | ⏳ 대기 | 0% |
+| EPIC 8: 고도화 | ⏳ 대기 | 0% |
+| **총 진행률** | | **41%** |
+
+> 상세 체크리스트: [.claude/CHECKLIST.md](.claude/CHECKLIST.md)
+
+## Completed Features
+
+### Phase 1: Planning & Design ✅
+- [x] 요구사항 문서 정리
+- [x] 공개/private/unlisted 정책 확정
+- [x] Owner/Editor 권한 모델 정의
+- [x] 좋아요 vs 찜 정책 문서화
+- [x] 모든 페이지 와이어프레임 (Figma)
+- [x] UX 정의 (Day 관리, 일정 편집, 지도 연동 등)
+
+### Phase 2: Database ✅
+- [x] Complete PostgreSQL schema (15+ tables)
+- [x] Row Level Security (RLS) policies
+- [x] Helper functions (`can_view_trip`, `can_edit_trip`, `is_trip_owner`, etc.)
+- [x] Automatic triggers (updated_at, updated_by, owner creation)
+- [x] Seed data (themes, regions)
+
+### Phase 3: Edge Functions ✅
+- [x] `search-place` - Kakao API integration + place caching
+- [x] `process-image` - Image upload with validation
+- [x] `create-review` - Review creation with permissions
+- [x] `ai-suggest-query` - AI-powered search suggestions
+- [x] `accept-invite-link` - Invitation system
+
+### Phase 4: Infrastructure (In Progress)
+- [x] Vite + React project setup
+- [x] Bootstrap 5 UI system
+- [ ] Supabase client connection
+- [ ] Auth login flow
+- [ ] Map SDK setup (Kakao Map API)
+- [ ] Vercel deployment pipeline
+
+## Next Steps
+
+1. **T-3003** Supabase client 연결 (`@supabase/supabase-js` 설치)
+2. **T-3004** Auth 로그인 플로우 연결
+3. **T-3005** Map SDK 세팅 (Kakao Map API)
+4. **T-3006** Vercel 배포 파이프라인 연결
+5. **EPIC 4** 읽기 전용 MVP 구현 시작
 
 ## Setup Instructions
 
@@ -72,9 +130,6 @@ npm --version
 
 # Supabase CLI
 npm install -g supabase
-
-# Git
-git --version
 ```
 
 ### 2. Clone and Install
@@ -92,100 +147,25 @@ npm install
 ### 3. Environment Variables
 
 ```bash
-# Copy environment template
-cp .env.example .env
+# Frontend: frontend/.env
+VITE_SUPABASE_URL=your-supabase-url
+VITE_SUPABASE_ANON_KEY=your-anon-key
 
-# Edit .env with your credentials
-# These are already configured:
-VITE_SUPABASE_URL=https://luahhgcbrlkfbbawcult.supabase.co
-VITE_SUPABASE_ANON_KEY=sb_publishable_SDDa1xzlYCu7OfeWJYSVAA_ap_q1gwU
+# Edge Functions: supabase/functions/.env
+SUPABASE_URL=your-supabase-url
+SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+KAKAO_REST_API_KEY=your-kakao-key
 ```
 
-### 4. Database Setup
+### 4. Run the Application
 
 ```bash
-# From project root
-cd ..
-
-# Apply database migration
-supabase db push
-
-# This will create:
-# - All tables with constraints
-# - RLS policies
-# - Helper functions
-# - Triggers
-# - Seed data (themes, regions)
-```
-
-### 5. Edge Functions Deployment
-
-```bash
-# Set environment variables for Edge Functions
-cd supabase/functions
-
-# Make sure .env has these values:
-# KAKAO_REST_API_KEY=adf4d53a313aa60e9213476773d61199
-# SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
-
-# Deploy all Edge Functions
-supabase functions deploy search-place
-supabase functions deploy process-image
-supabase functions deploy create-review
-supabase functions deploy ai-suggest-query
-supabase functions deploy accept-invite-link
-```
-
-### 6. Storage Setup
-
-Create an `images` bucket in Supabase Dashboard:
-
-1. Go to **Storage** in Supabase Dashboard
-2. Create new bucket: `images`
-3. Make it **public**
-4. Apply the storage policies from `supabase/functions/README.md`
-
-### 7. Run the Application
-
-```bash
-# From frontend directory
 cd frontend
 npm run dev
 
 # Application will open at http://localhost:5173
 ```
-
-## Features
-
-### Phase 1: Database ✅
-- [x] Complete PostgreSQL schema
-- [x] Row Level Security (RLS) policies
-- [x] Helper functions for access control
-- [x] Automatic triggers (updated_at, updated_by, owner creation)
-- [x] Seed data (themes, regions)
-
-### Phase 2: Edge Functions ✅
-- [x] `search-place` - Kakao API integration + place caching
-- [x] `process-image` - Image upload with validation
-- [x] `create-review` - Review creation with permissions
-- [x] `ai-suggest-query` - AI-powered search suggestions
-- [x] `accept-invite-link` - Invitation system
-
-### Phase 3: Frontend ✅
-- [x] React + TypeScript + Vite setup
-- [x] Authentication (Login/Signup)
-- [x] Home page (Trip discovery)
-- [x] Trip Detail page
-- [x] Trip Edit page with Realtime
-- [x] Supabase client integration
-- [x] API layer (trips, places, reviews)
-- [x] Responsive design
-
-### Realtime Collaboration
-- [x] Presence tracking (who's online)
-- [x] Postgres changes subscription
-- [x] Optimistic UI updates
-- [ ] Advanced: CRDT/OT (not in MVP)
 
 ## Core Domain Concepts
 
@@ -227,11 +207,13 @@ Helper functions enforce permissions:
 - `is_trip_owner(trip_id)`
 - `is_trip_member(trip_id)`
 
-## API Documentation
+## Documentation
 
-See individual README files:
-- Database: `supabase/README.md`
-- Edge Functions: `supabase/functions/README.md`
+- [WBS (Work Breakdown Structure)](WBS.md)
+- [Checklist (진행 현황)](CHECKLIST.md)
+- [Database](supabase/README.md)
+- [Edge Functions](supabase/functions/README.md)
+- [API](supabase/API.md)
 
 ## Development Workflow
 
@@ -243,87 +225,9 @@ npm run dev
 # Build for production
 npm run build
 
-# Preview production build
-npm run preview
-
-# Type checking
-npm run type-check
-
 # Linting
 npm run lint
 ```
-
-## Deployment
-
-### Frontend (Vercel/Netlify)
-
-```bash
-# Build
-cd frontend
-npm run build
-
-# Output in frontend/dist/
-# Deploy dist/ folder to your hosting provider
-```
-
-### Backend (Supabase)
-
-Already deployed! Your Supabase project is live at:
-```
-https://luahhgcbrlkfbbawcult.supabase.co
-```
-
-## Environment Variables Reference
-
-### Frontend (.env)
-```bash
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
-```
-
-### Edge Functions (supabase/functions/.env)
-```bash
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-KAKAO_REST_API_KEY=your-kakao-key
-OPENAI_API_KEY=your-openai-key  # OR
-ANTHROPIC_API_KEY=your-anthropic-key
-```
-
-## Troubleshooting
-
-### Database issues
-```bash
-# Reset database (⚠️ destroys data)
-supabase db reset
-
-# Check migrations
-supabase migration list
-```
-
-### Edge Functions not working
-```bash
-# Check function logs
-supabase functions logs search-place
-
-# Test locally
-supabase functions serve
-```
-
-### Frontend build errors
-```bash
-# Clear cache and reinstall
-rm -rf node_modules package-lock.json
-npm install
-```
-
-## Contributing
-
-1. Create a feature branch
-2. Make your changes
-3. Test thoroughly
-4. Create a pull request
 
 ## License
 
@@ -331,4 +235,4 @@ Private project for educational purposes.
 
 ---
 
-**Built with ❤️ using Supabase, React, and TypeScript**
+**Built with Supabase, React, and Bootstrap**
