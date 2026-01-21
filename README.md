@@ -38,30 +38,36 @@ Trip Planner is "Google Docs + Figma + Map + Travel Itinerary" - a real-time col
 
 ```
 project1/
-├── frontend/                # React frontend application
+├── frontend/                  # React frontend application
 │   ├── src/
-│   │   ├── api/            # API layer
-│   │   ├── components/     # React components
-│   │   ├── features/       # Feature modules
-│   │   ├── hooks/          # Custom React hooks
-│   │   ├── pages/          # Page components
-│   │   ├── styles/         # CSS styles
-│   │   └── ui-preview/     # UI component preview
+│   │   ├── context/          # React Context (AuthContext)
+│   │   ├── lib/              # 외부 라이브러리 설정 (supabaseClient)
+│   │   ├── pages/            # 페이지 컴포넌트
+│   │   ├── services/         # 서비스 레이어
+│   │   │   ├── _core/        # 공통 유틸 (errors, functions, storage)
+│   │   │   └── auth.service.js
+│   │   ├── types/            # TypeScript 타입 정의
+│   │   │   ├── database.types.ts   # Supabase 스키마 타입
+│   │   │   └── domain.types.ts     # 도메인/쿼리 결과 타입
+│   │   ├── ui-preview/       # UI 컴포넌트 프리뷰
+│   │   └── setupTests.js     # 테스트 환경 설정
 │   └── package.json
 │
-├── supabase/               # Supabase configuration
-│   ├── functions/          # Edge Functions
-│   │   ├── search-place/   # Kakao API integration
-│   │   ├── process-image/  # Image upload
-│   │   ├── create-review/  # Review creation
+├── supabase/                 # Supabase configuration
+│   ├── functions/            # Edge Functions
+│   │   ├── search-place/     # Kakao API integration
+│   │   ├── process-image/    # Image upload
+│   │   ├── create-review/    # Review creation
 │   │   ├── ai-suggest-query/ # AI query normalization
 │   │   └── accept-invite-link/ # Invitation system
-│   └── migrations/         # Database schema
+│   └── migrations/           # Database schema
 │
-├── WBS.md             # Work breakdown structure
-├── CHECKLIST.md       # Progress tracking
-└── README.md              # This file
+├── WBS.md                    # Work breakdown structure
+├── CHECKLIST.md              # Progress tracking
+└── README.md                 # This file
 ```
+
+> 상세 구조: [frontend/README.md](frontend/README.md#프로젝트-구조)
 
 ## Progress Overview
 
@@ -70,15 +76,15 @@ project1/
 | EPIC 0: 기획/설계     | ✅ 완료   | 100%     |
 | EPIC 1: UI/UX (Figma) | ✅ 완료   | 100%     |
 | EPIC 2: DB/Supabase   | ✅ 완료   | 100%     |
-| EPIC 3: 인프라/세팅   | 🔄 진행중 | 33%      |
+| EPIC 3: 인프라/세팅   | 🔄 진행중 | 67%      |
 | EPIC 4: MVP 읽기      | ⏳ 대기   | 0%       |
 | EPIC 5: MVP 편집      | ⏳ 대기   | 0%       |
 | EPIC 6: MVP 협업      | ⏳ 대기   | 0%       |
 | EPIC 7: Social        | ⏳ 대기   | 0%       |
 | EPIC 8: 고도화        | ⏳ 대기   | 0%       |
-| **총 진행률**         |           | **41%**  |
+| **총 진행률**         |           | **45%**  |
 
-> 상세 체크리스트: [.claude/CHECKLIST.md](.claude/CHECKLIST.md)
+> 상세 체크리스트: [CHECKLIST.md](CHECKLIST.md)
 
 ## Completed Features
 
@@ -107,22 +113,24 @@ project1/
 - [x] `ai-suggest-query` - AI-powered search suggestions
 - [x] `accept-invite-link` - Invitation system
 
-### Phase 4: Infrastructure (In Progress)
+### Phase 4: Infrastructure (In Progress - 67%)
 
 - [x] Vite + React project setup
 - [x] Bootstrap 5 UI system
-- [ ] Supabase client connection
+- [x] Supabase client connection
+- [x] Test environment (Vitest + Testing Library)
+- [x] TypeScript type definitions
+- [x] Service layer architecture
 - [ ] Auth login flow
 - [ ] Map SDK setup (Kakao Map API)
 - [ ] Vercel deployment pipeline
 
 ## Next Steps
 
-1. **T-3003** Supabase client 연결 (`@supabase/supabase-js` 설치)
-2. **T-3004** Auth 로그인 플로우 연결
-3. **T-3005** Map SDK 세팅 (Kakao Map API)
-4. **T-3006** Vercel 배포 파이프라인 연결
-5. **EPIC 4** 읽기 전용 MVP 구현 시작
+1. **T-3004** Auth 로그인 플로우 완료
+2. **T-3005** Map SDK 세팅 (Kakao Map API)
+3. **T-3006** Vercel 배포 파이프라인 연결
+4. **EPIC 4** 읽기 전용 MVP 구현 시작
 
 ## Setup Instructions
 
