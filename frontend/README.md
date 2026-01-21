@@ -5,12 +5,13 @@
 1. [개요](#개요)
 2. [설치 및 환경변수](#설치-및-환경변수)
 3. [개발 명령어](#개발-명령어)
-4. [UI Preview](#ui-preview)
-5. [API 사용법](#api-사용법)
-6. [Realtime & Presence](#realtime--presence)
-7. [React Hooks & Context](#react-hooks--context)
-8. [컨벤션](#컨벤션)
-9. [Troubleshooting / FAQ](#troubleshooting--faq)
+4. [테스트](#테스트)
+5. [UI Preview](#ui-preview)
+6. [API 사용법](#api-사용법)
+7. [Realtime & Presence](#realtime--presence)
+8. [React Hooks & Context](#react-hooks--context)
+9. [컨벤션](#컨벤션)
+10. [Troubleshooting / FAQ](#troubleshooting--faq)
 
 ---
 
@@ -122,6 +123,272 @@ npm run build
 
 - 출력: `dist/` 폴더
 - 최적화된 프로덕션 번들 생성
+
+---
+
+## 테스트
+
+### 테스트 스택
+
+| 항목            | 기술                          |
+| --------------- | ----------------------------- |
+| Test Runner     | Vitest 4.x                    |
+| Testing Library | @testing-library/react 16.x   |
+| DOM Environment | jsdom 27.x                    |
+| Matchers        | @testing-library/jest-dom 6.x |
+
+### 테스트 명령어
+
+```bash
+# 테스트 실행 (watch 모드)
+npm run test
+
+# 테스트 한 번 실행
+npm run test:run
+
+# 테스트 UI 실행
+npm run test:ui
+```
+
+### 파일 구조
+
+```
+src/
+├── setup.js              # 테스트 전역 설정
+├── components/
+│   ├── Button.jsx
+│   └── Button.test.jsx        # 컴포넌트 옆에 테스트 파일
+├── hooks/
+│   ├── useAuth.js
+│   └── useAuth.test.js
+└── __tests__/                 # 통합 테스트 (선택)
+    └── integration.test.jsx
+```
+
+### 테스트 파일 네이밍
+
+- 컴포넌트: `ComponentName.test.jsx`
+- 훅: `hookName.test.js`
+- 유틸리티: `utilName.test.js`
+
+### 기본 테스트 작성법
+
+#### 컴포넌트 테스트
+
+```jsx
+// src/components/Button.test.jsx
+import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import Button from './Button';
+
+describe('Button', () => {
+  it('텍스트를 올바르게 렌더링한다', () => {
+    render(<Button>클릭</Button>);
+
+    expect(screen.getByRole('button')).toHaveTextContent('클릭');
+  });
+
+  it('클릭 시 onClick 핸들러를 호출한다', () => {
+    const handleClick = vi.fn();
+    render(<Button onClick={handleClick}>클릭</Button>);
+
+    fireEvent.click(screen.getByRole('button'));
+
+    expect(handleClick).toHaveBeenCalledTimes(1);
+  });
+
+  it('disabled 상태에서는 클릭이 동작하지 않는다', () => {
+    const handleClick = vi.fn();
+    render(
+      <Button onClick={handleClick} disabled>
+        클릭
+      </Button>,
+    );
+
+    fireEvent.click(screen.getByRole('button'));
+
+    expect(handleClick).not.toHaveBeenCalled();
+  });
+});
+```
+
+#### 커스텀 훅 테스트
+
+```jsx
+// src/hooks/useCounter.test.js
+import { renderHook, act } from '@testing-library/react';
+import { describe, it, expect } from 'vitest';
+import useCounter from './useCounter';
+
+describe('useCounter', () => {
+  it('초기값으로 시작한다', () => {
+    const { result } = renderHook(() => useCounter(10));
+
+    expect(result.current.count).toBe(10);
+  });
+
+  it('increment 호출 시 카운트가 증가한다', () => {
+    const { result } = renderHook(() => useCounter(0));
+
+    act(() => {
+      result.current.increment();
+    });
+
+    expect(result.current.count).toBe(1);
+  });
+});
+```
+
+#### 비동기 테스트
+
+```jsx
+// src/components/UserProfile.test.jsx
+import { render, screen, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import UserProfile from './UserProfile';
+import { supabase } from '../api/supabase';
+
+// Supabase 모킹
+vi.mock('../api/supabase', () => ({
+  supabase: {
+    from: vi.fn(() => ({
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          single: vi.fn(() =>
+            Promise.resolve({
+              data: { id: '1', username: '테스트유저' },
+              error: null,
+            }),
+          ),
+        })),
+      })),
+    })),
+  },
+}));
+
+describe('UserProfile', () => {
+  it('사용자 정보를 로드하여 표시한다', async () => {
+    render(<UserProfile userId="1" />);
+
+    // 로딩 상태 확인
+    expect(screen.getByText('로딩 중...')).toBeInTheDocument();
+
+    // 데이터 로드 후 확인
+    await waitFor(() => {
+      expect(screen.getByText('테스트유저')).toBeInTheDocument();
+    });
+  });
+});
+```
+
+### Context/Provider가 필요한 컴포넌트 테스트
+
+```jsx
+// src/test-utils.jsx
+import { render } from '@testing-library/react';
+import { BrowserRouter } from 'react-router-dom';
+import { AuthProvider } from './hooks/useAuth';
+
+// 모든 Provider를 포함하는 래퍼
+function AllProviders({ children }) {
+  return (
+    <BrowserRouter>
+      <AuthProvider>{children}</AuthProvider>
+    </BrowserRouter>
+  );
+}
+
+// 커스텀 render 함수
+export function renderWithProviders(ui, options) {
+  return render(ui, { wrapper: AllProviders, ...options });
+}
+
+// @testing-library/react의 모든 것을 re-export
+export * from '@testing-library/react';
+```
+
+```jsx
+// 사용 예시
+import { renderWithProviders, screen } from '../test-utils';
+import Navigation from './Navigation';
+
+describe('Navigation', () => {
+  it('로그인하지 않은 경우 로그인 버튼을 표시한다', () => {
+    renderWithProviders(<Navigation />);
+
+    expect(screen.getByRole('button', { name: '로그인' })).toBeInTheDocument();
+  });
+});
+```
+
+### 주요 Testing Library 쿼리
+
+| 쿼리                   | 용도                                    |
+| ---------------------- | --------------------------------------- |
+| `getByRole`            | 접근성 역할로 요소 찾기 (권장)          |
+| `getByText`            | 텍스트 내용으로 찾기                    |
+| `getByLabelText`       | label과 연결된 form 요소 찾기           |
+| `getByPlaceholderText` | placeholder로 input 찾기                |
+| `getByTestId`          | data-testid 속성으로 찾기 (최후의 수단) |
+| `queryBy*`             | 요소가 없어도 에러 없이 null 반환       |
+| `findBy*`              | 비동기로 요소 찾기 (Promise 반환)       |
+
+### jest-dom 커스텀 매처
+
+```jsx
+// 가시성
+expect(element).toBeVisible();
+expect(element).toBeInTheDocument();
+
+// form 요소
+expect(input).toHaveValue('입력값');
+expect(checkbox).toBeChecked();
+expect(button).toBeDisabled();
+
+// 속성/클래스
+expect(element).toHaveClass('active');
+expect(element).toHaveAttribute('href', '/home');
+
+// 텍스트
+expect(element).toHaveTextContent('내용');
+```
+
+### Vitest 주요 기능
+
+```jsx
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+
+// 모킹
+const mockFn = vi.fn();
+const mockFnWithReturn = vi.fn(() => 'value');
+
+// 타이머 모킹
+vi.useFakeTimers();
+vi.advanceTimersByTime(1000);
+vi.useRealTimers();
+
+// 모듈 모킹
+vi.mock('./module', () => ({
+  default: vi.fn(),
+  namedExport: vi.fn(),
+}));
+
+// 스파이
+const spy = vi.spyOn(object, 'method');
+
+// 초기화
+beforeEach(() => {
+  vi.clearAllMocks();
+});
+```
+
+### 테스트 작성 가이드라인
+
+1. **AAA 패턴 따르기**: Arrange(준비) → Act(실행) → Assert(검증)
+2. **사용자 관점에서 테스트**: 구현 세부사항이 아닌 동작을 테스트
+3. **접근성 쿼리 우선**: `getByRole`, `getByLabelText` 사용 권장
+4. **의미 있는 테스트 이름**: 테스트가 무엇을 검증하는지 명확히 작성
+5. **테스트 격리**: 각 테스트는 독립적으로 실행 가능해야 함
 
 ---
 
@@ -492,11 +759,11 @@ function App() {
 
 ### 브랜치 네이밍
 
-| 접두사 | 용도 | 예시 |
-|--------|------|------|
-| `feature/` | 새로운 기능 개발 | `feature/login-page` |
-| `fix/` | 버그 수정 | `fix/auth-redirect` |
-| `hotfix/` | 긴급 버그 수정 (프로덕션) | `hotfix/critical-crash` |
+| 접두사     | 용도                      | 예시                    |
+| ---------- | ------------------------- | ----------------------- |
+| `feature/` | 새로운 기능 개발          | `feature/login-page`    |
+| `fix/`     | 버그 수정                 | `fix/auth-redirect`     |
+| `hotfix/`  | 긴급 버그 수정 (프로덕션) | `hotfix/critical-crash` |
 
 ```bash
 # 브랜치 생성 예시
@@ -507,15 +774,15 @@ git checkout -b hotfix/login-failure
 
 ### 커밋 메시지
 
-| 타입 | 용도 | 예시 |
-|------|------|------|
-| `feat:` | 새로운 기능 추가 | `feat: 여행 생성 폼 추가` |
-| `fix:` | 버그 수정 | `fix: 로그인 리다이렉트 오류 수정` |
-| `chore:` | 빌드, 설정, 의존성 등 | `chore: eslint 설정 업데이트` |
-| `refactor:` | 코드 리팩토링 (기능 변경 없음) | `refactor: useAuth 훅 분리` |
-| `docs:` | 문서 수정 | `docs: README 업데이트` |
-| `style:` | 코드 포맷팅 (기능 변경 없음) | `style: 들여쓰기 수정` |
-| `test:` | 테스트 코드 | `test: 로그인 테스트 추가` |
+| 타입        | 용도                           | 예시                               |
+| ----------- | ------------------------------ | ---------------------------------- |
+| `feat:`     | 새로운 기능 추가               | `feat: 여행 생성 폼 추가`          |
+| `fix:`      | 버그 수정                      | `fix: 로그인 리다이렉트 오류 수정` |
+| `chore:`    | 빌드, 설정, 의존성 등          | `chore: eslint 설정 업데이트`      |
+| `refactor:` | 코드 리팩토링 (기능 변경 없음) | `refactor: useAuth 훅 분리`        |
+| `docs:`     | 문서 수정                      | `docs: README 업데이트`            |
+| `style:`    | 코드 포맷팅 (기능 변경 없음)   | `style: 들여쓰기 수정`             |
+| `test:`     | 테스트 코드                    | `test: 로그인 테스트 추가`         |
 
 ```bash
 # 커밋 메시지 예시
@@ -563,11 +830,7 @@ export default function MyComponent({ prop1, prop2 }) {
   };
 
   // 6. render
-  return (
-    <div>
-      {/* ... */}
-    </div>
-  );
+  return <div>{/* ... */}</div>;
 }
 ```
 
@@ -587,25 +850,30 @@ npm run lint -- --fix
 
 ```markdown
 ## 📝 무엇을 하나요?
-* 할 일을 간단히 설명해주세요
+
+- 할 일을 간단히 설명해주세요
 
 ## 📌 To do
-* [ ] 할 작업들 리스트업
+
+- [ ] 할 작업들 리스트업
 ```
 
 ### PR Template
 
 ```markdown
 ## 🔎 What
-* 한 작업을 간단히 설명해주세요
+
+- 한 작업을 간단히 설명해주세요
 
 ## 🔗 Issue
-* Closes: #이슈번호
+
+- Closes: #이슈번호
 
 ## ✅ 체크리스트
-* [ ] 브랜치 base가 적절한가요?
-* [ ] 제목이 이슈 제목과 동일한가요?
-* [ ] 최소 1명의 리뷰를 받았나요?
+
+- [ ] 브랜치 base가 적절한가요?
+- [ ] 제목이 이슈 제목과 동일한가요?
+- [ ] 최소 1명의 리뷰를 받았나요?
 ```
 
 ---
