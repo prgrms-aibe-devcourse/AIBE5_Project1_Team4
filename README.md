@@ -229,6 +229,109 @@ npm run build
 npm run lint
 ```
 
+## Team Convention
+
+### Branch Naming
+
+| 접두사 | 용도 | 예시 |
+|--------|------|------|
+| `feature/` | 새로운 기능 개발 | `feature/#12-login-page` |
+| `fix/` | 버그 수정 | `fix/#15-auth-redirect` |
+| `hotfix/` | 긴급 버그 수정 (프로덕션) | `hotfix/#20-critical-crash` |
+
+```bash
+# 브랜치 생성 예시
+git checkout -b feature/#12-trip-create
+git checkout -b fix/#15-map-loading-error
+```
+
+### Commit Message
+
+| 타입 | 용도 | 예시 |
+|------|------|------|
+| `[Feat]` | 새로운 기능 추가 | `[Feat] #12 - 여행 생성 폼 추가` |
+| `[Fix]` | 버그 수정 | `[Fix] #15 - 로그인 리다이렉트 오류 수정` |
+| `[Chore]` | 빌드, 설정, 의존성 등 | `[Chore] #18 - eslint 설정 업데이트` |
+| `[Refactor]` | 코드 리팩토링 | `[Refactor] #20 - useAuth 훅 분리` |
+| `[Docs]` | 문서 수정 | `[Docs] #22 - README 업데이트` |
+| `[Style]` | 코드 포맷팅 | `[Style] #25 - 들여쓰기 수정` |
+| `[Test]` | 테스트 코드 | `[Test] #28 - 로그인 테스트 추가` |
+
+```bash
+# 커밋 메시지 예시
+git commit -m "[Feat] #12 - 여행 상세 페이지 구현"
+git commit -m "[Fix] #15 - 지도 마커 클릭 이벤트 수정"
+git commit -m "[Chore] #18 - React Bootstrap 버전 업그레이드"
+```
+
+### File/Folder Naming
+
+```
+컴포넌트:     PascalCase.jsx     (예: TripCard.jsx, LoginForm.jsx)
+훅:          camelCase.js       (예: useAuth.js, useTrip.js)
+유틸리티:     camelCase.js       (예: formatDate.js, validators.js)
+스타일:       kebab-case.css     (예: trip-card.css)
+상수:         SCREAMING_SNAKE    (예: API_ENDPOINTS, MAX_FILE_SIZE)
+```
+
+### Component Structure
+
+```jsx
+// 1. imports (외부 → 내부 순서)
+import { useState, useEffect } from 'react';
+import { Button } from 'react-bootstrap';
+import { useAuth } from '../hooks/useAuth';
+
+// 2. 컴포넌트 정의
+export default function MyComponent({ prop1, prop2 }) {
+  // 3. hooks
+  const [state, setState] = useState(null);
+  const { user } = useAuth();
+
+  // 4. effects
+  useEffect(() => {
+    // ...
+  }, []);
+
+  // 5. handlers
+  const handleClick = () => {
+    // ...
+  };
+
+  // 6. render
+  return (
+    <div>{/* ... */}</div>
+  );
+}
+```
+
+> 상세 컨벤션: [frontend/README.md](frontend/README.md#컨벤션)
+
+### Issue Template
+
+```markdown
+## 📝 무엇을 하나요?
+* 할 일을 간단히 설명해주세요
+
+## 📌 To do
+* [ ] 할 작업들 리스트업
+```
+
+### PR Template
+
+```markdown
+## 🔎 What
+* 한 작업을 간단히 설명해주세요
+
+## 🔗 Issue
+* Closes: #이슈번호
+
+## ✅ 체크리스트
+* [ ] 브랜치 base가 적절한가요?
+* [ ] 제목이 이슈 제목과 동일한가요?
+* [ ] 최소 1명의 리뷰를 받았나요?
+```
+
 ## License
 
 Private project for educational purposes.
