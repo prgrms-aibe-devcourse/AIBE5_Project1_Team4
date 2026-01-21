@@ -6,12 +6,13 @@
 2. [설치 및 환경변수](#설치-및-환경변수)
 3. [개발 명령어](#개발-명령어)
 4. [테스트](#테스트)
-5. [UI Preview](#ui-preview)
-6. [API 사용법](#api-사용법)
-7. [Realtime & Presence](#realtime--presence)
-8. [React Hooks & Context](#react-hooks--context)
-9. [컨벤션](#컨벤션)
-10. [Troubleshooting / FAQ](#troubleshooting--faq)
+5. [아키텍처](#아키텍처)
+6. [UI Preview](#ui-preview)
+7. [API 사용법](#api-사용법)
+8. [Realtime & Presence](#realtime--presence)
+9. [React Hooks & Context](#react-hooks--context)
+10. [컨벤션](#컨벤션)
+11. [Troubleshooting / FAQ](#troubleshooting--faq)
 
 ---
 
@@ -42,15 +43,26 @@ Trip Planner 프론트엔드는 **협업 기반 여행 계획 서비스**의 클
 
 ```
 src/
-├── api/              # Supabase API 통신 레이어
-├── components/       # 공통 UI 컴포넌트
-├── features/         # 기능별 모듈 (trips, auth, reviews 등)
-├── hooks/            # 커스텀 React Hooks
-├── pages/            # 페이지 컴포넌트
-├── styles/           # 전역 스타일
-├── ui-preview/       # UI 컴포넌트 프리뷰
-├── App.jsx           # 앱 루트
-└── main.jsx          # 엔트리포인트
+├── context/            # React Context (AuthContext 등)
+├── lib/                # 외부 라이브러리 설정
+│   └── supabaseClient.js
+├── services/           # 서비스 레이어
+│   ├── _core/          # 공통 유틸리티
+│   │   ├── errors.js   # AppError, 에러 분류
+│   │   ├── functions.js # Edge Function 호출
+│   │   ├── storage.js  # Storage 유틸
+│   │   └── normalize/  # 데이터 정규화
+│   └── auth.service.js # 인증 서비스
+├── types/              # TypeScript 타입 정의
+│   ├── database.types.ts  # Supabase 스키마 타입
+│   └── domain.types.ts    # 도메인/쿼리 결과 타입
+├── components/         # 공통 UI 컴포넌트
+├── pages/              # 페이지 컴포넌트
+├── styles/             # 전역 스타일
+├── ui-preview/         # UI 컴포넌트 프리뷰
+├── setupTests.js       # 테스트 환경 설정
+├── App.jsx             # 앱 루트
+└── main.jsx            # 엔트리포인트
 ```
 
 ---
@@ -389,6 +401,160 @@ beforeEach(() => {
 3. **접근성 쿼리 우선**: `getByRole`, `getByLabelText` 사용 권장
 4. **의미 있는 테스트 이름**: 테스트가 무엇을 검증하는지 명확히 작성
 5. **테스트 격리**: 각 테스트는 독립적으로 실행 가능해야 함
+
+---
+
+## 아키텍처
+
+### 레이어 구조
+
+```
+┌─────────────────────────────────────────────────┐
+│                   Pages/UI                       │
+├─────────────────────────────────────────────────┤
+│              Context (AuthContext)               │
+├─────────────────────────────────────────────────┤
+│            Services (auth.service 등)            │
+├─────────────────────────────────────────────────┤
+│     _core (errors, functions, storage)           │
+├─────────────────────────────────────────────────┤
+│           lib/supabaseClient.js                  │
+└─────────────────────────────────────────────────┘
+```
+
+### 서비스 레이어 (`services/`)
+
+서비스 레이어는 Supabase와의 통신을 추상화하고 일관된 에러 처리를 제공합니다.
+
+#### 에러 처리 (`_core/errors.js`)
+
+```javascript
+import { unwrap, AppError, isAuthError } from '@/services/_core/errors';
+
+// Supabase 결과를 unwrap (에러 시 AppError throw)
+const data = unwrap(result, 'tripService.getTrip');
+
+// UI에서 에러 분기 처리
+try {
+  await someOperation();
+} catch (e) {
+  if (isAuthError(e)) {
+    // 로그인 페이지로 리다이렉트
+  }
+}
+```
+
+**AppError 종류 (`kind`)**:
+
+| kind         | HTTP | 설명                   |
+| ------------ | ---- | ---------------------- |
+| `auth`       | 401  | 로그인 필요            |
+| `forbidden`  | 403  | 권한 없음              |
+| `not_found`  | 404  | 대상 없음              |
+| `conflict`   | 409  | 중복/충돌              |
+| `validation` | 400  | 잘못된 요청            |
+| `network`    | 0    | 네트워크 오류          |
+| `server`     | 5xx  | 서버 오류              |
+| `unknown`    | -    | 알 수 없음             |
+
+#### Edge Function 호출 (`_core/functions.js`)
+
+```javascript
+import { invokeFunction } from '@/services/_core/functions';
+
+// Edge Function 호출 (unwrap 자동 적용)
+const places = await invokeFunction('search-place', {
+  body: { query: '강남 카페', page: 1 },
+});
+```
+
+#### Storage 유틸 (`_core/storage.js`)
+
+```javascript
+import { uploadFile, getPublicUrl, removeFiles } from '@/services/_core/storage';
+
+// 파일 업로드
+const data = await uploadFile('images', 'trips/cover.jpg', file);
+
+// Public URL 가져오기
+const url = getPublicUrl('images', 'trips/cover.jpg');
+
+// 파일 삭제
+await removeFiles('images', ['trips/cover.jpg']);
+```
+
+#### 데이터 정규화 (`_core/normalize/`)
+
+Supabase에서 반환된 데이터를 정규화합니다.
+
+```javascript
+import { normalizePlace } from '@/services/_core/normalize/normalizePlace';
+
+// latitude/longitude를 number로 변환
+const place = normalizePlace(rawPlace);
+```
+
+### 타입 정의 (`types/`)
+
+#### `database.types.ts`
+
+Supabase 스키마에서 생성된 타입입니다. 직접 수정하지 마세요.
+
+```typescript
+import type { Database } from '@/types/database.types';
+
+// Supabase 클라이언트에 타입 적용
+const supabase = createClient<Database>(url, key);
+```
+
+#### `domain.types.ts`
+
+도메인 엔티티와 쿼리 결과 타입입니다.
+
+```typescript
+import type { Trip, TripInsert, TripFull, Profile } from '@/types/domain.types';
+
+// 기본 엔티티
+const trip: Trip = { ... };
+
+// Insert 타입 (생성 시)
+const newTrip: TripInsert = { title: '제주 여행', ... };
+
+// 쿼리 결과 타입 (관계 포함)
+const tripWithAuthor: TripWithAuthor = { ...trip, author: profile };
+```
+
+### Context (`context/`)
+
+#### AuthContext
+
+인증 상태와 관련 함수를 제공합니다.
+
+```javascript
+import { useAuth } from '@/context/AuthContext';
+
+function MyComponent() {
+  const { user, isAuthed, loading, signIn, signOut } = useAuth();
+
+  if (loading) return <Spinner />;
+  if (!isAuthed) return <LoginPrompt />;
+
+  return <div>Welcome, {user.email}</div>;
+}
+```
+
+**제공 값:**
+
+| 속성              | 타입       | 설명                    |
+| ----------------- | ---------- | ----------------------- |
+| `session`         | Session    | Supabase 세션           |
+| `user`            | User       | 현재 사용자             |
+| `loading`         | boolean    | 초기 로딩 중            |
+| `isAuthed`        | boolean    | 로그인 여부             |
+| `signIn`          | function   | 이메일/비밀번호 로그인  |
+| `signUp`          | function   | 회원가입                |
+| `signOut`         | function   | 로그아웃                |
+| `signInWithOAuth` | function   | OAuth 로그인            |
 
 ---
 
