@@ -5,6 +5,7 @@ A production-grade collaborative travel planning application built with React an
 ## Project Vision
 
 Trip Planner is "Google Docs + Figma + Map + Travel Itinerary" - a real-time collaborative travel planning platform where:
+
 - Multiple users can edit the same trip simultaneously
 - Finished trips become discoverable, shareable assets
 - Trips and places can receive reviews from the community
@@ -13,12 +14,14 @@ Trip Planner is "Google Docs + Figma + Map + Travel Itinerary" - a real-time col
 ## Tech Stack
 
 ### Frontend
+
 - **React 19** + **Vite**
 - **React Router** for navigation
 - **Bootstrap 5** + **React-Bootstrap** for UI
 - **Kakao Map API** for maps
 
 ### Backend
+
 - **Supabase**
   - Postgres database with RLS
   - Authentication
@@ -27,6 +30,7 @@ Trip Planner is "Google Docs + Figma + Map + Travel Itinerary" - a real-time col
   - Edge Functions
 
 ### External APIs
+
 - **Kakao Local Search** for place discovery
 - **OpenAI** or **Anthropic Claude** for AI query suggestions
 
@@ -54,34 +58,32 @@ project1/
 │   │   └── accept-invite-link/ # Invitation system
 │   └── migrations/         # Database schema
 │
-├── .claude/                # Project documentation
-│   ├── CLAUDE.md          # AI instructions
-│   ├── WBS.md             # Work breakdown structure
-│   └── CHECKLIST.md       # Progress tracking
-│
+├── WBS.md             # Work breakdown structure
+├── CHECKLIST.md       # Progress tracking
 └── README.md              # This file
 ```
 
 ## Progress Overview
 
-| Phase | Status | Progress |
-|-------|--------|----------|
-| EPIC 0: 기획/설계 | ✅ 완료 | 100% |
-| EPIC 1: UI/UX (Figma) | ✅ 완료 | 100% |
-| EPIC 2: DB/Supabase | ✅ 완료 | 100% |
-| EPIC 3: 인프라/세팅 | 🔄 진행중 | 33% |
-| EPIC 4: MVP 읽기 | ⏳ 대기 | 0% |
-| EPIC 5: MVP 편집 | ⏳ 대기 | 0% |
-| EPIC 6: MVP 협업 | ⏳ 대기 | 0% |
-| EPIC 7: Social | ⏳ 대기 | 0% |
-| EPIC 8: 고도화 | ⏳ 대기 | 0% |
-| **총 진행률** | | **41%** |
+| Phase                 | Status    | Progress |
+| --------------------- | --------- | -------- |
+| EPIC 0: 기획/설계     | ✅ 완료   | 100%     |
+| EPIC 1: UI/UX (Figma) | ✅ 완료   | 100%     |
+| EPIC 2: DB/Supabase   | ✅ 완료   | 100%     |
+| EPIC 3: 인프라/세팅   | 🔄 진행중 | 33%      |
+| EPIC 4: MVP 읽기      | ⏳ 대기   | 0%       |
+| EPIC 5: MVP 편집      | ⏳ 대기   | 0%       |
+| EPIC 6: MVP 협업      | ⏳ 대기   | 0%       |
+| EPIC 7: Social        | ⏳ 대기   | 0%       |
+| EPIC 8: 고도화        | ⏳ 대기   | 0%       |
+| **총 진행률**         |           | **41%**  |
 
 > 상세 체크리스트: [.claude/CHECKLIST.md](.claude/CHECKLIST.md)
 
 ## Completed Features
 
 ### Phase 1: Planning & Design ✅
+
 - [x] 요구사항 문서 정리
 - [x] 공개/private/unlisted 정책 확정
 - [x] Owner/Editor 권한 모델 정의
@@ -90,6 +92,7 @@ project1/
 - [x] UX 정의 (Day 관리, 일정 편집, 지도 연동 등)
 
 ### Phase 2: Database ✅
+
 - [x] Complete PostgreSQL schema (15+ tables)
 - [x] Row Level Security (RLS) policies
 - [x] Helper functions (`can_view_trip`, `can_edit_trip`, `is_trip_owner`, etc.)
@@ -97,6 +100,7 @@ project1/
 - [x] Seed data (themes, regions)
 
 ### Phase 3: Edge Functions ✅
+
 - [x] `search-place` - Kakao API integration + place caching
 - [x] `process-image` - Image upload with validation
 - [x] `create-review` - Review creation with permissions
@@ -104,6 +108,7 @@ project1/
 - [x] `accept-invite-link` - Invitation system
 
 ### Phase 4: Infrastructure (In Progress)
+
 - [x] Vite + React project setup
 - [x] Bootstrap 5 UI system
 - [ ] Supabase client connection
@@ -170,23 +175,27 @@ npm run dev
 ## Core Domain Concepts
 
 ### Trips
+
 - Acts like a collaborative document
 - Has owner and editors
 - Visibility: public, unlisted, or private
 - Contains days with schedule items
 
 ### Places
+
 - Shared master table
 - Cached from Kakao API
 - Unique by (provider, provider_place_id)
 - Referenced by all schedule items
 
 ### Reviews
+
 - Unified system for trips AND places
 - Respects trip visibility
 - One review per user per target
 
 ### Collaboration
+
 - Real-time presence
 - Link-based invitations
 - Role-based access (owner/editor)
@@ -202,6 +211,7 @@ All access is controlled through PostgreSQL RLS:
 - **Deletion**: Only owners
 
 Helper functions enforce permissions:
+
 - `can_view_trip(trip_id)`
 - `can_edit_trip(trip_id)`
 - `is_trip_owner(trip_id)`
@@ -227,17 +237,32 @@ npm run build
 
 # Linting
 npm run lint
+
+# Testing
+npm run test        # watch 모드
+npm run test:run    # 단일 실행
+npm run test:ui     # UI 모드
 ```
+
+### 테스트
+
+| 도구            | 용도               |
+| --------------- | ------------------ |
+| Vitest          | 테스트 러너        |
+| Testing Library | 컴포넌트/훅 테스트 |
+| jsdom           | DOM 환경           |
+
+> 상세 가이드: [frontend/README.md#테스트](frontend/README.md#테스트)
 
 ## Team Convention
 
 ### Branch Naming
 
-| 접두사 | 용도 | 예시 |
-|--------|------|------|
-| `feature/` | 새로운 기능 개발 | `feature/#12-login-page` |
-| `fix/` | 버그 수정 | `fix/#15-auth-redirect` |
-| `hotfix/` | 긴급 버그 수정 (프로덕션) | `hotfix/#20-critical-crash` |
+| 접두사     | 용도                      | 예시                        |
+| ---------- | ------------------------- | --------------------------- |
+| `feature/` | 새로운 기능 개발          | `feature/#12-login-page`    |
+| `fix/`     | 버그 수정                 | `fix/#15-auth-redirect`     |
+| `hotfix/`  | 긴급 버그 수정 (프로덕션) | `hotfix/#20-critical-crash` |
 
 ```bash
 # 브랜치 생성 예시
@@ -247,15 +272,15 @@ git checkout -b fix/#15-map-loading-error
 
 ### Commit Message
 
-| 타입 | 용도 | 예시 |
-|------|------|------|
-| `[Feat]` | 새로운 기능 추가 | `[Feat] #12 - 여행 생성 폼 추가` |
-| `[Fix]` | 버그 수정 | `[Fix] #15 - 로그인 리다이렉트 오류 수정` |
-| `[Chore]` | 빌드, 설정, 의존성 등 | `[Chore] #18 - eslint 설정 업데이트` |
-| `[Refactor]` | 코드 리팩토링 | `[Refactor] #20 - useAuth 훅 분리` |
-| `[Docs]` | 문서 수정 | `[Docs] #22 - README 업데이트` |
-| `[Style]` | 코드 포맷팅 | `[Style] #25 - 들여쓰기 수정` |
-| `[Test]` | 테스트 코드 | `[Test] #28 - 로그인 테스트 추가` |
+| 타입         | 용도                  | 예시                                      |
+| ------------ | --------------------- | ----------------------------------------- |
+| `[Feat]`     | 새로운 기능 추가      | `[Feat] #12 - 여행 생성 폼 추가`          |
+| `[Fix]`      | 버그 수정             | `[Fix] #15 - 로그인 리다이렉트 오류 수정` |
+| `[Chore]`    | 빌드, 설정, 의존성 등 | `[Chore] #18 - eslint 설정 업데이트`      |
+| `[Refactor]` | 코드 리팩토링         | `[Refactor] #20 - useAuth 훅 분리`        |
+| `[Docs]`     | 문서 수정             | `[Docs] #22 - README 업데이트`            |
+| `[Style]`    | 코드 포맷팅           | `[Style] #25 - 들여쓰기 수정`             |
+| `[Test]`     | 테스트 코드           | `[Test] #28 - 로그인 테스트 추가`         |
 
 ```bash
 # 커밋 메시지 예시
@@ -299,9 +324,7 @@ export default function MyComponent({ prop1, prop2 }) {
   };
 
   // 6. render
-  return (
-    <div>{/* ... */}</div>
-  );
+  return <div>{/* ... */}</div>;
 }
 ```
 
@@ -311,25 +334,30 @@ export default function MyComponent({ prop1, prop2 }) {
 
 ```markdown
 ## 📝 무엇을 하나요?
-* 할 일을 간단히 설명해주세요
+
+- 할 일을 간단히 설명해주세요
 
 ## 📌 To do
-* [ ] 할 작업들 리스트업
+
+- [ ] 할 작업들 리스트업
 ```
 
 ### PR Template
 
 ```markdown
 ## 🔎 What
-* 한 작업을 간단히 설명해주세요
+
+- 한 작업을 간단히 설명해주세요
 
 ## 🔗 Issue
-* Closes: #이슈번호
+
+- Closes: #이슈번호
 
 ## ✅ 체크리스트
-* [ ] 브랜치 base가 적절한가요?
-* [ ] 제목이 이슈 제목과 동일한가요?
-* [ ] 최소 1명의 리뷰를 받았나요?
+
+- [ ] 브랜치 base가 적절한가요?
+- [ ] 제목이 이슈 제목과 동일한가요?
+- [ ] 최소 1명의 리뷰를 받았나요?
 ```
 
 ## License
