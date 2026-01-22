@@ -282,6 +282,8 @@ const { data, error } = await supabase.functions.invoke('create-review', {
 
 AI 검색어 추천 (오타 교정 + 연관 검색어)
 
+한국 여행 서비스를 위한 검색어 정규화 기능으로, **모든 응답이 한국어**로 반환됩니다.
+
 **Endpoint**: `POST /functions/v1/ai-suggest-query`
 
 **Request**:
@@ -298,8 +300,8 @@ AI 검색어 추천 (오타 교정 + 연관 검색어)
 {
   data: {
     original_query: '',      // 원본 쿼리
-    normalized_query: '',    // 교정된 쿼리
-    suggestions: []          // 연관 검색어 (3-5개)
+    normalized_query: '',    // 교정된 쿼리 (한국어)
+    suggestions: []          // 연관 검색어 3-5개 (한국어)
   }
 }
 ```
@@ -307,17 +309,29 @@ AI 검색어 추천 (오타 교정 + 연관 검색어)
 **사용 예시**:
 ```javascript
 const { data, error } = await supabase.functions.invoke('ai-suggest-query', {
-  body: { q: 'coffe shop gangnam' }
+  body: { q: '강남 커피솦' }  // 오타 포함
 })
 
 // Response:
 // {
-//   normalized_query: "coffee shop gangnam",
-//   suggestions: ["cafe gangnam", "specialty coffee gangnam", ...]
+//   "data": {
+//     "original_query": "강남 커피솦",
+//     "normalized_query": "강남 커피숍",
+//     "suggestions": ["강남 카페", "강남역 카페", "강남 스페셜티 커피", "강남 브런치 카페"]
+//   }
 // }
 ```
 
+**기능**:
+| 기능 | 설명 | 예시 |
+|------|------|------|
+| 오타 교정 | 흔한 한글 오타 자동 수정 | `커피솦` → `커피숍` |
+| 정규화 | 검색어 표준화 | `강남 카페` → `강남 카페` |
+| 추천 검색어 | 관련 검색어 3-5개 제안 | `강남역 카페`, `강남 브런치 카페` 등 |
+
 **참고**: 인증 없이 사용 가능 (선택적)
+
+**AI 모델**: OpenAI GPT-3.5 Turbo 또는 Anthropic Claude Haiku (환경변수 설정에 따름)
 
 ---
 
