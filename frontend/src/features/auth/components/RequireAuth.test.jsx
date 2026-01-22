@@ -3,18 +3,14 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import RequireAuth from './RequireAuth';
 
-// useAuth를 원하는 상태로 mock
 vi.mock('@/features/auth/hooks/useAuth', () => ({
   useAuth: vi.fn(),
 }));
-
 import { useAuth } from '@/features/auth/hooks/useAuth';
 
-// returnTo 저장 함수 mock
 vi.mock('@/features/auth/auth.feature', () => ({
   setReturnTo: vi.fn(),
 }));
-
 import { setReturnTo } from '@/features/auth/auth.feature';
 
 describe('RequireAuth', () => {
@@ -27,14 +23,21 @@ describe('RequireAuth', () => {
 
     render(
       <MemoryRouter initialEntries={['/protected?a=1']}>
-        <RequireAuth>
-          <div>protected</div>
-        </RequireAuth>
+        <Routes>
+          <Route
+            path="/protected"
+            element={
+              <RequireAuth>
+                <div>protected</div>
+              </RequireAuth>
+            }
+          />
+        </Routes>
       </MemoryRouter>,
     );
 
-    // 너희 로더 문구에 맞춰서 체크
-    expect(screen.getByText(/세션 확인 중|loading/i)).toBeTruthy();
+    expect(screen.getByTestId('auth-loading')).toBeInTheDocument();
+    expect(setReturnTo).not.toHaveBeenCalled(); // 로딩 중엔 저장/리다이렉트 금지 보장(선택이지만 좋음)
   });
 
   it('redirects to /login and sets returnTo when user is null', async () => {
@@ -56,10 +59,7 @@ describe('RequireAuth', () => {
       </MemoryRouter>,
     );
 
-    // /login으로 이동했는지
     expect(await screen.findByText('login page')).toBeTruthy();
-
-    // returnTo가 저장됐는지
     expect(setReturnTo).toHaveBeenCalledWith('/protected?a=1');
   });
 
@@ -71,12 +71,20 @@ describe('RequireAuth', () => {
 
     render(
       <MemoryRouter initialEntries={['/protected']}>
-        <RequireAuth>
-          <div>protected</div>
-        </RequireAuth>
+        <Routes>
+          <Route
+            path="/protected"
+            element={
+              <RequireAuth>
+                <div>protected</div>
+              </RequireAuth>
+            }
+          />
+        </Routes>
       </MemoryRouter>,
     );
 
     expect(screen.getByText('protected')).toBeTruthy();
+    expect(setReturnTo).not.toHaveBeenCalled(); // 로그인 상태면 returnTo 저장할 이유 없음
   });
 });
