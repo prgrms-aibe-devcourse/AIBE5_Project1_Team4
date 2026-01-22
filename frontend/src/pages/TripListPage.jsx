@@ -1,0 +1,1 @@
+export default function TripListPage() { return <div className="p-5"><h1>🔍 여행 탐색 페이지</h1></div>; }

@@ -1,0 +1,1 @@
+export default function HomePage() { return <div className="p-5"><h1>🏠 랜딩 페이지</h1></div>; }
