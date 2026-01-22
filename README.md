@@ -232,6 +232,7 @@ Helper functions enforce permissions:
 - [Database](supabase/README.md)
 - [Edge Functions](supabase/functions/README.md)
 - [API](supabase/API.md)
+- [Issue Templates](.github/ISSUE_TEMPLATE/)
 
 ## Development Workflow
 
@@ -338,7 +339,32 @@ export default function MyComponent({ prop1, prop2 }) {
 
 > 상세 컨벤션: [frontend/README.md](frontend/README.md#컨벤션)
 
-### Issue Template
+### Issue Templates
+
+GitHub에서 "New Issue" 클릭 시 템플릿 선택 화면이 표시됩니다.
+
+| 템플릿      | 용도                              | 라벨          |
+| ----------- | --------------------------------- | ------------- |
+| **Epic**    | 대규모 기능 단위 (여러 이슈 포함) | `epic`        |
+| **Feature** | 단일 기능 구현                    | `enhancement` |
+| **Bug**     | 버그 리포트                       | `bug`         |
+
+#### Epic 템플릿
+
+```markdown
+## 🎯 목표
+
+- <유저 관점에서 달성해야 할 결과>
+
+## 📌 To do (각 항목 = 서브 이슈 1개)
+
+> 각 To do 항목은 별도 PR로 분리하여 구현한다.
+
+- [ ] [Feat] <작업 1>
+- [ ] [Feat] <작업 2>
+```
+
+#### Feature / Bug 템플릿
 
 ```markdown
 ## 📝 무엇을 하나요?
@@ -349,6 +375,8 @@ export default function MyComponent({ prop1, prop2 }) {
 
 - [ ] 할 작업들 리스트업
 ```
+
+> 템플릿 파일: [.github/ISSUE_TEMPLATE/](.github/ISSUE_TEMPLATE/)
 
 ### PR Template
 
@@ -367,6 +395,8 @@ export default function MyComponent({ prop1, prop2 }) {
 - [ ] 제목이 이슈 제목과 동일한가요?
 - [ ] 최소 1명의 리뷰를 받았나요?
 ```
+
+> 템플릿 파일: [.github/PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md)
 
 ## License
 
