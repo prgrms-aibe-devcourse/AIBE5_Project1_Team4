@@ -8,12 +8,12 @@ import { useState } from 'react';
 import SortBar from '../../components/SortBar';
 
 const SortBarPreview = () => {
-  // 인기순 토글 상태
-  const [isPopular, setIsPopular] = useState(true);
+  // 현재 선택된 정렬 옵션
+  const [sortBy, setSortBy] = useState('latest');
 
-  const handleTogglePopular = () => {
-    setIsPopular((prev) => !prev);
-    console.log(`인기순 토글: ${!isPopular}`);
+  const handleSortChange = (newSort) => {
+    setSortBy(newSort);
+    console.log(`정렬이 변경되었습니다: ${newSort}`);
   };
 
   return (
@@ -23,10 +23,10 @@ const SortBarPreview = () => {
         SortBar 컴포넌트 미리보기
       </h2>
 
-      {/* 인기순 활성화 상태 */}
+      {/* 최신순 상태 */}
       <div style={{ marginBottom: '60px' }}>
         <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '20px', color: '#666' }}>
-          1️⃣ 인기순 활성화 상태
+          1️⃣ 최신순 선택
         </h3>
         <div style={{ 
           background: '#f8f9fa', 
@@ -35,20 +35,20 @@ const SortBarPreview = () => {
           border: '1px solid #e9ecef'
         }}>
           <SortBar 
-            isPopular={isPopular}
-            onTogglePopular={handleTogglePopular}
+            sortBy={sortBy}
+            onSortChange={handleSortChange}
             title="여행 일정"
           />
         </div>
         <p style={{ marginTop: '10px', fontSize: '12px', color: '#999' }}>
-          현재 상태: <strong style={{ color: '#0066cc' }}>{isPopular ? '인기순 ON' : '인기순 OFF'}</strong>
+          현재 선택: <strong style={{ color: '#0066cc' }}>{sortBy === 'latest' ? '최신순' : '인기순'}</strong>
         </p>
       </div>
 
-      {/* 인기순 비활성화 상태 */}
+      {/* 인기순 상태 */}
       <div style={{ marginBottom: '60px' }}>
         <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '20px', color: '#666' }}>
-          2️⃣ 인기순 비활성화 상태
+          2️⃣ 인기순 선택
         </h3>
         <div style={{ 
           background: '#f8f9fa', 
@@ -57,13 +57,13 @@ const SortBarPreview = () => {
           border: '1px solid #e9ecef'
         }}>
           <SortBar 
-            isPopular={false}
-            onTogglePopular={handleTogglePopular}
+            sortBy="popular"
+            onSortChange={handleSortChange}
             title="여행 일정"
           />
         </div>
         <p style={{ marginTop: '10px', fontSize: '12px', color: '#999' }}>
-          인기순 필터가 비활성화된 상태
+          인기순(좋아요 많은 순)으로 정렬된 상태
         </p>
       </div>
     </div>
