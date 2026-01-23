@@ -1,7 +1,7 @@
 import TripCreateTest from '../../pages/TripCreate';
 
 export const meta = {
-  title: 'Trip Create Test Page',
+  title: 'TripCreateTestPage',
   order: 20,
 };
 

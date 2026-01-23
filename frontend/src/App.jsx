@@ -24,9 +24,10 @@ function App() {
           {import.meta.env.DEV && (
           <Route path="/preview" element={<UiPreview />} />
         )}
-        {import.meta.env.DEV && (
+        
+          {/* TripCreate 페이지 라우트 */}
           <Route path="/trip-create" element={<TripCreate />} />
-        )}
+
         {import.meta.env.DEV && <Route path="/health" element={<Health />} />}
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
       </Routes>
