@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AuthContext } from '@/context/AuthContext';
 import * as authService from '@/services/auth.service';
 
@@ -9,77 +9,92 @@ export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null); // ✅ 추가
+
+  const unsubRef = useRef(null);
+  const mountedRef = useRef(false);
+
+  const ensureProfile = useCallback(async (u) => {
+    if (!u) return;
+    try {
+      await upsertProfile(toProfileUpsertPayload(u));
+    } catch (e) {
+      console.warn('profiles upsert failed:', e);
+    }
+  }, []);
+
+  const cleanup = useCallback(() => {
+    unsubRef.current?.();
+    unsubRef.current = null;
+  }, []);
+
+  const init = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    cleanup();
+
+    try {
+      const s = await authService.getSession();
+      if (!mountedRef.current) return;
+
+      setSession(s);
+      setUser(s?.user ?? null);
+
+      if (s?.user) await ensureProfile(s.user);
+
+      const { data } = authService.onAuthStateChange(
+        async (event, nextSession) => {
+          if (!mountedRef.current) return;
+
+          setSession(nextSession);
+          setUser(nextSession?.user ?? null);
+
+          if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+            await ensureProfile(nextSession?.user ?? null);
+          }
+        },
+      );
+
+      unsubRef.current = () => data?.subscription?.unsubscribe?.();
+    } catch (e) {
+      if (!mountedRef.current) return;
+      console.error('Auth init failed:', e);
+      setSession(null);
+      setUser(null);
+      setError(e); // ✅ 실패 상태 저장
+    } finally {
+      if (mountedRef.current) setLoading(false);
+    }
+  }, [cleanup, ensureProfile]);
 
   useEffect(() => {
-    let unsub = null;
-    let mounted = true;
-
-    async function ensureProfile(u) {
-      if (!u) return;
-      try {
-        await upsertProfile(toProfileUpsertPayload(u));
-      } catch (e) {
-        // 로그인 흐름을 막진 말고(UX), 기록만
-        console.warn('profiles upsert failed:', e);
-      }
-    }
-
-    async function init() {
-      try {
-        const s = await authService.getSession();
-        if (!mounted) return;
-
-        setSession(s);
-        setUser(s?.user ?? null);
-
-        // ✅ 앱 시작 시 이미 세션이 있으면 profile 보장
-        if (s?.user) await ensureProfile(s.user);
-
-        const { data } = authService.onAuthStateChange(
-          async (event, nextSession) => {
-            setSession(nextSession);
-            setUser(nextSession?.user ?? null);
-            setLoading(false);
-
-            // ✅ 로그인 완료 / 유저 업데이트 때 profile 보장
-            if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
-              await ensureProfile(nextSession?.user ?? null);
-            }
-
-            // (선택) SIGNED_OUT이면 별도 처리할 거 없으면 패스
-          },
-        );
-
-        unsub = () => data?.subscription?.unsubscribe?.();
-      } catch (e) {
-        console.error('Auth init failed:', e);
-        setSession(null);
-        setUser(null);
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    }
-
+    mountedRef.current = true;
     init();
     return () => {
-      mounted = false;
-      if (unsub) unsub();
+      mountedRef.current = false;
+      cleanup();
     };
-  }, []);
+  }, [init, cleanup]);
 
   const value = useMemo(
     () => ({
       loading,
+      error, // ✅ 노출
       session,
       user,
       isAuthed: !!user,
+
       async signOut() {
         await authService.signOut();
         setSession(null);
         setUser(null);
       },
+
+      async retry() {
+        await init(); // ✅ 재시도
+      },
     }),
-    [loading, session, user],
+    [loading, error, session, user, init],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
