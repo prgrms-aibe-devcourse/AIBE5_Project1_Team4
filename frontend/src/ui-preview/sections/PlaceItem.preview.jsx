@@ -1,7 +1,7 @@
 // src/ui-preview/sections/Place.preview.jsx
 
 import { Container } from 'react-bootstrap';
-import PlaceItem from '../../components/places/Placeitem';
+import PlaceItem from '../../components/places/PlaceItem';
 
 const PlacePreview = () => {
   // 카카오 API에서 넘어오는 가짜 데이터 (스키마 준수)
