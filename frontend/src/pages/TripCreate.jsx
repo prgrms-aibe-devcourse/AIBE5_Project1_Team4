@@ -1,22 +1,6 @@
 import { useState } from 'react';
+import { formatDateDot, getTodayString, formatLocalDate } from '@/utils/date';
 import './trip-create.css';
-
-const formatDate = (value) => value.replace(/-/g, '.');
-
-const getTodayString = () => {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
-
-const formatLocalDate = (date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
 
 const addDays = (value, days) => {
   const normalized = value.includes('.') ? value.replace(/\./g, '-') : value;
@@ -496,7 +480,7 @@ function TripCreateTest() {
                           <path d="M8 3v4M16 3v4M3 9h18" />
                         </svg>
                       </span>
-                      {formatDate(currentDay.date)}
+                      {formatDateDot(currentDay.date)}
                       {isCalendarOpen && (
                         <div
                           className="trip-panel-calendar"
