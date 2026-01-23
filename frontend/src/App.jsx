@@ -9,6 +9,7 @@ import HomePage from './pages/HomePage';
 // 기존 개발용 컴포넌트
 import AuthCallbackPage from './pages/AuthCallbackPage';
 import Health from './pages/Health';
+import TripCreate from './pages/TripCreate';
 import UiPreview from './pages/UiPreview';
 
 function App() {
@@ -22,6 +23,9 @@ function App() {
           {/* 개발용 UI 쇼룸 */}
           {import.meta.env.DEV && (
           <Route path="/preview" element={<UiPreview />} />
+        )}
+        {import.meta.env.DEV && (
+          <Route path="/trip-create" element={<TripCreate />} />
         )}
         {import.meta.env.DEV && <Route path="/health" element={<Health />} />}
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
