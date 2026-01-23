@@ -1,7 +1,8 @@
 import { Container, Row, Col, Spinner } from 'react-bootstrap';
 import TripCard from './TripCard';
 import SortBar from './SortBar';
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 
 /**
  * 여행 카드 리스트 컴포넌트
@@ -30,43 +31,12 @@ const TripCardList = ({
   const [sortBy, setSortBy] = useState('latest');
 
   // ========================================================================
-  // Ref 정의
+  // 무한 스크롤 훅
   // ========================================================================
-  // Intersection Observer가 감시할 DOM 요소를 참조
-  // 무한 스크롤 트리거가 될 페이지 하단 요소
-  const observerTarget = useRef(null);
-
-  // ========================================================================
-  // 무한 스크롤 구현 (useEffect)
-  // ========================================================================
-  // Intersection Observer로 무한 스크롤 구현
-  // 사용자가 페이지 하단에 도달할 때 자동으로 더 많은 데이터 로드
-  useEffect(() => {
-    const target = observerTarget.current;
-    // Intersection Observer 생성: 특정 요소가 뷰포트에 들어올 때 감지
-    const observer = new IntersectionObserver(
-      (entries) => {
-        // entries[0]: 감시 중인 요소의 정보
-        // isIntersecting: 요소가 현재 보이는 상태인지 확인
-        if (entries[0].isIntersecting && hasMore && !isLoading && onLoadMore) {
-          // 조건: 요소가 보이고, 더 로드할 데이터가 있고, 현재 로딩 중이 아닐 때
-          onLoadMore();
-        }
-      },
-      { threshold: 0.1 } // threshold: 요소가 10% 이상 뷰포트에 들어올 때 감지
-    );
-
-    if (target) {
-      observer.observe(target);
-    }
-
-    // 컴포넌트 언마운트 시 관찰 중지 (메모리 누수 방지)
-    return () => {
-      if (target) {
-        observer.unobserve(target);
-      }
-    };
-  }, [hasMore, isLoading, onLoadMore]);
+  const { targetRef } = useInfiniteScroll({
+    onIntersect: onLoadMore,
+    enabled: hasMore && !isLoading && !!onLoadMore,
+  });
 
   // ========================================================================
   // 핸들러 함수 정의
@@ -173,7 +143,7 @@ const TripCardList = ({
 
           {/* 무한 스크롤 트리거 요소 */}
           {/* 이 div가 화면에 보이면 onLoadMore 콜백이 호출됨 */}
-          <div ref={observerTarget} style={{ height: '100px' }} />
+          <div ref={targetRef} style={{ height: '100px' }} />
 
           {/* 로딩 중 표시 */}
           {isLoading && (
