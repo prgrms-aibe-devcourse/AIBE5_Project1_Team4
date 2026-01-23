@@ -5,6 +5,12 @@ import { setReturnTo } from '@/features/auth/auth.feature';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { Navigate, useLocation } from 'react-router-dom';
 
+const SHOULD_NOT_SAVE_PREFIXES = ['/login', '/auth/callback'];
+
+function shouldSaveReturnTo(path) {
+  return !SHOULD_NOT_SAVE_PREFIXES.some((p) => path.startsWith(p));
+}
+
 export default function RequireAuth({ children, redirectTo = '/login' }) {
   const { loading, user } = useAuth();
   const location = useLocation();
@@ -16,7 +22,12 @@ export default function RequireAuth({ children, redirectTo = '/login' }) {
 
   // ✅ 로그인 안 됨 → returnTo 저장 후 로그인 페이지로
   if (!user) {
-    setReturnTo(location.pathname + location.search);
+    const current = location.pathname + location.search;
+
+    if (shouldSaveReturnTo(location.pathname)) {
+      setReturnTo(current);
+    }
+
     return <Navigate to={redirectTo} replace />;
   }
 
