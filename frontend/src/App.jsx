@@ -27,6 +27,7 @@ function App() {
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
       </Routes>
     </div>
+
   );
 }
 
