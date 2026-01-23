@@ -1,10 +1,13 @@
 import { supabase } from '@/lib/supabaseClient';
+import { unwrap } from './_core/errors';
+
+const CONTEXT = 'profilesService';
 
 /**
  * @param {{
  *  id: string,
- *  email: string|null,
- *  display_name: string|null,
+ *  username: string,
+ *  full_name: string|null,
  *  avatar_url: string|null,
  *  updated_at?: string
  * }} payload
@@ -15,9 +18,11 @@ export async function upsertProfile(payload) {
     updated_at: payload.updated_at ?? new Date().toISOString(),
   };
 
-  const { error } = await supabase
+  const result = await supabase
     .from('profiles')
     .upsert(row, { onConflict: 'id' });
 
-  if (error) throw error;
+  if (result.error) {
+    unwrap(result, `${CONTEXT}.upsertProfile`);
+  }
 }
