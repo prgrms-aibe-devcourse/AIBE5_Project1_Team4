@@ -19,6 +19,10 @@ export function popReturnTo() {
   return returnTo;
 }
 
+export function clearReturnTo() {
+  localStorage.removeItem(KEY);
+}
+
 export async function signInWithKakao() {
   const ORIGIN = window.location?.origin || '';
   const redirectTo = `${ORIGIN}/auth/callback`;
