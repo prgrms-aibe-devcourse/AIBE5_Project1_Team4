@@ -1,6 +1,7 @@
 import { Container, Row, Col, Spinner } from 'react-bootstrap';
 import TripCard from './TripCard';
-import { useEffect, useRef, useCallback } from 'react';
+import SortBar from './SortBar';
+import { useEffect, useRef, useCallback, useState } from 'react';
 
 /**
  * 여행 카드 리스트 컴포넌트
@@ -22,6 +23,12 @@ const TripCardList = ({
   emptyMessage = '여행 일정이 없습니다', // trips가 비어있을 때 표시할 메시지
   columns = 3,                          // 그리드 열의 개수 (1, 2, 3, 4 중 선택)
 }) => {
+  // ========================================================================
+  // State 정의
+  // ========================================================================
+  // 현재 선택된 정렬 방식 ('latest' 또는 'popular')
+  const [sortBy, setSortBy] = useState('latest');
+
   // ========================================================================
   // Ref 정의
   // ========================================================================
@@ -77,6 +84,37 @@ const TripCardList = ({
     onLikeClick?.(tripId);
   }, [onLikeClick]);
 
+  // 정렬 변경 핸들러
+  const handleSortChange = useCallback((newSort) => {
+    setSortBy(newSort);
+  }, []);
+
+  // 정렬된 여행 목록을 계산하는 함수
+  const getSortedTrips = useCallback((tripsToSort) => {
+    if (!Array.isArray(tripsToSort)) return [];
+    
+    const sorted = [...tripsToSort];
+    if (sortBy === 'latest') {
+      // 최신순: created_at 기준 내림차순
+      sorted.sort((a, b) => {
+        const dateA = new Date(a.created_at || 0);
+        const dateB = new Date(b.created_at || 0);
+        return dateB - dateA;
+      });
+    } else if (sortBy === 'popular') {
+      // 인기순: like_count 기준 내림차순
+      sorted.sort((a, b) => {
+        const likeA = a.like_count || 0;
+        const likeB = b.like_count || 0;
+        return likeB - likeA;
+      });
+    }
+    return sorted;
+  }, [sortBy]);
+
+  // 정렬된 여행 목록
+  const sortedTrips = getSortedTrips(trips);
+
   // ========================================================================
   // 반응형 그리드 설정 함수 및 계산된 값
   // ========================================================================
@@ -103,9 +141,16 @@ const TripCardList = ({
     <Container fluid className="py-5">
       {trips.length > 0 ? (
         <>
+          {/* 정렬 바 */}
+          <SortBar 
+            sortBy={sortBy}
+            onSortChange={handleSortChange}
+            title="여행 일정"
+          />
+
           {/* 여행 카드들을 그리드로 표시 */}
           <Row className="g-4 mb-5">
-            {trips.map((trip) => (
+            {sortedTrips.map((trip) => (
               // Bootstrap Col: 반응형 열 구성요소
               <Col 
                 key={trip.id}
