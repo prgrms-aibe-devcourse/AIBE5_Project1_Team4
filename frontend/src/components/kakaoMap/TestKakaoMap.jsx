@@ -1,22 +1,13 @@
 import { useKakaoMap } from "../../hooks/useKakaoMap";
 import { Map, MapMarker } from "react-kakao-maps-sdk";
+import MapLoadingPlaceholder from "./MapLoadingPlaceholder";
 
 const TestKakaoMap = () => {
   const [loading, error] = useKakaoMap(); // 우리가 만든 훅 사용
 
-// 1. 로딩 중일 때 메시지
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <h3>성남 지도를 불러오는 중...</h3>
-      </div>
-    );
-  }
-
-  // 2. 에러 발생 시 (주로 API 키 문제)
-  if (error) {
-    return <div style={{ color: 'red', padding: '20px' }}>카카오 지도 로드 에러: {error.message}</div>;
-  }
+  // 로딩/에러 상태 처리
+  if (loading) return <MapLoadingPlaceholder message="성남 지도를 불러오는 중..." />;
+  if (error) return <MapLoadingPlaceholder message={`카카오 지도 로드 에러: ${error.message}`} variant="error" />;
 
   return (
     <Map 

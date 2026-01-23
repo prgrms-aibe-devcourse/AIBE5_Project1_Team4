@@ -1,5 +1,6 @@
 import { useKakaoMap } from "../../hooks/useKakaoMap";
 import { Map, MapMarker, Polyline } from "react-kakao-maps-sdk";
+import MapLoadingPlaceholder from "./MapLoadingPlaceholder";
 
 const MarkerMap = ({
     center = { lat: 37.366, lng: 127.108 }, // 기본값: 정자역
@@ -10,8 +11,8 @@ const MarkerMap = ({
 })=> {
     const [loading, error] = useKakaoMap();
 
-    if (loading) return <div style={{ width, height, background: "#f9f9f9" }}>지도를 불러오는 중...</div>;
-    if (error) return <div style={{ width, height }}>에러가 발생했습니다.</div>;
+    if (loading) return <MapLoadingPlaceholder width={width} height={height} />;
+    if (error) return <MapLoadingPlaceholder width={width} height={height} message="에러가 발생했습니다." variant="error" />;
 
     return (
         <Map center={center} style={{ width, height }} level={level}>

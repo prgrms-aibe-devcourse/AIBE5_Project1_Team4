@@ -26,7 +26,7 @@ import { toProfileUpsertPayload } from '@/features/auth/mappers/profile.mapper';
 
 // 테스트용 상태를 보여주는 컴포넌트
 function Probe() {
-  const { loading, user, isAuthed } = useAuth();
+  const { loading, user } = useAuth();
 
   if (loading) return <div>loading</div>;
   if (!user) return <div>guest</div>;
@@ -136,8 +136,8 @@ describe('AuthProvider', () => {
 
     toProfileUpsertPayload.mockReturnValue({
       id: 'user-1',
-      email: 'a@a.com',
-      display_name: 'A',
+      username: 'a',
+      full_name: 'A',
       avatar_url: null,
     });
 
@@ -178,8 +178,8 @@ describe('AuthProvider', () => {
 
     toProfileUpsertPayload.mockReturnValue({
       id: 'user-2',
-      email: 'b@b.com',
-      display_name: 'B',
+      username: 'b',
+      full_name: 'B',
       avatar_url: null,
     });
 

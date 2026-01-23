@@ -22,8 +22,8 @@ describe('upsertProfile (service)', () => {
 
     const payload = {
       id: 'u-1',
-      email: 'a@b.com',
-      display_name: 'A',
+      username: 'testuser',
+      full_name: 'Test User',
       avatar_url: null,
     };
 
@@ -38,25 +38,28 @@ describe('upsertProfile (service)', () => {
     // updated_at는 채워져 있어야 함(값 자체는 시간이라 형태만 체크)
     expect(rowArg).toMatchObject({
       id: 'u-1',
-      email: 'a@b.com',
-      display_name: 'A',
+      username: 'testuser',
+      full_name: 'Test User',
       avatar_url: null,
     });
     expect(typeof rowArg.updated_at).toBe('string');
     expect(rowArg.updated_at.length).toBeGreaterThan(0);
   });
 
-  it('throws when supabase returns error', async () => {
+  it('throws AppError when supabase returns error', async () => {
     upsertMock.mockResolvedValueOnce({ error: new Error('boom') });
 
     await expect(
       upsertProfile({
         id: 'u-1',
-        email: null,
-        display_name: null,
+        username: 'testuser',
+        full_name: null,
         avatar_url: null,
       }),
-    ).rejects.toThrow('boom');
+    ).rejects.toMatchObject({
+      name: 'AppError',
+      context: 'profilesService.upsertProfile',
+    });
   });
 
   it('does not override updated_at if provided', async () => {
@@ -64,8 +67,8 @@ describe('upsertProfile (service)', () => {
 
     await upsertProfile({
       id: 'u-1',
-      email: null,
-      display_name: null,
+      username: 'testuser',
+      full_name: null,
       avatar_url: null,
       updated_at: '2026-01-01T00:00:00.000Z',
     });

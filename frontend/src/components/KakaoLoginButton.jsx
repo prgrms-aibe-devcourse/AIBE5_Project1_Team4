@@ -1,4 +1,3 @@
-import { useCallback } from 'react';
 import { Button } from 'react-bootstrap';
 import { setReturnTo, signInWithKakao } from '@/features/auth/auth.feature';
 

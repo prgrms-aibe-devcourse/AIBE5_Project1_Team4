@@ -1,5 +1,6 @@
 import { Heart, Bookmark } from 'lucide-react';   // 하트와 책갈피 아이콘 임포트
 import { Card, Badge, Button } from 'react-bootstrap'; // 부트스트랩 컴포넌트 임포트
+import { getTimeAgo } from '@/utils/date';
 import './TripCard.css';
 
 /**
@@ -48,25 +49,6 @@ const TripCard = ({
         day: 'numeric'
       })}`
     : '날짜 미정';
-
-  // 작성 시간을 상대적 시간으로 포맷팅
-  // 예: "3분 전", "2시간 전", "2일 전"
-  const getTimeAgo = (date) => {
-    if (!date) return '';
-    const now = new Date();
-    const createdDate = new Date(date);
-    const diffMs = now - createdDate;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    // 시간 범위별로 다른 포맷 사용
-    if (diffMins < 60) return `${diffMins}분 전`;
-    if (diffHours < 24) return `${diffHours}시간 전`;
-    if (diffDays < 7) return `${diffDays}일 전`;
-    // 7일 이상이면 정확한 날짜 표시
-    return createdDate.toLocaleDateString('ko-KR');
-  };
 
   return (
     // Bootstrap Card: 섀도우 효과와 함께 카드 레이아웃
