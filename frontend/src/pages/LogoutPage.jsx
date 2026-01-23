@@ -1,14 +1,19 @@
-import { Container, Spinner } from 'react-bootstrap';
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "../lib/supabaseClient";
 
-function LogoutPage() {
-  return (
-    <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
-      <div className="text-center">
-        <Spinner animation="border" className="mb-3" />
-        <p>로그아웃 중입니다...</p>
-      </div>
-    </Container>
-  );
-}
+const LogoutPage = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const run = async () => {
+      await supabase.auth.signOut();
+      navigate("/login", { replace: true });
+    };
+    run();
+  }, [navigate]);
+
+  return <p>로그아웃 중...</p>;
+};
 
 export default LogoutPage;
