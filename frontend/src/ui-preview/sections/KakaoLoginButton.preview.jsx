@@ -1,5 +1,5 @@
 import React from 'react';
-import { KakaoLoginButton } from '../../components/KakoLoginButton';
+import { KakaoLoginButton } from '../../components/KakaoLoginButton';
 import { Button } from 'react-bootstrap';
 import { supabase } from '../../lib/supabaseClient';
 

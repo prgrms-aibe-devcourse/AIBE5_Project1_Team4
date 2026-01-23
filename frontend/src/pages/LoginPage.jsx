@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
-import { KakaoLoginButton } from "../components/KakoLoginButton";
+import { KakaoLoginButton } from "../components/KakaoLoginButton";
 
 /**
  * NOTE:
