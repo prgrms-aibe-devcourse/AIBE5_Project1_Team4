@@ -11,6 +11,9 @@ import AuthCallbackPage from './pages/AuthCallbackPage';
 import Health from './pages/Health';
 import TripCreate from './pages/TripCreate';
 import UiPreview from './pages/UiPreview';
+import LoginPage from './pages/LoginPage';
+import LogoutPage from './pages/LogoutPage';
+
 
 function App() {
   return (
@@ -30,6 +33,9 @@ function App() {
 
         {import.meta.env.DEV && <Route path="/health" element={<Health />} />}
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
+
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/logout" element={<LogoutPage />} />
       </Routes>
     </div>
 
