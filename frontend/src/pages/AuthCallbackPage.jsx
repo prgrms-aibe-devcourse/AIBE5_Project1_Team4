@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import {
+  exchangeCodeForSession,
+  getSession,
+} from '@/services/auth.service';
 import FullScreenLoader from '../components/FullScreenLoader';
 import { popReturnTo } from '../features/auth/auth.feature';
 
@@ -17,15 +20,11 @@ export default function AuthCallbackPage() {
         const code = url.searchParams.get('code');
 
         if (code) {
-          const { error } = await supabase.auth.exchangeCodeForSession(code);
-          if (error) throw error;
+          await exchangeCodeForSession(code);
         }
 
         // 세션 확인
-        const { data, error } = await supabase.auth.getSession();
-        if (error) throw error;
-
-        const session = data.session;
+        const session = await getSession();
         if (!session) {
           throw new Error('세션이 생성되지 않았어요. 다시 로그인해 주세요.');
         }
