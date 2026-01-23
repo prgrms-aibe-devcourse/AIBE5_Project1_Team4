@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 질문 및 논의
+    url: https://github.com/prgrms-aibe-devcourse/project1/discussions
+    about: 이슈가 아닌 질문이나 논의는 Discussions를 이용해주세요.
