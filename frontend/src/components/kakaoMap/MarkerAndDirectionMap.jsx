@@ -3,17 +3,18 @@ import React, { useEffect } from "react";
 import { useKakaoMap } from "../../hooks/useKakaoMap";
 import { Map, MapMarker, Polyline } from "react-kakao-maps-sdk";
 import { useKakaoDirections } from "../../hooks/useKakaoDirections";
+import MapLoadingPlaceholder from "./MapLoadingPlaceholder";
 
 const MarkerAndDirectionMap = ({
     center = { lat: 37.366, lng: 127.108 }, //초기 지도 중심 좌표
-    level = 6,                              //지도 확대 레벨            
+    level = 6,                              //지도 확대 레벨
     markers = [],                           // 화면에 표시할 장소들. [{ lat, lng, content }, ...] 형태의 배열
     width = "100%",
     height = "100vh"
 }) => {
 
     const [loadingMap, mapError] = useKakaoMap();
-    const { path, getDirections, loading: loadingRoute, error: routeError } = useKakaoDirections();
+    const { path, getDirections, loading: loadingRoute } = useKakaoDirections();
 
     useEffect(() => {
         if (markers.length >= 2) {
@@ -21,8 +22,8 @@ const MarkerAndDirectionMap = ({
         }
     }, [markers, getDirections]);
 
-    if (loadingMap) return <div style={{ width, height, background: "#f9f9f9" }}>지도를 로딩 중...</div>;
-    if (mapError) return <div style={{ width, height }}>지도 로드 에러!</div>;
+    if (loadingMap) return <MapLoadingPlaceholder width={width} height={height} />;
+    if (mapError) return <MapLoadingPlaceholder width={width} height={height} message="지도 로드 에러!" variant="error" />;
 
     return (
         <Map center={center} style={{ width, height }} level={level}>
