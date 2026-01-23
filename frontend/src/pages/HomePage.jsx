@@ -40,7 +40,7 @@ const TripSection = ({ title, subtitle, trips, onLike, onBookmark }) => {
   };
 
   return (
-      {/* 섹션 헤더 (제목 + 더보기 링크) */}
+      /* 섹션 헤더 (제목 + 더보기 링크) */
     <div className="mb-5 position-relative">
       <div className="d-flex justify-content-between align-items-end mb-3 px-2">
         <div>
