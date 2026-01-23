@@ -1,18 +1,18 @@
-import TripFilterPanel from '../../components/TripFilterPanel';
+import TripFilterPanel from '../../components/trip/TripFilterPanel';
 import { useState } from 'react';
 
 export default function TripFilterPanelPreview() {
   // 프리뷰에서 작동을 확인하기 위한 임시 상태값들
-  const [region, setRegion] = useState("전체");
-  const [theme, setTheme] = useState("미식");
-  const [date, setDate] = useState("전체");
+  const [region, setRegion] = useState('전체');
+  const [theme, setTheme] = useState('미식');
+  const [date, setDate] = useState('전체');
 
   return (
     <div className="p-5 bg-dark" style={{ minHeight: '100vh' }}>
       <h2 className="text-white mb-4">Filter Panel Preview (T-4012~4014)</h2>
-      
+
       {/* 마스터가 만든 컴포넌트 호출 */}
-      <TripFilterPanel 
+      <TripFilterPanel
         selectedRegion={region}
         onRegionChange={setRegion}
         selectedTheme={theme}

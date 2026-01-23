@@ -50,6 +50,24 @@ export function formatDateRange(startDate, endDate) {
 }
 
 /**
+ * 날짜 범위를 포맷팅 (예: "1월 25일 - 1월 26일")
+ * @param {string} startDate - 시작 날짜
+ * @param {string} endDate - 종료 날짜
+ * @returns {string} 포맷된 날짜 범위 문자열
+ */
+export function formatDateRangeWithLocale(start_date, end_date) {
+  return start_date && end_date
+    ? `${new Date(start_date).toLocaleDateString('ko-KR', {
+        month: 'short',
+        day: 'numeric',
+      })} - ${new Date(end_date).toLocaleDateString('ko-KR', {
+        month: 'short',
+        day: 'numeric',
+      })}`
+    : '날짜 미정';
+}
+
+/**
  * 오늘 날짜를 "YYYY-MM-DD" 형식으로 반환
  * @returns {string} "YYYY-MM-DD" 형식의 오늘 날짜
  */
