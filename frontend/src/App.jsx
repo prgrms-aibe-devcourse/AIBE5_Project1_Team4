@@ -13,32 +13,35 @@ import UiPreview from './pages/UiPreview';
 import LoginPage from './pages/LoginPage';
 import LogoutPage from './pages/LogoutPage';
 import ExplorePreviewPage from './components/ExplorePreviewPage';
+import AppLayout from './components/AppLayout';
 
 function App() {
   return (
     <div>
       <Routes>
-        {/* 1. 메인 기능 라우트 */}
-        <Route path="/" element={<HomePage />} />
+        <Route element={<AppLayout />}>
+          {/* 1. 메인 기능 라우트 */}
+          <Route index element={<HomePage />} />
 
-        {/* TripCreate 페이지 라우트 */}
-        <Route path="/trip-create" element={<TripCreate />} />
-        <Route path="/auth/callback" element={<AuthCallbackPage />} />
+          {/* TripCreate 페이지 라우트 */}
+          <Route path="/trip-create" element={<TripCreate />} />
+          <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/logout" element={<LogoutPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/logout" element={<LogoutPage />} />
 
-        {import.meta.env.DEV && (
-          <>
-            {/* 개발용 UI 쇼룸 */}
-            <Route path="/preview" element={<UiPreview />} />
+          {import.meta.env.DEV && (
+            <>
+              {/* 개발용 UI 쇼룸 */}
+              <Route path="/preview" element={<UiPreview />} />
 
-            {/* Supabase Health Checkl */}
-            <Route path="/health" element={<Health />} />
+              {/* Supabase Health Checkl */}
+              <Route path="/health" element={<Health />} />
 
-            <Route path="/search-preview" element={<ExplorePreviewPage />} />
-          </>
-        )}
+              <Route path="/search-preview" element={<ExplorePreviewPage />} />
+            </>
+          )}
+        </Route>
       </Routes>
     </div>
   );
