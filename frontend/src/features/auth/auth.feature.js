@@ -40,6 +40,7 @@ export function sanitizeReturnTo(input) {
   if (!v.startsWith('/')) return DEFAULT_RETURN_TO;
 
   // 3) 제어문자(개행 등) 차단
+  // eslint-disable-next-line no-control-regex
   if (/[\u0000-\u001F\u007F]/.test(v)) return DEFAULT_RETURN_TO;
 
   // 4) 루프 방지
