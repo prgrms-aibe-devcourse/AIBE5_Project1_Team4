@@ -1,6 +1,7 @@
 export default function FullScreenLoader({ message = '처리 중...' }) {
   return (
     <div
+      data-testid="auth-loading"
       style={{
         position: 'fixed',
         inset: 0,
