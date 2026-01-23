@@ -1,0 +1,125 @@
+/* Trip Card Component Styles */
+
+.trip-card {
+  border: none;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.trip-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* 이미지 컨테이너 */
+.trip-card__image-container {
+  height: 200px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.trip-card__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.trip-card:hover .trip-card__image {
+  transform: scale(1.05);
+}
+
+.trip-card__image-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* 버튼 그룹 컨테이너 */
+.trip-card__button-group {
+  z-index: 10;
+}
+
+/* 좋아요 버튼 */
+.trip-card__like-btn {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: none !important;
+  width: 40px !important;
+  height: 40px !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.2s ease;
+}
+
+.trip-card__like-btn:hover {
+  background: white !important;
+  transform: scale(1.1);
+}
+
+/* 찜 버튼 */
+.trip-card__bookmark-btn {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: none !important;
+  width: 40px !important;
+  height: 40px !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.2s ease;
+}
+
+.trip-card__bookmark-btn:hover {
+  background: white !important;
+  transform: scale(1.1);
+}
+
+/* 제목 */
+.trip-card__title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #222;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* 설명 */
+.trip-card__description {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* 작성자 */
+.trip-card__author-name {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trip-card__author-time {
+  font-size: 0.75rem;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .trip-card__title {
+    font-size: 14px;
+  }
+
+  .trip-card__image-container {
+    height: 160px;
+  }
+}
