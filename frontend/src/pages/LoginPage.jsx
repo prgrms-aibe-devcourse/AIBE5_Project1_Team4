@@ -1,25 +1,20 @@
 import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { supabase } from "../lib/supabaseClient";
+import { useLocation } from "react-router-dom";
+import { KakaoLoginButton } from "../components/KakoLoginButton";
 
-const toKoreanAuthError = (message) => {
-  if (!message) return "로그인에 실패했습니다.";
-  if (message.includes("Invalid login credentials"))
-    return "이메일 또는 비밀번호가 올바르지 않습니다.";
-  if (message.includes("Email not confirmed"))
-    return "이메일 인증이 필요합니다.";
-  if (message.includes("Too many requests"))
-    return "요청이 너무 많습니다. 잠시 후 다시 시도해주세요.";
-  return message;
-};
-
+/**
+ * NOTE:
+ * - 이 페이지는 로그인 "UI 레이아웃"만 담당합니다.
+ * - 인증/세션 로직은 팀의 useAuth() 또는 상위 AuthProvider에서 처리합니다.
+ * - Supabase 직접 호출(signInWithPassword)은 팀 합의에 따라 제거했습니다.
+ */
 const LoginPage = () => {
-  const navigate = useNavigate();
   const location = useLocation();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  // UI 상태(연동 후에는 useAuth() 상태로 대체될 수 있음)
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -34,20 +29,11 @@ const LoginPage = () => {
       return;
     }
 
+    // 레이아웃-only 버전: 실제 로그인 호출은 하지 않음
+    // 추후 팀장님이 useAuth() 흐름에 연결할 예정
+    setLoading(true);
     try {
-      setLoading(true);
-
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        setErrorMsg(toKoreanAuthError(error.message));
-        return;
-      }
-
-      navigate(returnTo || "/", { replace: true });
+      setErrorMsg("로그인 기능은 추후 연동됩니다. (현재: 레이아웃 전용)");
     } finally {
       setLoading(false);
     }
@@ -148,6 +134,22 @@ const LoginPage = () => {
             {loading ? "로그인 중..." : "로그인"}
           </button>
         </form>
+
+<div style={{ marginTop: "12px", display: "grid", gap: "8px" }}>
+  <div style={{ display: "flex", alignItems: "center", gap: "12px", opacity: 0.6 }}>
+    <div style={{ height: "1px", flex: 1, background: "rgba(0,0,0,0.12)" }} />
+    <span style={{ fontSize: "12px" }}>또는</span>
+    <div style={{ height: "1px", flex: 1, background: "rgba(0,0,0,0.12)" }} />
+  </div>
+
+  <KakaoLoginButton />
+</div>
+
+
+        {/* 레이아웃-only 안내 (삭제 가능) */}
+        <p style={{ marginTop: "12px", marginBottom: 0, fontSize: "12px", opacity: 0.7 }}>
+          현재 화면은 레이아웃 전용입니다. 로그인 연동은 추후 적용됩니다.
+        </p>
       </div>
     </div>
   );
