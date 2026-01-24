@@ -1,0 +1,232 @@
+/* HomePage 스타일 */
+
+.home-page {
+  background: #fff;
+  padding-bottom: 3rem;
+}
+
+/* Hero Section */
+.home-hero {
+  background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.5)),
+    url('https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1600&q=80');
+  background-size: cover;
+  background-position: center;
+  min-height: 500px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 0;
+}
+
+.home-hero__content {
+  text-align: center;
+  color: white;
+}
+
+.home-hero__badge {
+  margin-bottom: 1rem;
+  padding: 0.5rem 1rem;
+  border-radius: 50px;
+  font-weight: 400;
+}
+
+.home-hero__title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+}
+
+.home-hero__filter {
+  margin-top: 1.5rem;
+}
+
+/* Content Section */
+.home-content {
+  padding-top: 3rem;
+}
+
+/* Trip Section */
+.home-section {
+  margin-bottom: 3rem;
+  position: relative;
+}
+
+.home-section__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 1rem;
+  padding: 0 0.5rem;
+}
+
+.home-section__title {
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.home-section__subtitle {
+  color: #6c757d;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.home-section__more {
+  text-decoration: none;
+  color: #333;
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: color 0.2s;
+}
+
+.home-section__more:hover {
+  color: #667eea;
+}
+
+/* Slider */
+.home-section__slider {
+  position: relative;
+}
+
+.home-section__cards {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  padding: 0.5rem 0.25rem;
+  scroll-behavior: smooth;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.home-section__cards::-webkit-scrollbar {
+  display: none;
+}
+
+.home-section__card {
+  min-width: 280px;
+  max-width: 280px;
+}
+
+.home-section__nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid #dee2e6;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.2s;
+}
+
+.home-section__nav:hover {
+  background: #f8f9fa;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.home-section__nav--left {
+  left: -20px;
+}
+
+.home-section__nav--right {
+  right: -20px;
+}
+
+.home-section__loading,
+.home-section__empty {
+  width: 100%;
+  padding: 3rem;
+  text-align: center;
+  color: #6c757d;
+  background: #f8f9fa;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+/* CTA Section */
+.home-cta {
+  margin-top: 3rem;
+  padding: 4rem 2rem;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(118, 75, 162, 0.3);
+}
+
+.home-cta__content {
+  position: relative;
+  z-index: 1;
+}
+
+.home-cta__title {
+  color: white;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+}
+
+.home-cta__btn {
+  display: inline-block;
+  padding: 0.875rem 2.5rem;
+  background: white;
+  color: #667eea;
+  font-weight: 600;
+  border-radius: 50px;
+  text-decoration: none;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s;
+}
+
+.home-cta__btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  color: #764ba2;
+}
+
+.home-cta__circle {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.home-cta__circle--1 {
+  width: 300px;
+  height: 300px;
+  top: -100px;
+  left: -100px;
+}
+
+.home-cta__circle--2 {
+  width: 200px;
+  height: 200px;
+  bottom: -50px;
+  right: -50px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .home-hero__title {
+    font-size: 1.75rem;
+  }
+
+  .home-section__nav {
+    display: none;
+  }
+
+  .home-section__card {
+    min-width: 260px;
+    max-width: 260px;
+  }
+}
