@@ -1,7 +1,7 @@
 /* TripSummaryBar.css */
 
 .trip-summary-container {
-  background-color: transparent; /* 배경 투명 (부모가 흰색) */
+  background-color: transparent; /* 배경 투명 */
   /* TripCreate: padding: 0 0 8px; (아래쪽 여백만 있음) */
   padding: 24px 0 16px; 
   border-bottom: none; 
@@ -15,11 +15,11 @@
 .summary-left {
   display: flex;
   flex-direction: column;
-  gap: 12px; /* 요소 간격 TripCreate와 유사하게 */
+  gap: 12px; 
   max-width: 800px;
 }
 
-/* 1. 제목 (TripCreate 스타일) */
+/* 1. 제목 */
 .summary-title {
   font-family: 'Noto Sans KR', sans-serif;
   font-size: 1.8rem; /* TripCreate: 1.8rem */
@@ -34,26 +34,26 @@
 .summary-meta-row {
   display: flex;
   align-items: center;
-  gap: 12px; /* 간격 좁힘 */
+  gap: 12px;
   color: #333;
-  font-size: 0.95rem; /* 글씨 크기 약간 줄임 */
+  font-size: 0.95rem; 
   font-weight: 500;
   margin-top: 4px;
 }
 
 .meta-item { display: flex; align-items: center; gap: 6px; }
 .meta-item.author { font-weight: 600; color: #111; font-size: 1rem; }
-.meta-divider { width: 1px; height: 12px; background-color: #e0e0e0; } /* 구분선 연하게 */
+.meta-divider { width: 1px; height: 12px; background-color: #e0e0e0; } 
 
 /* 3. 날짜 행 */
 .summary-date-row {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #666; /* TripCreate: #6b6b6b */
-  font-size: 0.85rem; /* TripCreate: 0.8rem */
+  color: #666; 
+  font-size: 0.85rem; 
   font-weight: 400;
-  margin-top: -2px; /* 위쪽 요소와 가깝게 */
+  margin-top: -2px; 
 }
 
 /* 4. 설명 & 태그 */
@@ -86,11 +86,11 @@
 /* --- 우측 영역 (버튼 그룹) --- */
 .summary-right {
   display: flex;
-  gap: 8px; /* 버튼 사이 간격 좁힘 */
-  padding-top: 6px; /* 제목과 높이 시각적 보정 */
+  gap: 8px; 
+  padding-top: 6px;
 }
 
-/* 버튼 스타일 (TripCreate: trip-title-chip) */
+/* 버튼 스타일  */
 .summary-btn-flat {
   display: inline-flex;
   align-items: center;
@@ -100,7 +100,7 @@
   border: none;            
   border-radius: 6px;      
   
-  font-size: 0.85rem;      /* TripCreate: 0.84rem */
+  font-size: 0.85rem;    
   font-weight: 600;        
   color: #111;             
   
@@ -113,7 +113,7 @@
 }
 
 .summary-btn-flat svg {
-  width: 16px; /* 아이콘 크기 TripCreate: 18px -> 16px로 조정 */
+  width: 16px; 
   height: 16px;
   stroke-width: 1.8px;
 }

@@ -24,16 +24,16 @@
   pointer-events: auto;
 }
 
-/* 1. 토글 버튼 스타일 (이미지 참고) */
+/* 1. 토글 버튼 스타일*/
 .schedule-toggle-btn {
   position: absolute;
   top: 0;
   right: 0;
-  width: 48px;  /* 버튼 크기 */
-  height: 48px;
+  width: 36px;  /* 버튼 크기 */
+  height: 36px;
   background-color: #fff;
   border: 1px solid #e9ecef; /* 아주 연한 테두리 */
-  border-radius: 50%; /* 둥근 원형 버튼 (지도 위에서 예쁨) */
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -56,7 +56,7 @@
   right: 280px; /* 패널 안쪽 위치 조정 */
   top: 12px;    /* 패널 상단 여백 */
   
-  /* 열려있을 땐 심플한 아이콘처럼 보이게 스타일 변경 (선택사항) */
+  /* 열려있을 땐 심플한 아이콘처럼 보이게 스타일 변경 */
   background-color: transparent;
   border-color: transparent;
   box-shadow: none;
