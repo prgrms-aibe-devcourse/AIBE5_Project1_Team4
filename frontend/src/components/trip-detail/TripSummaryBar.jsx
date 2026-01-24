@@ -1,70 +1,79 @@
 import React from 'react';
-import { Container } from 'react-bootstrap';
-// 아이콘 라이브러리 (프로젝트에 lucide-react가 없다면 설치 필요, 혹은 react-icons 사용)
-import { User, Heart, Bookmark, Edit2, Share2, Flag, ChevronUp, Calendar } from 'lucide-react';
-import './TripSummaryBar.css'; // 위에서 만든 CSS import
+import { 
+  Calendar, Bookmark, Share2, User, MapPin, Siren, Heart 
+} from 'lucide-react';
+import './TripSummaryBar.css';
 
 const TripSummaryBar = () => {
   return (
     <div className="trip-summary-container">
-      <Container fluid className="p-0">
-        
+      {/* --- 좌측: 여행 상세 정보 --- */}
+      <div className="summary-left">
         {/* 1. 제목 */}
-        <h1 className="trip-summary-title">서울 3박 4일 미식 여행</h1>
+        <h1 className="summary-title">서울 2박 3일 맛집 여행</h1>
 
-        {/* 2. 작성자 정보 및 우측 액션 버튼 */}
-        <div className="trip-summary-info-row">
-          {/* 좌측: 작성자, 좋아요, 북마크, 편집 */}
-          <div className="trip-summary-meta-left">
-            <span className="trip-meta-item">
-              <User size={16} strokeWidth={2.5} /> 작성자 A
-            </span>
-            <span className="trip-meta-item">
-              <Heart size={16} strokeWidth={2.5} /> 124
-            </span>
-            <span className="trip-meta-item">
-              <Bookmark size={16} strokeWidth={2.5} /> 38
-            </span>
-            <span className="trip-meta-item text-secondary">
-              <Edit2 size={14} /> 편집
-            </span>
+        {/* 2. 작성자 및 통계 */}
+        <div className="summary-meta-row">
+          <div className="meta-item author">
+            <User size={18} />
+            <span>작성자 A</span>
           </div>
-
-          {/* 우측: 공유, 신고, 닫기 */}
-          <div className="trip-summary-actions-right">
-            <button className="trip-action-btn">
-              <Share2 size={16} /> 공유
-            </button>
-            <button className="trip-action-btn">
-              <Flag size={16} /> 신고
-            </button>
-            <button className="trip-action-btn">
-              <ChevronUp size={20} /> 닫기
-            </button>
+          <div className="meta-divider"></div>
+          <div className="meta-item">
+            <Bookmark size={18} />
+            <span>38</span>
+          </div>
+          <div className="meta-item">
+            {/* 👁️ 대신 좋아요(Heart) 아이콘 적용 */}
+            <Heart size={18} />
+            <span>1,240</span>
           </div>
         </div>
 
-        {/* 3. 날짜 정보 */}
-        <div className="trip-summary-date-row">
-          <Calendar size={14} />
+        {/* 3. 날짜 */}
+        <div className="summary-date-row">
+          <Calendar size={18} />
           <span>2025년 12월 1일 ~ 2025년 12월 4일</span>
         </div>
 
-        {/* 4. 설명 및 태그 */}
-        <div className="trip-summary-desc">
+        {/* 4. 설명 & 태그 */}
+        <p className="summary-desc">
           서울의 맛집만 골라 돌아다니는 먹방 여행 루트
-        </div>
-        <div className="trip-summary-tags">
-          #미식 #도보 #혼행
-        </div>
-
-        {/* 5. 루트 경로 */}
-        <div className="trip-summary-route">
-          서울역 <span className="route-arrow">→</span> 성수 <span className="route-arrow">→</span> 강남 <span className="route-arrow">→</span> 홍대 <span className="route-arrow">→</span> 인천공항
-          <span className="text-muted ms-2" style={{fontSize: '11px'}}>(총 4개 경유지)</span>
+        </p>
+        <div className="summary-tags">
+          <span>#미식</span>
+          <span>#도보</span>
+          <span>#혼행</span>
         </div>
 
-      </Container>
+        {/* 5. 루트 요약 */}
+        <div className="summary-route">
+          <MapPin size={16} className="text-muted" />
+          <span className="route-text">서울역 → 성수 → 강남 → 홍대 → 인천공항</span>
+        </div>
+      </div>
+
+
+      {/* --- 우측: 액션 버튼 그룹 (3개) --- */}
+      <div className="summary-right">
+        {/* 1. 저장됨 */}
+        <button className="summary-btn-flat">
+          <Bookmark size={18} strokeWidth={2} />
+          <span>저장됨</span>
+        </button>
+        
+        {/* 2. 신고 */}
+        <button className="summary-btn-flat">
+          <Siren size={18} strokeWidth={2} />
+          <span>신고</span>
+        </button>
+        
+        {/* 3. 공개하기 */}
+        <button className="summary-btn-flat">
+          <Share2 size={18} strokeWidth={2} />
+          <span>공개하기</span>
+        </button>
+      </div>
     </div>
   );
 };
