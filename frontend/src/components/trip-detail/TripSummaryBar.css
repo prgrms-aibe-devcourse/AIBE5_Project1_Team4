@@ -1,0 +1,100 @@
+/* TripSummaryBar.css */
+.trip-summary-container {
+  background-color: #ffffff;
+  padding: 24px 32px;
+  border-bottom: 1px solid #eee;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: #333;
+}
+
+/* 1. 제목 영역 */
+.trip-summary-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+  color: #000;
+  line-height: 1.4;
+}
+
+/* 2. 작성자 및 액션 버튼 줄 (Flexbox) */
+.trip-summary-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+/* 좌측 메타 정보 (작성자, 좋아요 등) */
+.trip-summary-meta-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: #333;
+  font-weight: 500;
+}
+
+.trip-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+/* 우측 액션 버튼 (공유, 신고, 닫기) */
+.trip-summary-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: #666;
+  font-size: 13px;
+}
+
+.trip-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+  font-weight: 400;
+}
+.trip-action-btn:hover {
+  color: #000;
+}
+
+/* 3. 날짜 행 */
+.trip-summary-date-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 16px;
+}
+
+/* 4. 본문, 태그, 루트 */
+.trip-summary-desc {
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+.trip-summary-tags {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 12px;
+}
+
+.trip-summary-route {
+  font-size: 13px;
+  color: #333;
+}
+
+.route-arrow {
+  color: #999;
+  margin: 0 4px;
+}
