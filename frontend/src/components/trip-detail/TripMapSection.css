@@ -1,61 +1,41 @@
-/* TripMapSection.css - 상세 페이지 지도 전용 스타일 */
-
-/* 지도 섹션 전체 컨테이너 */
+/* TripMapSection.css */
 .trip-detail-map-container {
   width: 100%;
-  height: 500px;
-  background-color: #f8f9fa; /* 로딩 전 배경색 */
-  position: relative;
-  border-radius: 16px; 
-  border: 1px solid #e9ecef;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-/* 지도 내부 (실제 지도가 들어갈 자리) */
-.trip-detail-map-view {
-  width: 100%;
   height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: #adb5bd;
+  /* 실제 지도와 유사한 밝은 배경색 적용 */
+  background-color: #f8f9fa; 
+  position: relative;
+  overflow: hidden;
+  /* 기존 격자 무늬 및 어두운 배경 제거 */
 }
 
-/* 지도 위 컨트롤 버튼 (우측 상단) */
-.trip-detail-map-controls {
+/* 줌 컨트롤 (우측 하단 유지) */
+.map-zoom-controls {
   position: absolute;
-  top: 20px;
-  right: 20px;
+  bottom: 24px;
+  right: 24px;
   display: flex;
   flex-direction: column;
   gap: 8px;
   z-index: 10;
 }
 
-.trip-map-control-btn {
+.zoom-btn {
   width: 40px;
   height: 40px;
-  background-color: white;
-  border: 1px solid #dee2e6;
+  background-color: #fff;
+  border: 1px solid #ced4da;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   color: #495057;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   transition: all 0.2s;
 }
 
-.trip-map-control-btn:hover {
-  background-color: #f1f3f5;
+.zoom-btn:hover {
+  background-color: #f8f9fa;
   color: #212529;
-}
-
-/* 플레이스홀더 아이콘 스타일 */
-.trip-map-placeholder-icon {
-  margin-bottom: 1rem;
-  color: #ced4da;
 }

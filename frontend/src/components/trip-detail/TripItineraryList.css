@@ -1,125 +1,170 @@
-/* TripItineraryList.css - 상세 페이지 일정 목록(Itinerary) 전용 스타일 */
+/* TripItineraryList.css */
 
-/* 컨테이너: 흰색 박스에 그림자 */
-.trip-schedule-container {
-  background-color: #fff;
-  padding: 24px;
-  border-radius: 16px; /* 둥근 모서리 */
-  border: 1px solid #e9ecef;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  height: 100%; /* 부모 높이에 맞춤 (선택사항) */
-}
-
-/* 1. 일차(Day) 헤더 */
-.schedule-day-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
-  padding-bottom: 12px;
-  border-bottom: 2px solid #f1f3f5;
-}
-
-.day-badge {
-  background-color: #339af0;
-  color: white;
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-weight: 700;
-  font-size: 14px;
-}
-
-.day-date {
-  color: #868e96;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-/* 2. 일정 리스트 (타임라인 스타일) */
-.schedule-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  position: relative;
-  padding-left: 10px;
-}
-
-/* 타임라인 세로선 (왼쪽에 쭉 그어지는 선) */
-.schedule-list::before {
-  content: '';
+/* 전체 래퍼: 버튼과 패널을 감싸는 컨테이너 */
+.itinerary-wrapper {
   position: absolute;
-  top: 15px;
-  bottom: 15px;
-  left: 25px; /* 동그라미 중심선 */
-  width: 2px;
-  background-color: #e9ecef;
-  z-index: 0;
+  top: 20px;       /* 지도 상단에서 20px */
+  right: 20px;     /* 지도 우측에서 20px */
+  bottom: 20px;    /* 지도 하단에서 20px */
+  z-index: 100;    /* 지도 위에 뜸 */
+  
+  /* 닫혔을 때는 버튼 크기만큼만 공간 차지 */
+  width: 48px; 
+  height: 48px;
+  
+  /* 애니메이션 */
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none; /* 닫혀있을 땐 빈 공간 클릭 통과 */
 }
 
-/* 개별 일정 아이템 */
-.schedule-item {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  position: relative;
-  z-index: 1; 
+/* 열렸을 때 너비 확장 */
+.itinerary-wrapper.open {
+  width: 340px; /* 패널 너비(320) + 여백 등 */
+  height: auto;
+  pointer-events: auto;
 }
 
-/* 순서 번호 (동그라미) */
-.schedule-order {
-  width: 32px;
-  height: 32px;
-  background-color: #e7f5ff;
-  color: #1c7ed6;
-  border-radius: 50%;
+/* 1. 토글 버튼 스타일 (이미지 참고) */
+.schedule-toggle-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 48px;  /* 버튼 크기 */
+  height: 48px;
+  background-color: #fff;
+  border: 1px solid #e9ecef; /* 아주 연한 테두리 */
+  border-radius: 50%; /* 둥근 원형 버튼 (지도 위에서 예쁨) */
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 13px;
-  border: 3px solid #fff; /* 선을 가리기 위한 흰색 테두리 */
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-  flex-shrink: 0;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  z-index: 110;
+  color: #111; /* 화살표 검은색 */
+  pointer-events: auto;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* 내용 박스 */
-.schedule-content {
-  flex-grow: 1;
+.schedule-toggle-btn:hover {
   background-color: #f8f9fa;
-  padding: 12px 16px;
-  border-radius: 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  transition: all 0.2s;
-  border: 1px solid transparent;
+  transform: scale(1.05);
 }
 
-.schedule-content:hover {
+/* 패널이 열렸을 때 버튼 스타일 변경 */
+.itinerary-wrapper.open .schedule-toggle-btn {
+  /* 패널 내부 왼쪽 상단으로 이동하는 느낌 */
+  right: 280px; /* 패널 안쪽 위치 조정 */
+  top: 12px;    /* 패널 상단 여백 */
+  
+  /* 열려있을 땐 심플한 아이콘처럼 보이게 스타일 변경 (선택사항) */
+  background-color: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  width: 32px;
+  height: 32px;
+}
+
+/* 2. 일정 패널 본체 */
+.trip-schedule-container {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 320px;
   background-color: #fff;
-  border-color: #339af0;
-  box-shadow: 0 2px 8px rgba(51, 154, 240, 0.15);
-  transform: translateX(2px);
+  border-radius: 16px;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  
+  /* 초기 상태: 오른쪽으로 숨김 */
+  transform: translateX(120%);
+  opacity: 0;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s;
 }
 
-.place-name {
-  font-weight: 600;
+/* 패널 열림: 제자리로 슬라이딩 */
+.itinerary-wrapper.open .trip-schedule-container {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+/* 3. 내부 스타일 (Day 네비게이션) */
+.day-navigation-header {
+  padding: 16px;
+  /* 버튼이 들어갈 공간 확보 (왼쪽 여백) */
+  padding-left: 48px; 
+  border-bottom: 1px solid #f1f3f5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #fff;
+}
+
+.day-nav-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 4px;
+}
+
+.nav-arrow-btn {
+  background: none;
+  border: 1px solid #e9ecef;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #495057;
+}
+
+.nav-arrow-btn:hover:not(:disabled) {
+  background-color: #f1f3f5;
+  color: #212529;
+}
+
+.current-day-title {
+  font-size: 18px;
+  font-weight: 700;
   color: #343a40;
-  font-size: 15px;
-  display: block;
 }
 
-.place-category {
-  font-size: 12px;
-  color: #adb5bd;
+.current-date-text {
+  font-size: 13px;
+  color: #868e96;
+  background-color: #f8f9fa;
+  padding: 2px 8px;
+  border-radius: 12px;
 }
+
+.schedule-list-scroll-area {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.schedule-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed #f1f3f5;
+}
+.schedule-item:last-child { border-bottom: none; }
 
 .schedule-time {
   font-size: 13px;
-  color: #495057;
-  font-weight: 500;
-  background-color: #fff;
-  padding: 4px 8px;
-  border-radius: 6px;
-  border: 1px solid #dee2e6;
+  font-weight: 600;
+  color: #343a40;
+  min-width: 45px;
+  padding-top: 2px;
 }
+
+.place-name { font-size: 15px; font-weight: 600; color: #343a40; display: block; }
+.place-category { font-size: 12px; color: #adb5bd; }
