@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { listPublicTrips } from '@/services/trips.service';
 
-export function usePublicTrips({ q = '', limit = 20 } = {}) {
+export function usePublicTrips({ q = '', limit = 20, sort = 'latest' } = {}) {
   const [items, setItems] = useState([]);
   const [cursor, setCursor] = useState(null);
   const [hasMore, setHasMore] = useState(true);
@@ -20,7 +20,7 @@ export function usePublicTrips({ q = '', limit = 20 } = {}) {
     setError(null);
 
     try {
-      const res = await listPublicTrips({ q, limit, cursor: null });
+      const res = await listPublicTrips({ q, limit, cursor: null, sort });
       setItems(res.items);
       setCursor(res.nextCursor);
       setHasMore(!!res.nextCursor);
@@ -31,7 +31,7 @@ export function usePublicTrips({ q = '', limit = 20 } = {}) {
     } finally {
       loadingRef.current = false;
     }
-  }, [q, limit]);
+  }, [q, limit, sort]);
 
   const loadMore = useCallback(async () => {
     if (!hasMore) return;
@@ -44,7 +44,7 @@ export function usePublicTrips({ q = '', limit = 20 } = {}) {
     setStatus((prev) => (prev === 'idle' ? 'loading' : prev));
 
     try {
-      const res = await listPublicTrips({ q, limit, cursor });
+      const res = await listPublicTrips({ q, limit, cursor, sort });
       setItems((prev) => [...prev, ...res.items]);
       setCursor(res.nextCursor);
       setHasMore(!!res.nextCursor);
@@ -55,9 +55,9 @@ export function usePublicTrips({ q = '', limit = 20 } = {}) {
     } finally {
       loadingRef.current = false;
     }
-  }, [q, limit, cursor, hasMore]);
+  }, [q, limit, cursor, hasMore, sort]);
 
-  // q 변경 시 자동 새로고침(디바운스는 나중에 붙이면 됨)
+  // q 또는 sort 변경 시 자동 새로고침
   useEffect(() => {
     refresh();
   }, [refresh]);
