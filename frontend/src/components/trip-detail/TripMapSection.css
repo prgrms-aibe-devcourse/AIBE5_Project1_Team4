@@ -3,7 +3,7 @@
   width: 100%;
   height: 100%;
   /* 실제 지도와 유사한 밝은 배경색 적용 */
-  background-color: #f8f9fa; 
+  background-color: #d9d9d9; 
   position: relative;
   overflow: hidden;
   /* 기존 격자 무늬 및 어두운 배경 제거 */
