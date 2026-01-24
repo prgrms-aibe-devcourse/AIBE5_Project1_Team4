@@ -5,8 +5,15 @@ import { renderHook, act } from '@testing-library/react';
 const mocks = vi.hoisted(() => ({
   signOut: vi.fn(),
   clearReturnTo: vi.fn(),
-  toastFire: vi.fn(),
 }));
+
+// ✅ A안 핵심: overlay.toast만 mock
+vi.mock('@/shared/ui/overlay', () => ({
+  toast: vi.fn(),
+}));
+
+// overlay.toast를 테스트에서 검증하려면 import 해와야 함 (mocked 버전으로 들어옴)
+import { toast } from '@/shared/ui/overlay';
 
 vi.mock('./useAuth', () => ({
   useAuth: () => ({ signOut: mocks.signOut }),
@@ -16,18 +23,13 @@ vi.mock('@/features/auth/auth.feature', () => ({
   clearReturnTo: mocks.clearReturnTo,
 }));
 
-vi.mock('@/shared/ui/toast', () => ({
-  Toast: { fire: mocks.toastFire },
-}));
-
 import { useLogout } from './useLogout';
 
-describe('useLogout', () => {
+describe('useLogout (A: mock overlay.toast)', () => {
   let consoleErrorSpy;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // ✅ 에러 케이스 테스트에서 console.error가 stderr로 찍히는 걸 방지
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
@@ -47,18 +49,16 @@ describe('useLogout', () => {
     expect(mocks.clearReturnTo).toHaveBeenCalledTimes(1);
     expect(mocks.signOut).toHaveBeenCalledTimes(1);
 
-    // ✅ 성공 토스트 (useLogout에 success toast가 실제로 있어야 함)
-    expect(mocks.toastFire).toHaveBeenCalledWith({
+    // ✅ 성공 토스트
+    expect(toast).toHaveBeenCalledWith('로그아웃되었습니다', {
       icon: 'success',
-      title: '로그아웃되었습니다',
     });
 
-    // (선택) clearReturnTo가 signOut보다 먼저 호출되는지
+    // (선택) 호출 순서
     expect(mocks.clearReturnTo.mock.invocationCallOrder[0]).toBeLessThan(
       mocks.signOut.mock.invocationCallOrder[0],
     );
 
-    // 성공 케이스에서는 로그가 찍히지 않는 게 자연스러움
     expect(consoleErrorSpy).not.toHaveBeenCalled();
   });
 
@@ -74,12 +74,12 @@ describe('useLogout', () => {
     expect(mocks.clearReturnTo).toHaveBeenCalledTimes(1);
     expect(mocks.signOut).toHaveBeenCalledTimes(1);
 
-    expect(mocks.toastFire).toHaveBeenCalledWith({
+    // ✅ 실패 토스트
+    expect(toast).toHaveBeenCalledWith('로그아웃에 실패했습니다', {
       icon: 'error',
-      title: '로그아웃에 실패했습니다',
     });
 
-    // ✅ 에러 로깅도 "의도된 동작"이라면 여기서 검증
+    // ✅ useLogout가 에러 로깅을 하는게 의도라면 검증
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       '[logout failed]',
       expect.any(Error),
