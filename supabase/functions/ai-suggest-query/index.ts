@@ -68,13 +68,58 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    const originalQuery = body.q.trim()
+    const originalQuery = body.q.trim().toLowerCase()
 
     // Check if query is too long
     if (originalQuery.length > 200) {
       return new Response(
         JSON.stringify({ error: 'Query too long. Max 200 characters.' } as ApiResponse),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Check exact cache in database (queries from last 24 hours)
+    const { data: exactCached } = await supabase
+      .from('ai_query_suggestions')
+      .select('normalized_query, suggestions')
+      .eq('original_query', originalQuery)
+      .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (exactCached) {
+      return new Response(
+        JSON.stringify({
+          data: {
+            normalized_query: exactCached.normalized_query,
+            suggestions: exactCached.suggestions || [],
+            original_query: originalQuery,
+          }
+        } as ApiResponse),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Check similar queries using trigram similarity (pg_trgm)
+    const { data: similarCached } = await supabase
+      .rpc('find_similar_query_suggestion', {
+        p_query: originalQuery,
+        p_similarity_threshold: 0.3,
+        p_max_age_hours: 24
+      })
+      .maybeSingle()
+
+    if (similarCached) {
+      return new Response(
+        JSON.stringify({
+          data: {
+            normalized_query: similarCached.normalized_query,
+            suggestions: similarCached.suggestions || [],
+            original_query: originalQuery,
+          }
+        } as ApiResponse),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 

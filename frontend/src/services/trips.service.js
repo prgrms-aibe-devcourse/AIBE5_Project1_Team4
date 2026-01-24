@@ -23,6 +23,7 @@ import { unwrap, toAppError, logError } from '@/services/_core/errors';
  * @property {string=} q
  * @property {number=} limit
  * @property {{ createdAt: string, id: string }=} cursor
+ * @property {'latest'|'popular'=} sort
  */
 
 function mapRowToCard(row) {
@@ -42,6 +43,8 @@ function mapRowToCard(row) {
     like_count: Number(row.like_count) || 0,
     bookmark_count: Number(row.bookmark_count) || 0,
     member_count: Number(row.member_count) || 1,
+    regions: row.regions ?? [],
+    themes: row.themes ?? [],
   };
 }
 
@@ -50,8 +53,34 @@ function mapRowToCard(row) {
  * @param {ListPublicTripsParams} params
  * @returns {Promise<{ items: PublicTripCard[], nextCursor: ({ createdAt: string, id: string } | null) }>}
  */
+/**
+ * 필터 옵션 (지역/테마) 조회 - 여행 수 많은 순
+ */
+export async function getFilterOptions() {
+  const context = 'tripsService.getFilterOptions';
+
+  try {
+    const [regionsResult, themesResult] = await Promise.all([
+      supabase.rpc('get_region_filter_options'),
+      supabase.rpc('get_theme_filter_options'),
+    ]);
+
+    const regions = unwrap(regionsResult, context) || [];
+    const themes = unwrap(themesResult, context) || [];
+
+    return {
+      regions: regions.map((r) => ({ name: r.name, slug: r.slug, count: Number(r.trip_count) })),
+      themes: themes.map((t) => ({ name: t.name, slug: t.slug, count: Number(t.trip_count) })),
+    };
+  } catch (e) {
+    const appErr = toAppError(e, context);
+    logError(appErr);
+    throw appErr;
+  }
+}
+
 export async function listPublicTrips(params = {}) {
-  const { q, limit = 20, cursor } = params;
+  const { q, limit = 20, cursor, sort = 'latest' } = params;
 
   const context = 'tripsService.listPublicTrips';
 
@@ -63,6 +92,7 @@ export async function listPublicTrips(params = {}) {
       p_q: q ?? null,
       p_cursor_created_at: cursor?.createdAt ?? null,
       p_cursor_id: cursor?.id ?? null,
+      p_sort: sort,
     });
 
     const rows = unwrap(result, context) || [];
@@ -70,8 +100,9 @@ export async function listPublicTrips(params = {}) {
     const items = rows.map(mapRowToCard);
 
     const last = items[items.length - 1];
+    // popular 정렬은 커서 기반 페이지네이션 미지원
     const nextCursor =
-      last && rows.length === realLimit
+      sort === 'latest' && last && rows.length === realLimit
         ? { createdAt: last.created_at, id: last.id }
         : null;
 
