@@ -1,0 +1,125 @@
+/* TripItineraryList.css - 상세 페이지 일정 목록(Itinerary) 전용 스타일 */
+
+/* 컨테이너: 흰색 박스에 그림자 */
+.trip-schedule-container {
+  background-color: #fff;
+  padding: 24px;
+  border-radius: 16px; /* 둥근 모서리 */
+  border: 1px solid #e9ecef;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  height: 100%; /* 부모 높이에 맞춤 (선택사항) */
+}
+
+/* 1. 일차(Day) 헤더 */
+.schedule-day-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f1f3f5;
+}
+
+.day-badge {
+  background-color: #339af0;
+  color: white;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.day-date {
+  color: #868e96;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* 2. 일정 리스트 (타임라인 스타일) */
+.schedule-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+  padding-left: 10px;
+}
+
+/* 타임라인 세로선 (왼쪽에 쭉 그어지는 선) */
+.schedule-list::before {
+  content: '';
+  position: absolute;
+  top: 15px;
+  bottom: 15px;
+  left: 25px; /* 동그라미 중심선 */
+  width: 2px;
+  background-color: #e9ecef;
+  z-index: 0;
+}
+
+/* 개별 일정 아이템 */
+.schedule-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+  z-index: 1; 
+}
+
+/* 순서 번호 (동그라미) */
+.schedule-order {
+  width: 32px;
+  height: 32px;
+  background-color: #e7f5ff;
+  color: #1c7ed6;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  border: 3px solid #fff; /* 선을 가리기 위한 흰색 테두리 */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  flex-shrink: 0;
+}
+
+/* 내용 박스 */
+.schedule-content {
+  flex-grow: 1;
+  background-color: #f8f9fa;
+  padding: 12px 16px;
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+
+.schedule-content:hover {
+  background-color: #fff;
+  border-color: #339af0;
+  box-shadow: 0 2px 8px rgba(51, 154, 240, 0.15);
+  transform: translateX(2px);
+}
+
+.place-name {
+  font-weight: 600;
+  color: #343a40;
+  font-size: 15px;
+  display: block;
+}
+
+.place-category {
+  font-size: 12px;
+  color: #adb5bd;
+}
+
+.schedule-time {
+  font-size: 13px;
+  color: #495057;
+  font-weight: 500;
+  background-color: #fff;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+}
