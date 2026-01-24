@@ -25,6 +25,10 @@ export function classifySupabaseError(err) {
   const status = err?.status ?? err?.code ?? null;
   const message = err?.message ?? 'Unknown error';
 
+  // custom rpc exception message mapping (detail APIs)
+  if (message.includes('trip_not_found'))
+    return { kind: 'not_found', status: 404 };
+
   // PostgREST는 HTTP status를 주는 경우가 많음
   if (err?.status === 401) return { kind: 'auth', status: 401 };
   if (err?.status === 403) return { kind: 'forbidden', status: 403 };
