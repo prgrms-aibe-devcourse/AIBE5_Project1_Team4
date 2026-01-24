@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Button, ButtonGroup, Container, Form } from 'react-bootstrap';
-import TripCardList from '@/components/TripCardList';
+import TripCardList from '@/components/trip/TripCardList';
 import { listPublicTrips } from '@/services/trips.service';
 import { seedDummyTrips } from '@/dev/seedDummyTrips'; // 있으면
 // import { useNavigate } from 'react-router-dom';

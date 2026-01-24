@@ -1,6 +1,6 @@
 import { Container, Row, Col, Spinner } from 'react-bootstrap';
 import TripCard from './TripCard';
-import SortBar from './SortBar';
+import SortBar from '../SortBar';
 import { useCallback, useState } from 'react';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 
@@ -12,17 +12,17 @@ import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
  * - 로딩, 빈 상태, 끝 상태 표시
  */
 const TripCardList = ({
-  trips = [],                           // 표시할 여행 데이터 배열 (여행 객체 리스트)
-  isLoading = false,                    // 현재 데이터를 로딩 중인지 여부 (로딩 스피너 표시 여부)
-  hasMore = false,                      // 더 불러올 데이터가 있는지 여부 (무한 스크롤 계속 여부)
-  onLoadMore,                           // 무한 스크롤 트리거 시 호출되는 콜백 함수 (데이터 로드 함수)
-  onCardClick,                          // 여행 카드 클릭 시 호출되는 콜백 함수 (상세 페이지 이동 등)
-  onLikeClick,                          // 좋아요 버튼 클릭 시 호출되는 콜백 함수 (상태 토글)
-  onBookmarkClick,                      // 북마크 버튼 클릭 시 호출되는 콜백 함수 (상태 토글)
-  likedTripIds = [],                    // 사용자가 좋아요한 여행들의 ID 배열 (좋아요 상태 표시용)
-  bookmarkedTripIds = [],               // 사용자가 북마크한 여행들의 ID 배열 (북마크 상태 표시용)
+  trips = [], // 표시할 여행 데이터 배열 (여행 객체 리스트)
+  isLoading = false, // 현재 데이터를 로딩 중인지 여부 (로딩 스피너 표시 여부)
+  hasMore = false, // 더 불러올 데이터가 있는지 여부 (무한 스크롤 계속 여부)
+  onLoadMore, // 무한 스크롤 트리거 시 호출되는 콜백 함수 (데이터 로드 함수)
+  onCardClick, // 여행 카드 클릭 시 호출되는 콜백 함수 (상세 페이지 이동 등)
+  onLikeClick, // 좋아요 버튼 클릭 시 호출되는 콜백 함수 (상태 토글)
+  onBookmarkClick, // 북마크 버튼 클릭 시 호출되는 콜백 함수 (상태 토글)
+  likedTripIds = [], // 사용자가 좋아요한 여행들의 ID 배열 (좋아요 상태 표시용)
+  bookmarkedTripIds = [], // 사용자가 북마크한 여행들의 ID 배열 (북마크 상태 표시용)
   emptyMessage = '여행 일정이 없습니다', // trips가 비어있을 때 표시할 메시지
-  columns = 3,                          // 그리드 열의 개수 (1, 2, 3, 4 중 선택)
+  columns = 3, // 그리드 열의 개수 (1, 2, 3, 4 중 선택)
 }) => {
   // ========================================================================
   // State 정의
@@ -41,18 +41,24 @@ const TripCardList = ({
   // ========================================================================
   // 핸들러 함수 정의
   // ========================================================================
-  
+
   // 카드 클릭 핸들러
   // useCallback: 메모이제이션으로 부모 리렌더링 시에도 함수 재생성 방지
-  const handleCardClick = useCallback((tripId) => {
-    onCardClick?.(tripId);
-  }, [onCardClick]);
+  const handleCardClick = useCallback(
+    (tripId) => {
+      onCardClick?.(tripId);
+    },
+    [onCardClick],
+  );
 
   // 좋아요 클릭 핸들러
   // useCallback: 메모이제이션으로 부모 리렌더링 시에도 함수 재생성 방지
-  const handleLikeClick = useCallback((tripId) => {
-    onLikeClick?.(tripId);
-  }, [onLikeClick]);
+  const handleLikeClick = useCallback(
+    (tripId) => {
+      onLikeClick?.(tripId);
+    },
+    [onLikeClick],
+  );
 
   // 정렬 변경 핸들러
   const handleSortChange = useCallback((newSort) => {
@@ -60,27 +66,30 @@ const TripCardList = ({
   }, []);
 
   // 정렬된 여행 목록을 계산하는 함수
-  const getSortedTrips = useCallback((tripsToSort) => {
-    if (!Array.isArray(tripsToSort)) return [];
-    
-    const sorted = [...tripsToSort];
-    if (sortBy === 'latest') {
-      // 최신순: created_at 기준 내림차순
-      sorted.sort((a, b) => {
-        const dateA = new Date(a.created_at || 0);
-        const dateB = new Date(b.created_at || 0);
-        return dateB - dateA;
-      });
-    } else if (sortBy === 'popular') {
-      // 인기순: like_count 기준 내림차순
-      sorted.sort((a, b) => {
-        const likeA = a.like_count || 0;
-        const likeB = b.like_count || 0;
-        return likeB - likeA;
-      });
-    }
-    return sorted;
-  }, [sortBy]);
+  const getSortedTrips = useCallback(
+    (tripsToSort) => {
+      if (!Array.isArray(tripsToSort)) return [];
+
+      const sorted = [...tripsToSort];
+      if (sortBy === 'latest') {
+        // 최신순: created_at 기준 내림차순
+        sorted.sort((a, b) => {
+          const dateA = new Date(a.created_at || 0);
+          const dateB = new Date(b.created_at || 0);
+          return dateB - dateA;
+        });
+      } else if (sortBy === 'popular') {
+        // 인기순: like_count 기준 내림차순
+        sorted.sort((a, b) => {
+          const likeA = a.like_count || 0;
+          const likeB = b.like_count || 0;
+          return likeB - likeA;
+        });
+      }
+      return sorted;
+    },
+    [sortBy],
+  );
 
   // 정렬된 여행 목록
   const sortedTrips = getSortedTrips(trips);
@@ -88,17 +97,22 @@ const TripCardList = ({
   // ========================================================================
   // 반응형 그리드 설정 함수 및 계산된 값
   // ========================================================================
-  
+
   // 반응형 그리드 열 수를 계산하는 함수
   // columns props에 따라 다른 Bootstrap 그리드 설정 반환
   // xs: 초소형(모바일), sm: 소형(태블릿), lg: 대형(데스크톱)
   const getColSize = () => {
-    switch(columns) {
-      case 1: return { xs: 12, sm: 12, lg: 12 }; // 1열: 화면 너비 전체
-      case 2: return { xs: 12, sm: 6, lg: 6 };   // 2열: 데스크톱에서 50%
-      case 3: return { xs: 12, sm: 6, lg: 4 };   // 3열: 데스크톱에서 33%
-      case 4: return { xs: 12, sm: 6, lg: 3 };   // 4열: 데스크톱에서 25%
-      default: return { xs: 12, sm: 6, lg: 4 };  // 기본값: 3열
+    switch (columns) {
+      case 1:
+        return { xs: 12, sm: 12, lg: 12 }; // 1열: 화면 너비 전체
+      case 2:
+        return { xs: 12, sm: 6, lg: 6 }; // 2열: 데스크톱에서 50%
+      case 3:
+        return { xs: 12, sm: 6, lg: 4 }; // 3열: 데스크톱에서 33%
+      case 4:
+        return { xs: 12, sm: 6, lg: 3 }; // 4열: 데스크톱에서 25%
+      default:
+        return { xs: 12, sm: 6, lg: 4 }; // 기본값: 3열
     }
   };
 
@@ -112,7 +126,7 @@ const TripCardList = ({
       {trips.length > 0 ? (
         <>
           {/* 정렬 바 */}
-          <SortBar 
+          <SortBar
             sortBy={sortBy}
             onSortChange={handleSortChange}
             title="여행 일정"
@@ -122,7 +136,7 @@ const TripCardList = ({
           <Row className="g-4 mb-5">
             {sortedTrips.map((trip) => (
               // Bootstrap Col: 반응형 열 구성요소
-              <Col 
+              <Col
                 key={trip.id}
                 xs={colSize.xs}
                 sm={colSize.sm}

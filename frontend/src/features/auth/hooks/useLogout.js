@@ -1,6 +1,6 @@
-import { useAuth } from './useAuth';
 import { clearReturnTo } from '@/features/auth/auth.feature';
-import { Toast } from '@/shared/ui/toast';
+import { toast } from '../../../shared/ui/overlay';
+import { useAuth } from './useAuth';
 
 export function useLogout() {
   const { signOut } = useAuth();
@@ -10,17 +10,11 @@ export function useLogout() {
       clearReturnTo();
       await signOut();
 
-      Toast.fire({
-        icon: 'success',
-        title: '로그아웃되었습니다',
-      });
+      toast('로그아웃되었습니다', { icon: 'success' });
     } catch (e) {
       console.error('[logout failed]', e);
 
-      Toast.fire({
-        icon: 'error',
-        title: '로그아웃에 실패했습니다',
-      });
+      toast('로그아웃에 실패했습니다', { icon: 'error' });
     }
   };
 
