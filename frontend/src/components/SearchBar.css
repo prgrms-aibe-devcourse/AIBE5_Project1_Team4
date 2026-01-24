@@ -1,0 +1,128 @@
+/* SearchBar 컴포넌트 스타일 */
+
+.search-bar {
+  position: relative;
+  width: 100%;
+}
+
+.search-bar__input-group {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.search-bar__input {
+  border: 2px solid #e9ecef;
+  border-right: none;
+  padding: 0.875rem 1.25rem;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.search-bar__input:focus {
+  border-color: #667eea;
+  box-shadow: none;
+}
+
+.search-bar__btn {
+  padding: 0 1.5rem;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.search-bar__btn:hover {
+  transform: scale(1.02);
+}
+
+/* 드롭다운 */
+.search-bar__dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  max-height: 320px;
+  overflow-y: auto;
+  z-index: 1000;
+  animation: dropdownFadeIn 0.2s ease;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.search-bar__dropdown-loading,
+.search-bar__dropdown-error,
+.search-bar__dropdown-empty {
+  padding: 1.25rem;
+  text-align: center;
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.search-bar__dropdown-error {
+  color: #dc3545;
+}
+
+/* 정규화된 쿼리 */
+.search-bar__normalized {
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg, #f8f9ff 0%, #f0f4ff 100%);
+  border-bottom: 1px solid #e9ecef;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.search-bar__normalized:hover {
+  background: linear-gradient(135deg, #eef1ff 0%, #e5ebff 100%);
+}
+
+/* 제안 목록 */
+.search-bar__suggestions {
+  border-radius: 0;
+}
+
+.search-bar__suggestions-header {
+  background: #f8f9fa;
+  padding: 0.625rem 1rem;
+  font-size: 0.8rem;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.search-bar__suggestion-item {
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: none;
+  border-bottom: 1px solid #f1f3f4;
+}
+
+.search-bar__suggestion-item:hover {
+  background: #f8f9ff;
+  padding-left: 1.25rem;
+}
+
+.search-bar__suggestion-item:last-child {
+  border-bottom: none;
+}
+
+/* 외부 클릭 감지용 배경 */
+.search-bar__backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+}
