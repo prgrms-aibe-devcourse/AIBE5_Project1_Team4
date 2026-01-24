@@ -31,13 +31,16 @@ const TripCard = ({
     cover_image_url, // 여행 커버 이미지 URL
     start_date, // 여행 시작 날짜
     end_date, // 여행 종료 날짜
-    region, // 여행 지역
+    regions = [], // 여행 지역들
     author, // 작성자 정보 (이름, 아바타 등)
     like_count = 0, // 좋아요 개수
     bookmark_count = 0, // 북마크 개수
     member_count = 1, // 여행 참가자 수
     created_at, // 여행 생성 시간
   } = trip;
+
+  // 첫 번째 지역 표시
+  const region = regions[0];
 
   // 여행 기간 계산 및 포맷팅
   // 예: "2월 15 - 2월 18"
