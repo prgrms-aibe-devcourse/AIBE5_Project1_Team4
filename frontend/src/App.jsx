@@ -10,6 +10,7 @@ import TripsPage from './pages/TripsPage';
 import AuthCallbackPage from './pages/AuthCallbackPage';
 import Health from './pages/Health';
 import TripCreate from './pages/TripCreate';
+import TripDetailPage from './pages/TripDetailPage';
 import UiPreview from './pages/UiPreview';
 import LoginPage from './pages/LoginPage';
 import LogoutPage from './pages/LogoutPage';
@@ -27,6 +28,8 @@ function App() {
 
           {/* TripCreate 페이지 라우트 */}
           <Route path="/trip-create" element={<TripCreate />} />
+          {/* TripDetailPage 페이지 라우트 */}
+          <Route path="/trips/:id" element={<TripDetailPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
           <Route path="/login" element={<LoginPage />} />
