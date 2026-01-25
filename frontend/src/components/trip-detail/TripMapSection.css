@@ -1,0 +1,41 @@
+/* TripMapSection.css */
+.trip-detail-map-container {
+  width: 100%;
+  height: 100%;
+
+  background-color: #d9d9d9; 
+  position: relative;
+  overflow: hidden;
+
+}
+
+/* 줌 컨트롤 (우측 하단 유지) */
+.map-zoom-controls {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 10;
+}
+
+.zoom-btn {
+  width: 40px;
+  height: 40px;
+  background-color: #fff;
+  border: 1px solid #ced4da;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #495057;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: all 0.2s;
+}
+
+.zoom-btn:hover {
+  background-color: #f8f9fa;
+  color: #212529;
+}

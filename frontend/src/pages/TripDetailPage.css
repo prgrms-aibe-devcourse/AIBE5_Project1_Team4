@@ -1,0 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+
+/* 전체 페이지 레이아웃 (TripCreate와 동일하게) */
+.trip-detail-page {
+  background-color: #ffffff; 
+  /* 중요: 상단 Navbar 높이를 고려해 padding-top 조정 필요할 수 있음 */
+  padding: 0 48px 48px;   
+  font-family: 'Noto Sans KR', sans-serif;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+/* 상단바 영역 */
+.trip-detail-header {
+  flex-shrink: 0;
+  z-index: 102;
+  position: relative;
+  margin-bottom: 0px; 
+}
+
+/* 지도+패널 영역 */
+.trip-detail-body {
+  position: relative;
+  flex-grow: 1;
+  width: 100%;
+  border-radius: 10px; 
+  overflow: hidden;
+  background-color: #d9d9d9;
+}
