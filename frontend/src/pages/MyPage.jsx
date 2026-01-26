@@ -1,112 +1,136 @@
-import React from 'react';
-import { Container, Row, Col, Card, ListGroup, Button, Badge } from 'react-bootstrap';
-import { User, ChevronRight, Map, Settings, LogOut, Heart, Bookmark, Calendar } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; 
+import { supabase } from '@/lib/supabaseClient';
+import { Container, Row, Col, Card, ListGroup } from 'react-bootstrap';
+import { LogOut } from 'lucide-react'; 
+
+// 🧱 마이페이지를 구성하는 독립된 컴포넌트들
+import ProfileCard from '../components/mypage/ProfileCard';
+import StatGroup from '../components/mypage/StatGroup';
+import RecentTrips from '../components/mypage/RecentTrips';
+import StatDetailModal from '../components/mypage/StatDetailModal';
+
+// 📡 DB 조회를 위한 공통 서비스 함수
+import { getQuickStatsList } from '../services/profiles.service';
 
 const MyPage = () => {
-  // 샘플 데이터 (나중에 Supabase 연결)
-  const myTrips = [
-    { id: 1, title: '제주 올레길 트레킹', date: '12월 8일 - 12월 14일', location: '제주' },
-    { id: 2, title: '도쿄 쇼핑 & 맛집', date: '6월 19일 - 6월 24일', location: '도쿄' },
-  ];
+  const navigate = useNavigate();
+  const [currentUser, setCurrentUser] = useState(null);
+  
+  // 🔢 상단 카드의 실시간 수치를 관리하는 상태
+  const [stats, setStats] = useState({ likes: 0, trips: 0, bookmarks: 0 });
+  
+  // 🔍 상세 목록 모달의 노출 상태와 데이터를 관리하는 상태
+  const [modal, setModal] = useState({ show: false, title: '', list: [] });
+
+  /**
+   * 컴포넌트 마운트 시 유저 정보 및 초기 실시간 수치 로드
+   */
+  useEffect(() => {
+    const loadUserDataAndStats = async () => {
+      // 1. Supabase에서 현재 세션 유저 정보 획득
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        // 2. 유저 정보 설정 (피드백 반영: 카톡 프사 등 소셜 이미지 연동)
+        setCurrentUser({
+          id: user.id,
+          name: user.user_metadata?.full_name || '여행자',
+          email: user.email,
+          avatar_url: user.user_metadata?.avatar_url || null 
+        });
+
+        // 3. ⚡️ 실시간 DB 데이터 개수(Count) 반영 로직
+        try {
+          // DB에서 실제 저장된 리스트를 가져와서 길이를 기반으로 숫자 세팅
+          const likesData = await getQuickStatsList(user.id, 'likes');
+          const bookmarksData = await getQuickStatsList(user.id, 'bookmarks');
+          
+          setStats({
+            likes: likesData ? likesData.length : 0, 
+            trips: 0, // 피드백 반영: '내 여행' 카운트 로직은 추후 확장 예정
+            bookmarks: bookmarksData ? bookmarksData.length : 0
+          });
+        } catch (error) {
+          console.error("실시간 수치 로드 실패:", error);
+        }
+      }
+    };
+    loadUserDataAndStats();
+  }, []);
+
+  /**
+   * 📊 통계 카드(찜/북마크) 클릭 시 상세 리스트 모달 오픈
+   * @param {string} title - 모달 상단에 표시할 한글 제목 (예: 찜)
+   * @param {string} type - DB 조회를 위한 영어 타입 (예: likes)
+   */
+  const handleStatClick = async (title, type) => {
+    if (!currentUser) return;
+    
+    // 클릭한 시점에 최신 리스트를 다시 조회하여 모달에 전달
+    const data = await getQuickStatsList(currentUser.id, type);
+    setModal({
+      show: true,
+      title: title,
+      list: data || []
+    });
+  };
+
+  /**
+   * 🚪 로그아웃 처리 핸들러
+   * 세션 종료 후 피드백대로 메인/로그인 페이지로 네비게이션 처리
+   */
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (!error) navigate('/login');
+  };
+
+  // 유저 정보를 불러오기 전까지 빈 화면 처리
+  if (!currentUser) return null;
 
   return (
-    <div style={{ backgroundColor: '#f8f9fa', minHeight: '100vh' }}> {/* 배경색으로 공간 분리 */}
-      <Container className="py-5" style={{ maxWidth: '1000px' }}> {/* 너비를 1000px로 확장 */}
+    <div style={{ backgroundColor: '#f8f9fa', minHeight: '100vh' }}>
+      <Container className="py-5" style={{ maxWidth: '1000px' }}>
         <Row className="g-4">
-          
-          {/* 왼쪽 사이드: 프로필 및 메뉴 (Col 4) */}
           <Col lg={4}>
-            <Card className="mb-4 border-0 shadow-sm">
-              <Card.Body className="text-center p-4">
-                <div className="bg-light rounded-circle p-3 mx-auto mb-3" style={{ width: 'fit-content' }}>
-                  <User size={60} className="text-secondary" />
-                </div>
-                <h5 className="fw-bold">여행자</h5>
-                <p className="text-muted small">traveler@example.com</p>
-                <Button variant="outline-primary" size="sm" className="w-100 rounded-pill">
-                  프로필 수정
-                </Button>
-              </Card.Body>
-            </Card>
-
-            <Card className="border-0 shadow-sm overflow-hidden">
+            {/* 👤 유저 프로필 카드 (프사 및 기본 정보 표시) */}
+            <ProfileCard user={currentUser} />
+            
+            {/* ⚙️ 사이드바 (피드백 반영: '계정 설정' 제거 후 로그아웃만 유지) */}
+            <Card className="border-0 shadow-sm overflow-hidden mt-3">
               <ListGroup variant="flush">
-                <ListGroup.Item action className="d-flex align-items-center py-3">
-                  <Settings size={18} className="me-3 text-muted" />
-                  <span>계정 설정</span>
-                </ListGroup.Item>
-                <ListGroup.Item action className="d-flex align-items-center py-3 text-danger border-top">
+                <ListGroup.Item 
+                  action 
+                  className="d-flex align-items-center py-3 text-danger" 
+                  onClick={handleLogout}
+                >
                   <LogOut size={18} className="me-3" />
                   <span>로그아웃</span>
                 </ListGroup.Item>
               </ListGroup>
             </Card>
           </Col>
-
-          {/* 오른쪽 메인: 통계 및 활동 (Col 8) */}
+          
           <Col lg={8}>
-            {/* 상단 통계 수치 */}
-            <Row className="g-3 mb-4">
-              {[
-                { label: '찜', count: 12, icon: <Heart size={20} />, color: 'text-danger' },
-                { label: '내 여행', count: 5, icon: <Map size={20} />, color: 'text-primary' },
-                { label: '북마크', count: 8, icon: <Bookmark size={20} />, color: 'text-warning' }
-              ].map((item, idx) => (
-                <Col key={idx} xs={4}>
-                  <Card className="text-center border-0 shadow-sm">
-                    <Card.Body className="py-3">
-                      <div className={`${item.color} mb-1`}>{item.icon}</div>
-                      <div className="fw-bold fs-5">{item.count}</div>
-                      <div className="text-muted" style={{ fontSize: '12px' }}>{item.label}</div>
-                    </Card.Body>
-                  </Card>
-                </Col>
-              ))}
-            </Row>
-
-            {/* 내 여행 미리보기 섹션 (화면을 꽉 채워줌) */}
-            <h6 className="fw-bold mb-3 d-flex justify-content-between align-items-center">
-              최근 나의 여행
-              <Button variant="link" className="text-decoration-none text-muted p-0 small">전체보기</Button>
-            </h6>
+            {/* 📈 실시간 통계 영역 (클릭 시 모달 열림) */}
+            <StatGroup 
+              stats={stats} 
+              onStatClick={(title, type) => handleStatClick(title, type)} 
+            />
             
-            {myTrips.map((trip) => (
-              <Card key={trip.id} className="mb-3 border-0 shadow-sm hover-shadow" style={{ cursor: 'pointer' }}>
-                <Card.Body className="p-3">
-                  <Row className="align-items-center">
-                    <Col xs={"auto"} className="pe-0">
-                      <div className="bg-primary bg-opacity-10 p-3 rounded">
-                        <Map size={24} className="text-primary" />
-                      </div>
-                    </Col>
-                    <Col>
-                      <div className="fw-bold text-dark">{trip.title}</div>
-                      <div className="text-muted small d-flex align-items-center mt-1">
-                        <Calendar size={14} className="me-1" /> {trip.date}
-                        <Badge bg="light" text="dark" className="ms-2 fw-normal">{trip.location}</Badge>
-                      </div>
-                    </Col>
-                    <Col xs="auto">
-                      <ChevronRight size={18} className="text-muted" />
-                    </Col>
-                  </Row>
-                </Card.Body>
-              </Card>
-            ))}
-
-            {/* 데이터가 없을 때의 가이드 (빈 공간 방지) */}
-            {myTrips.length === 0 && (
-              <Card className="border-0 shadow-sm bg-white text-center py-5">
-                <Card.Body>
-                  <Map size={40} className="text-light mb-3" />
-                  <p className="text-muted">아직 생성된 여행 일정이 없습니다.</p>
-                  <Button variant="primary" size="sm">첫 여행 계획하기</Button>
-                </Card.Body>
-              </Card>
-            )}
+            {/* ✈️ 최근 여행 목록 영역 */}
+            <RecentTrips />
           </Col>
         </Row>
       </Container>
+
+      {/* 팝업 모달: 상세 찜/북마크 목록 표시 */}
+      <StatDetailModal 
+        show={modal.show} 
+        onHide={() => setModal({ ...modal, show: false })}
+        title={modal.title}
+        data={modal.list}
+      />
     </div>
   );
 };
