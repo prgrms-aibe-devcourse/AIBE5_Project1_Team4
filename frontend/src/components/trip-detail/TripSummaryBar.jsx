@@ -4,74 +4,86 @@ import {
 } from 'lucide-react';
 import './TripSummaryBar.css';
 
-const TripSummaryBar = () => {
+/**
+ * 여행 상세 정보 상단 요약 바 컴포넌트
+ * @param {Object} summary - DB(RPC)에서 받아온 여행 요약 데이터
+ */
+const TripSummaryBar = ({ summary }) => {
+  // 데이터가 로드되지 않았을 경우 렌더링 방지
+  if (!summary) return null;
+
+  // 구조 분해 할당을 통해 가독성 확보
+  const {
+    title,
+    description,
+    start_date,
+    end_date,
+    regions = [],
+    themes = [],
+    author, // { name, avatar_url } 구조
+    like_count = 0,
+    bookmark_count = 0
+  } = summary;
+
   return (
     <div className="trip-summary-container">
-      {/* --- 좌측: 여행 상세 정보 --- */}
       <div className="summary-left">
-        {/* 1. 제목 */}
-        <h1 className="summary-title">서울 2박 3일 맛집 여행</h1>
+        {/* 여행 제목 */}
+        <h1 className="summary-title">{title}</h1>
 
-        {/* 2. 작성자 및 통계 */}
+        {/* 작성자 정보 및 소셜 통계 */}
         <div className="summary-meta-row">
           <div className="meta-item author">
             <User size={18} />
-            <span>작성자 A</span>
+            {/* 작성자 이름 출력 (서일현 등 실명 연동 완료) */}
+            <span>{author?.name || '여행자'}</span>
           </div>
           <div className="meta-divider"></div>
           <div className="meta-item">
             <Bookmark size={18} />
-            <span>38</span>
+            <span>{bookmark_count}</span>
           </div>
           <div className="meta-item">
-            {/* 👁️ 대신 좋아요(Heart) 아이콘 적용 */}
             <Heart size={18} />
-            <span>1,240</span>
+            <span>{like_count}</span>
           </div>
         </div>
 
-        {/* 3. 날짜 */}
+        {/* 여행 일정 기간 */}
         <div className="summary-date-row">
           <Calendar size={18} />
-          <span>2025년 12월 1일 ~ 2025년 12월 4일</span>
+          <span>{start_date} ~ {end_date}</span>
         </div>
 
-        {/* 4. 설명 & 태그 */}
-        <p className="summary-desc">
-          서울의 맛집만 골라 돌아다니는 먹방 여행 루트
-        </p>
+        {/* 여행 설명 및 테마 태그 */}
+        <p className="summary-desc">{description}</p>
         <div className="summary-tags">
-          <span>#미식</span>
-          <span>#도보</span>
-          <span>#혼행</span>
+          {themes && themes.length > 0 ? (
+            themes.map((tag, index) => <span key={index}>#{tag}</span>)
+          ) : (
+            <span>#여행</span>
+          )}
         </div>
 
-        {/* 5. 루트 요약 */}
+        {/* 여행 경로 요약 */}
         <div className="summary-route">
           <MapPin size={16} className="text-muted" />
-          <span className="route-text">서울역 → 성수 → 강남 → 홍대 → 인천공항</span>
+          <span className="route-text">
+            {regions && regions.length > 0 ? regions.join(' → ') : "경로 정보 없음"}
+          </span>
         </div>
       </div>
 
-
-      {/* --- 우측: 액션 버튼 그룹 (3개) --- */}
+      {/* 우측 액션 버튼 영역 */}
       <div className="summary-right">
-        {/* 1. 저장됨 */}
         <button className="summary-btn-flat">
-          <Bookmark size={18} strokeWidth={2} />
-          <span>저장됨</span>
+          <Bookmark size={18} strokeWidth={2} /> <span>저장됨</span>
         </button>
-        
-        {/* 2. 신고 */}
         <button className="summary-btn-flat">
-          <Siren size={18} strokeWidth={2} />
-          <span>신고</span>
+          <Siren size={18} strokeWidth={2} /> <span>신고</span>
         </button>
-        
-        {/* 3. 공개하기 */}
         <button className="summary-btn-flat">
-          <Share2 size={18} strokeWidth={2} />
-          <span>공개하기</span>
+          <Share2 size={18} strokeWidth={2} /> <span>공개하기</span>
         </button>
       </div>
     </div>
