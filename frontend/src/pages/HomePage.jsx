@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import SearchBar from '@/components/SearchBar';
 import TripCard from '@/components/trip/TripCard';
 import { useAiSuggest } from '@/hooks/useAiSuggest';
-import { listPublicTrips } from '@/services/trips.service'; // Service Import
+import { listPublicTrips } from '@/services/trips.service';
 import './HomePage.css';
 
 // 여행 섹션 컴포넌트
@@ -16,7 +16,8 @@ const TripSection = ({
   onCardClick,
   onLike,
   onBookmark,
-  isLoading, // ✅ 로딩 상태 prop
+  isLoading,
+  linkTo = "/trips" // ✅ [수정] 이동할 링크 주소를 prop으로 받음 (기본값: 전체 목록)
 }) => {
   const scrollRef = useRef(null);
 
@@ -34,7 +35,8 @@ const TripSection = ({
           <h4 className="home-section__title">{title}</h4>
           {subtitle && <p className="home-section__subtitle">{subtitle}</p>}
         </div>
-        <Link to="/trips" className="home-section__more">
+        {/* ✅ [수정] 전달받은 linkTo 주소로 이동 */}
+        <Link to={linkTo} className="home-section__more">
           더보기 <ChevronRight size={16} />
         </Link>
       </div>
@@ -49,7 +51,7 @@ const TripSection = ({
 
         <div ref={scrollRef} className="home-section__cards">
           {isLoading ? (
-            // ✅ 로딩 스켈레톤 (데이터 로딩 중 표시)
+            // 로딩 스켈레톤
             [...Array(4)].map((_, i) => (
               <div key={i} className="home-section__card">
                 <div
@@ -71,7 +73,6 @@ const TripSection = ({
                   onCardClick={onCardClick}
                   onLikeClick={onLike}
                   onBookmarkClick={onBookmark}
-                  // API 데이터 바인딩
                   isLiked={trip.isLiked || false}
                   isBookmarked={trip.isBookmarked || false}
                 />
@@ -106,7 +107,7 @@ export default function HomePage() {
   const [recentTrips, setRecentTrips] = useState([]);
   const [popularTrips, setPopularTrips] = useState([]);
   const [recommendTrips, setRecommendTrips] = useState([]);
-  // ✅ 로딩 상태
+  // 로딩 상태
   const [isLoading, setIsLoading] = useState(true);
 
   // AI 쿼리 제안
@@ -121,23 +122,22 @@ export default function HomePage() {
     enabled: showSuggestions,
   });
 
-  // ✅ API 데이터 Fetching 로직
+  // API 데이터 Fetching 로직
   useEffect(() => {
     const fetchHomeData = async () => {
       try {
         setIsLoading(true);
 
-        // 최신순, 인기순 병렬 호출 (각각 8개씩)
+        // 최신순, 인기순 병렬 호출
         const [latestResult, popularResult] = await Promise.all([
           listPublicTrips({ limit: 8, sort: 'latest' }),
           listPublicTrips({ limit: 8, sort: 'popular' }),
         ]);
 
-        // 상태 업데이트
         setRecentTrips(latestResult.items || []);
         setPopularTrips(popularResult.items || []);
         
-        // ✅ [수정] 추천 여행: '최신순' -> '인기순' 데이터를 임시 사용
+        // 추천 여행: 현재 인기순 데이터를 사용 중이므로 인기순 링크로 연결 예정
         setRecommendTrips(popularResult.items || []); 
 
       } catch (error) {
@@ -154,7 +154,7 @@ export default function HomePage() {
     navigate(`/trips/${id}`);
   };
 
-  // ✅ UI 업데이트 헬퍼 함수
+  // UI 업데이트 헬퍼 함수
   const updateTripList = (list, id, field, countField) => {
     return list.map((t) => {
       if (t.id !== id) return t;
@@ -169,14 +169,14 @@ export default function HomePage() {
     });
   };
 
-  // ✅ 좋아요 핸들러 (UI 즉시 반영 - 낙관적 업데이트)
+  // 좋아요 핸들러
   const handleLike = (id) => {
     setRecentTrips(prev => updateTripList(prev, id, 'isLiked', 'like_count'));
     setPopularTrips(prev => updateTripList(prev, id, 'isLiked', 'like_count'));
     setRecommendTrips(prev => updateTripList(prev, id, 'isLiked', 'like_count'));
   };
 
-  // ✅ 북마크 핸들러 (UI 즉시 반영 - 낙관적 업데이트)
+  // 북마크 핸들러
   const handleBookmark = (id) => {
     setRecentTrips(prev => updateTripList(prev, id, 'isBookmarked', 'bookmark_count'));
     setPopularTrips(prev => updateTripList(prev, id, 'isBookmarked', 'bookmark_count'));
@@ -247,30 +247,33 @@ export default function HomePage() {
           title="추천 여행"
           subtitle="당신을 위한 맞춤 여행지"
           trips={recommendTrips}
-          isLoading={isLoading} // ✅ 로딩 상태 전달
+          isLoading={isLoading}
           onCardClick={handleCardClick}
           onLike={handleLike}
           onBookmark={handleBookmark}
+          linkTo="/trips?sort=popular" // ✅ [수정] 추천 -> 인기순 정렬 페이지로 이동
         />
 
         <TripSection
           title="인기 여행지"
           subtitle="가장 많은 사랑을 받은 여행지입니다"
           trips={popularTrips}
-          isLoading={isLoading} // ✅ 로딩 상태 전달
+          isLoading={isLoading}
           onCardClick={handleCardClick}
           onLike={handleLike}
           onBookmark={handleBookmark}
+          linkTo="/trips?sort=popular" // ✅ [수정] 인기 -> 인기순 정렬 페이지로 이동
         />
 
         <TripSection
           title="최근 등록된 여행"
           subtitle="따끈따끈한 여행 계획들입니다"
           trips={recentTrips}
-          isLoading={isLoading} // ✅ 로딩 상태 전달
+          isLoading={isLoading}
           onCardClick={handleCardClick}
           onLike={handleLike}
           onBookmark={handleBookmark}
+          linkTo="/trips?sort=latest" // ✅ [수정] 최근 -> 최신순 정렬 페이지로 이동
         />
 
         {/* CTA Section */}
