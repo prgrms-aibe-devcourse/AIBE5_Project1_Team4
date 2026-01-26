@@ -3,6 +3,7 @@ import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useLogout } from '@/features/auth/hooks/useLogout';
 import { setReturnToIfEmpty } from '@/features/auth/auth.feature';
 import { useEffect, useRef, useState } from 'react';
+import { User } from 'lucide-react';
 
 export default function AppHeader() {
   const { user, status } = useAuth();
@@ -131,16 +132,20 @@ export default function AppHeader() {
                   cursor: 'pointer',
                 }}
               >
-                <img
-                  src={user?.user_metadata?.avatar_url}
-                  alt="avatar"
-                  style={{
-                    width: '2.2rem',
-                    height: '2.2rem',
-                    borderRadius: '50%',
-                    objectFit: 'cover',
-                  }}
-                />
+                {user?.user_metadata?.avatar_url ? (
+                  <img
+                    src={user?.user_metadata?.avatar_url}
+                    alt="avatar"
+                    style={{
+                      width: '2.2rem',
+                      height: '2.2rem',
+                      borderRadius: '50%',
+                      objectFit: 'cover',
+                    }}
+                  />
+                ) : (
+                  <User className="text-secondary" />
+                )}
                 <span style={{ fontSize: 12, opacity: 0.7 }}>▼</span>
               </button>
 

@@ -1,8 +1,7 @@
+import { PlaneTakeoff } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import {
-  exchangeCodeForSession,
-  getSession,
-} from '@/services/auth.service';
+import { Button, Card, Container } from 'react-bootstrap';
+import { exchangeCodeForSession, getSession } from '@/services/auth.service';
 import FullScreenLoader from '../components/FullScreenLoader';
 import { popReturnTo } from '../features/auth/auth.feature';
 
@@ -15,7 +14,6 @@ export default function AuthCallbackPage() {
 
     async function run() {
       try {
-        // PKCE code 교환
         const url = new URL(window.location.href);
         const code = url.searchParams.get('code');
 
@@ -23,7 +21,6 @@ export default function AuthCallbackPage() {
           await exchangeCodeForSession(code);
         }
 
-        // 세션 확인
         const session = await getSession();
         if (!session) {
           throw new Error('세션이 생성되지 않았어요. 다시 로그인해 주세요.');
@@ -34,8 +31,7 @@ export default function AuthCallbackPage() {
         setStatus('success');
         setMessage('로그인 완료!');
 
-        // returnTo 처리
-        let returnTo = popReturnTo();
+        const returnTo = popReturnTo();
         window.location.replace(returnTo);
       } catch (e) {
         if (cancelled) return;
@@ -50,90 +46,112 @@ export default function AuthCallbackPage() {
     };
   }, []);
 
-  if (status === 'loading')
+  if (status === 'loading') {
     return <FullScreenLoader message="로그인 처리중..." />;
+  }
 
   if (status === 'error') {
     return (
-      <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light p-3">
-        <div
-          className="card shadow-sm border-0"
-          style={{ maxWidth: 520, width: '100%' }}
-        >
-          <div className="card-body p-4">
-            {/* 헤더 */}
-            <div className="d-flex align-items-start gap-3">
-              <div
-                className="rounded-circle d-flex align-items-center justify-content-center"
-                style={{
-                  width: 44,
-                  height: 44,
-                  background: 'rgba(220,53,69,0.12)', // bootstrap danger 느낌
-                  flex: '0 0 auto',
-                }}
-                aria-hidden="true"
-              >
-                <span style={{ fontSize: 22 }}>⚠️</span>
-              </div>
-
-              <div className="flex-grow-1">
-                <h4 className="mb-1">로그인 처리에 실패했어요</h4>
-                <p className="text-muted mb-0">
+      <div
+        className="min-vh-100 d-flex align-items-center"
+        style={{ backgroundColor: '#f8f9fa' }}
+      >
+        <Container>
+          <Card
+            className="mx-auto border-0 shadow-lg"
+            style={{ maxWidth: '400px', borderRadius: '20px' }}
+          >
+            <Card.Body className="p-5 d-flex flex-column align-items-center">
+              <div className="text-center mb-3">
+                <div className="bg-primary bg-opacity-10 rounded-circle d-inline-flex p-3 mb-3">
+                  <PlaneTakeoff size={32} className="text-primary" />
+                </div>
+                <h3 className="fw-bold text-dark mb-1">
+                  로그인 처리에 실패했어요
+                </h3>
+                <p className="text-muted small mb-0">
                   일시적인 문제일 수 있어요. 아래 버튼으로 다시 시도해 주세요.
                 </p>
               </div>
-            </div>
 
-            {/* 메시지 */}
-            <div className="alert alert-danger mt-3 mb-0" role="alert">
-              <div className="fw-semibold mb-1">에러 메시지</div>
-              <div style={{ wordBreak: 'break-word' }}>{message}</div>
-            </div>
-
-            {/* 액션 */}
-            <div className="d-flex flex-wrap gap-2 justify-content-end mt-4">
-              <button
-                type="button"
-                className="btn btn-outline-secondary"
-                onClick={() => window.location.replace('/')}
+              <div
+                className="alert alert-danger w-100 small"
+                role="alert"
+                style={{ maxWidth: '300px' }}
               >
-                홈으로
-              </button>
+                <div className="fw-semibold mb-1">에러 메시지</div>
+                <div style={{ wordBreak: 'break-word' }}>{message}</div>
+              </div>
 
-              <button
-                type="button"
-                className="btn btn-outline-primary"
-                onClick={() => window.location.reload()}
+              <div
+                className="d-grid gap-2 w-100 mt-2"
+                style={{ maxWidth: '300px' }}
               >
-                다시 시도
-              </button>
+                <Button
+                  variant="primary"
+                  onClick={() => window.location.replace('/login')}
+                >
+                  로그인으로 이동
+                </Button>
+                <Button
+                  variant="outline-primary"
+                  onClick={() => window.location.reload()}
+                >
+                  다시 시도
+                </Button>
+                <Button
+                  variant="outline-secondary"
+                  onClick={() => window.location.replace('/')}
+                >
+                  홈으로
+                </Button>
+              </div>
 
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={() => window.location.replace('/login')}
+              <div
+                className="text-muted small mt-3 text-center"
+                style={{ maxWidth: '300px' }}
               >
-                로그인으로 이동
-              </button>
-            </div>
-
-            {/* 보조 안내 */}
-            <div className="text-muted small mt-3">
-              계속 문제가 발생하면 잠시 후 다시 시도하거나, 브라우저를
-              새로고침해 보세요.
-            </div>
-          </div>
-        </div>
+                계속 문제가 발생하면 잠시 후 다시 시도하거나, 브라우저를
+                새로고침해 보세요.
+              </div>
+            </Card.Body>
+          </Card>
+        </Container>
       </div>
     );
   }
 
+  // success (대부분 replace로 바로 넘어가지만, 톤 통일)
   return (
-    <div className="min-vh-100 d-flex align-items-center justify-content-center text-center">
-      <div>
-        <div className="spinner-border" role="status" />
-        <p className="mt-3 mb-0">{message}</p>
-      </div>
+    <div
+      className="min-vh-100 d-flex align-items-center"
+      style={{ backgroundColor: '#f8f9fa' }}
+    >
+      <Container>
+        <Card
+          className="mx-auto border-0 shadow-lg"
+          style={{ maxWidth: '400px', borderRadius: '20px' }}
+        >
+          <Card.Body className="p-5 d-flex flex-column align-items-center text-center">
+            <div className="text-center mb-4">
+              <div className="bg-primary bg-opacity-10 rounded-circle d-inline-flex p-3 mb-3">
+                <PlaneTakeoff size={32} className="text-primary" />
+              </div>
+              <h3 className="fw-bold text-dark">Trip Planner</h3>
+              <p className="text-muted small mb-0">
+                {message || '로그인 완료!'}
+              </p>
+            </div>
+
+            <div
+              className="spinner-border"
+              role="status"
+              aria-label="redirecting"
+            />
+            <p className="text-muted small mt-3 mb-0">이동 중...</p>
+          </Card.Body>
+        </Card>
+      </Container>
     </div>
   );
 }

@@ -58,3 +58,16 @@ export async function exchangeCodeForSession(code) {
     unwrap(result, `${CONTEXT}.exchangeCodeForSession`);
   }
 }
+
+// 이메일 OTP(매직링크) 로그인 요청
+export async function signInWithEmailOtp(email, options = {}) {
+  const redirectTo =
+    options.emailRedirectTo ?? `${window.location.origin}/auth/callback`;
+
+  const result = await supabase.auth.signInWithOtp({
+    email,
+    options: { ...options, emailRedirectTo: redirectTo },
+  });
+
+  return unwrap(result, `${CONTEXT}.signInWithEmailOtp`);
+}
