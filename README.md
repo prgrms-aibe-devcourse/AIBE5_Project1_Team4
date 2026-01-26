@@ -71,18 +71,20 @@ project1/
 
 ## Progress Overview
 
+> 최종 업데이트: 2026-01-26
+
 | Phase                 | Status    | Progress |
 | --------------------- | --------- | -------- |
 | EPIC 0: 기획/설계     | ✅ 완료   | 100%     |
 | EPIC 1: UI/UX (Figma) | ✅ 완료   | 100%     |
 | EPIC 2: DB/Supabase   | ✅ 완료   | 100%     |
-| EPIC 3: 인프라/세팅   | 🔄 진행중 | 67%      |
-| EPIC 4: MVP 읽기      | ⏳ 대기   | 0%       |
-| EPIC 5: MVP 편집      | ⏳ 대기   | 0%       |
-| EPIC 6: MVP 협업      | ⏳ 대기   | 0%       |
-| EPIC 7: Social        | ⏳ 대기   | 0%       |
-| EPIC 8: 고도화        | ⏳ 대기   | 0%       |
-| **총 진행률**         |           | **45%**  |
+| EPIC 3: 인프라/세팅   | ✅ 완료   | 89%      |
+| EPIC 4: MVP 읽기      | ✅ 완료   | 86%      |
+| EPIC 5: MVP 편집      | 🔄 진행중 | 75%      |
+| EPIC 6: MVP 협업      | 🔄 진행중 | 40%      |
+| EPIC 7: Social        | 🔄 진행중 | 40%      |
+| EPIC 8: 고도화        | 🔄 진행중 | 17%      |
+| **총 진행률**         |           | **83%**  |
 
 > 상세 체크리스트: [CHECKLIST.md](CHECKLIST.md)
 
@@ -112,8 +114,10 @@ project1/
 - [x] `create-review` - Review creation with permissions
 - [x] `ai-suggest-query` - AI-powered search suggestions
 - [x] `accept-invite-link` - Invitation system
+- [x] `update-trip-member-role` - Member role management
+- [x] `popular-regions` - Popular regions query
 
-### Phase 4: Infrastructure (In Progress - 67%)
+### Phase 4: Infrastructure ✅ (89%)
 
 - [x] Vite + React project setup
 - [x] Bootstrap 5 UI system
@@ -121,16 +125,63 @@ project1/
 - [x] Test environment (Vitest + Testing Library)
 - [x] TypeScript type definitions
 - [x] Service layer architecture
-- [ ] Auth login flow
-- [ ] Map SDK setup (Kakao Map API)
+- [x] Auth login flow (이메일 OTP, 카카오 OAuth, Protected Routes)
+- [ ] Map SDK setup (Kakao Map API) — 패키지 설치만 완료
 - [ ] Vercel deployment pipeline
+
+### Phase 5: Read-Only MVP ✅ (86%)
+
+- [x] 랜딩 페이지 (Hero, 최근/인기/추천 섹션, CTA)
+- [x] 공개 Trip 리스트 API 연동
+- [x] 카드 리스트 UI (TripCard, TripCardList, Skeleton)
+- [x] 무한 스크롤 (Intersection Observer)
+- [x] 정렬 (최신순/인기순)
+- [x] 검색 / 필터 (키워드, 지역, 테마, 기간)
+- [x] AI 검색 제안 (useAiSuggest)
+- [x] 상세 페이지 레이아웃 + 요약바 + 일정 패널
+- [ ] 지도 마커 렌더링 — Kakao Map 연동 필요
+
+### Phase 6: Edit MVP 🔄 (75%)
+
+- [x] Trip 생성 API (`createTripDraft` RPC)
+- [x] Trip 메타정보 수정 (`updateTripMeta` RPC)
+- [x] Day 추가/삭제/날짜 조정 (RPC 완료)
+- [x] 일정 CRUD (`upsertScheduleItem`, `deleteScheduleItem` RPC)
+- [x] 장소 검색 (`search-place` Edge Function)
+- [x] 편집 UI 컴포넌트 (TripCreateView 외 10개)
+- [ ] 지도 연동 — Kakao Map 필요
+
+### Phase 7: Collaboration 🔄 (40%)
+
+- [x] 초대 링크 참여 처리 (Edge Function)
+- [x] 참여자 목록 조회 (`getTripMembers` RPC)
+- [x] Owner/Editor 권한 분기 (RLS 적용)
+- [ ] 초대 링크 생성 UI
+- [ ] Supabase Realtime 연동 (Presence, Postgres Changes)
+
+### Phase 8: Social 🔄 (40%)
+
+- [x] 좋아요/찜 토글 UI (TripCard)
+- [ ] 좋아요/찜 토글 API 연동
+- [ ] 내 찜 목록 필터
 
 ## Next Steps
 
-1. **T-3004** Auth 로그인 플로우 완료
-2. **T-3005** Map SDK 세팅 (Kakao Map API)
-3. **T-3006** Vercel 배포 파이프라인 연결
-4. **EPIC 4** 읽기 전용 MVP 구현 시작
+### 우선순위 1: Map SDK 연동
+1. **T-3005** Kakao Map SDK 컴포넌트 구현
+2. **T-4023** 상세 페이지 지도 마커 렌더링
+3. **T-5031~T-5033** 편집 페이지 지도 연동
+
+### 우선순위 2: Social API 연동
+1. 좋아요/찜 토글 API 구현
+2. 내 찜 목록 필터 연동
+
+### 우선순위 3: 협업 기능 완성
+1. 초대 링크 생성 UI
+2. Supabase Realtime 연동
+
+### 우선순위 4: 배포
+1. **T-3006** Vercel 배포 파이프라인 연결
 
 ## Setup Instructions
 

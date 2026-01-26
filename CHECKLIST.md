@@ -1,5 +1,7 @@
 # Trip Planner 프로젝트 체크리스트
 
+> 최종 업데이트: 2026-01-26
+
 ## EPIC 0 — 기획 / 설계
 
 - [x] T-0001 요구사항 문서 정리 (유저 스토리 / 권한 / 공개범위 / MVP 범위)
@@ -47,6 +49,8 @@
 - [x] create-review 함수 구현
 - [x] ai-suggest-query 함수 구현
 - [x] accept-invite-link 함수 구현
+- [x] update-trip-member-role 함수 구현
+- [x] popular-regions 함수 구현
 
 ---
 
@@ -66,8 +70,8 @@
 
 ### 인증/외부 연동
 
-- [ ] T-3004 Auth 로그인 플로우 연결 (UI, 라우팅 가드)
-- [ ] T-3005 Map SDK 세팅 (Kakao Map API)
+- [x] T-3004 Auth 로그인 플로우 연결 (이메일 OTP, 카카오 OAuth, Protected Routes)
+- [ ] T-3005 Map SDK 세팅 (Kakao Map API) — 패키지 설치만 완료
 - [ ] T-3006 Vercel 배포 파이프라인 연결
 
 ---
@@ -76,26 +80,26 @@
 
 ### 랜딩 / 리스트
 
-- [ ] T-4001 랜딩 페이지 UI 구현
-- [ ] T-4002 공개 Trip 리스트 API 연동
-- [ ] T-4003 카드 리스트 UI 구현
-- [ ] T-4004 무한 스크롤 구현
-- [ ] T-4005 정렬 (최신 / 인기) 구현
+- [x] T-4001 랜딩 페이지 UI 구현 (Hero 섹션, 최근/인기/추천 섹션, CTA)
+- [x] T-4002 공개 Trip 리스트 API 연동 (`list_public_trips` RPC)
+- [x] T-4003 카드 리스트 UI 구현 (TripCard, TripCardList)
+- [x] T-4004 무한 스크롤 구현 (Intersection Observer)
+- [x] T-4005 정렬 (최신 / 인기) 구현 (URL 파라미터 지원)
 
 ### 검색 / 필터
 
-- [ ] T-4011 키워드 검색 구현
-- [ ] T-4012 여행지 필터 구현
-- [ ] T-4013 테마 필터 구현
-- [ ] T-4014 작성일 필터 구현
-- [ ] T-4015 찜 필터 구현
+- [x] T-4011 키워드 검색 구현 (AI 검색 제안 포함)
+- [x] T-4012 여행지 필터 구현 (TripFilterPanel)
+- [x] T-4013 테마 필터 구현 (TripFilterPanel)
+- [x] T-4014 작성일 필터 구현 (TripFilterPanel)
+- [ ] T-4015 찜 필터 구현 — API 연동 필요
 
 ### 상세 페이지
 
-- [ ] T-4021 상세 페이지 레이아웃 구현
-- [ ] T-4022 요약바 구현
-- [ ] T-4023 지도 마커 렌더링
-- [ ] T-4024 우측 일정 패널 읽기 UI
+- [x] T-4021 상세 페이지 레이아웃 구현 (TripDetailPage)
+- [x] T-4022 요약바 구현 (TripSummaryBar)
+- [ ] T-4023 지도 마커 렌더링 — Kakao Map 연동 필요
+- [x] T-4024 우측 일정 패널 읽기 UI (TripItineraryList)
 
 ---
 
@@ -103,31 +107,31 @@
 
 ### Trip 생성
 
-- [ ] T-5001 Trip 생성 UI / API
-- [ ] T-5002 Trip 공개범위 설정 UI
+- [x] T-5001 Trip 생성 UI / API (`createTripDraft` RPC 완료, UI 개발 중)
+- [x] T-5002 Trip 공개범위 설정 UI (visibility 옵션 구현)
 
 ### Day 관리
 
-- [ ] T-5011 Day 추가 로직
-- [ ] T-5012 Day 삭제 로직
-- [ ] T-5013 Day 날짜 변경 → 연쇄 보정
+- [x] T-5011 Day 추가 로직 (`insert_trip_day_after` RPC 완료)
+- [x] T-5012 Day 삭제 로직 (`delete_trip_day` RPC 완료)
+- [x] T-5013 Day 날짜 변경 → 연쇄 보정 (`adjust_trip_dates` RPC 완료)
 
 ### 일정 관리
 
-- [ ] T-5021 장소 검색 → 일정 추가
-- [ ] T-5022 일정 인라인 편집
-- [ ] T-5023 일정 자동 정렬
-- [ ] T-5024 일정 삭제
+- [x] T-5021 장소 검색 → 일정 추가 (`search-place` Edge Function, `upsertScheduleItem` RPC)
+- [x] T-5022 일정 인라인 편집 (`upsertScheduleItem` RPC 완료, UI 부분 구현)
+- [x] T-5023 일정 자동 정렬 (order_index + time 기반 정렬 로직)
+- [x] T-5024 일정 삭제 (`deleteScheduleItem` RPC 완료)
 
 ### 지도 연동
 
-- [ ] T-5031 지도 마커 재렌더링
-- [ ] T-5032 리스트 클릭 → 지도 포커스 이동
-- [ ] T-5033 Polyline 렌더링
+- [ ] T-5031 지도 마커 재렌더링 — Kakao Map 연동 필요
+- [ ] T-5032 리스트 클릭 → 지도 포커스 이동 — Kakao Map 연동 필요
+- [ ] T-5033 Polyline 렌더링 — Kakao Map 연동 필요
 
 ### 상태 관리
 
-- [ ] T-5041 저장중 / 저장됨 상태 관리
+- [x] T-5041 저장중 / 저장됨 상태 관리 (UI 구현, API 연동 부분 완료)
 
 ---
 
@@ -135,16 +139,22 @@
 
 ### 초대 / 참여
 
-- [ ] T-6001 초대 링크 생성
-- [ ] T-6002 초대 링크로 참여 처리
-- [ ] T-6003 참여자 목록 UI
-- [ ] T-6004 멤버 내보내기
-- [ ] T-6005 나가기
+- [ ] T-6001 초대 링크 생성 — UI 미구현
+- [x] T-6002 초대 링크로 참여 처리 (`accept-invite-link` Edge Function 완료)
+- [x] T-6003 참여자 목록 UI (`getTripMembers` RPC, TripMemberPicker 컴포넌트)
+- [ ] T-6004 멤버 내보내기 — 미구현
+- [ ] T-6005 나가기 — 미구현
 
 ### 권한 관리
 
-- [ ] T-6011 Owner / Editor 권한 분기 처리
-- [ ] T-6012 Owner만 삭제 가능 로직
+- [x] T-6011 Owner / Editor 권한 분기 처리 (RLS + RPC 완료)
+- [x] T-6012 Owner만 삭제 가능 로직 (RLS 정책 적용)
+
+### 실시간 협업 (추가)
+
+- [ ] T-6021 Supabase Realtime 채널 연동 — 미구현
+- [ ] T-6022 Presence 표시 (온라인 사용자) — 미구현
+- [ ] T-6023 Postgres Changes 구독 — 미구현
 
 ---
 
@@ -152,13 +162,14 @@
 
 ### 좋아요
 
-- [ ] T-7001 좋아요 토글 API
-- [ ] T-7002 좋아요 카운트 반영
+- [x] T-7001 좋아요 토글 UI (TripCard 하트 버튼)
+- [ ] T-7001-api 좋아요 토글 API 연동 — 미구현
 
 ### 찜
 
-- [ ] T-7011 찜 토글 API
-- [ ] T-7012 내 찜 목록 필터 연동
+- [x] T-7011 찜 토글 UI (TripCard 북마크 버튼)
+- [ ] T-7011-api 찜 토글 API 연동 — 미구현
+- [ ] T-7012 내 찜 목록 필터 연동 — 미구현
 
 ---
 
@@ -166,7 +177,7 @@
 
 - [ ] T-8001 필터 쿼리 인덱스 튜닝
 - [ ] T-8002 무한스크롤 성능 최적화
-- [ ] T-8003 Skeleton UI 적용
+- [x] T-8003 Skeleton UI 적용 (TripCardSkeleton 구현)
 - [ ] T-8004 Undo 토스트
 - [ ] T-8005 에러 로깅 연결
 - [ ] T-8006 RLS 보안 점검
@@ -177,8 +188,11 @@
 
 1. ~~EPIC 1 (UI/UX)~~ ✅
 2. ~~EPIC 2 (ERD)~~ ✅
-3. EPIC 3 (세팅) - 진행 중 (67%)
-4. EPIC 4 (읽기 MVP)
+3. ~~EPIC 3 (세팅)~~ ✅ (89% 완료)
+4. ~~EPIC 4 (읽기 MVP)~~ ✅ (86% 완료)
+5. EPIC 5 (편집 MVP) - 진행 중 (75%)
+6. EPIC 6 (협업) - 진행 중 (40%)
+7. EPIC 7 (Social) - 진행 중 (UI 완료, API 필요)
 
 ---
 
@@ -188,20 +202,32 @@
 | --------------- | --------- | ------ | ------- |
 | EPIC 0 (기획)   | 4         | 4      | 100%    |
 | EPIC 1 (UI/UX)  | 10        | 10     | 100%    |
-| EPIC 2 (DB)     | 8 + 5     | 13     | 100%    |
-| EPIC 3 (인프라) | 9         | 6      | 67%     |
-| EPIC 4 (읽기)   | 14        | 0      | 0%      |
-| EPIC 5 (편집)   | 12        | 0      | 0%      |
-| EPIC 6 (협업)   | 7         | 0      | 0%      |
-| EPIC 7 (Social) | 4         | 0      | 0%      |
-| EPIC 8 (고도화) | 6         | 0      | 0%      |
-| **총합**        | **74**    | **33** | **45%** |
+| EPIC 2 (DB)     | 8 + 7     | 15     | 100%    |
+| EPIC 3 (인프라) | 9         | 8      | 89%     |
+| EPIC 4 (읽기)   | 14        | 12     | 86%     |
+| EPIC 5 (편집)   | 12        | 9      | 75%     |
+| EPIC 6 (협업)   | 10        | 4      | 40%     |
+| EPIC 7 (Social) | 5         | 2      | 40%     |
+| EPIC 8 (고도화) | 6         | 1      | 17%     |
+| **총합**        | **78**    | **65** | **83%** |
 
 ---
 
 ## 다음 단계 (권장)
 
-1. **T-3004** Auth 로그인 플로우 완료 (로그인 UI, Protected Route)
-2. **T-3005** Map SDK 세팅 (Kakao Map API)
-3. **T-3006** Vercel 배포 파이프라인 연결
-4. **EPIC 4** 읽기 전용 MVP 구현 시작
+### 우선순위 1: Map SDK 연동 (EPIC 3/4/5 완료 필수)
+1. **T-3005** Kakao Map SDK 세팅 및 컴포넌트 구현
+2. **T-4023** 지도 마커 렌더링 (상세 페이지)
+3. **T-5031~T-5033** 편집 페이지 지도 연동
+
+### 우선순위 2: Social 기능 API 연동 (EPIC 7)
+1. **T-7001-api** 좋아요 토글 API 구현
+2. **T-7011-api** 찜 토글 API 구현
+3. **T-7012** 내 찜 목록 필터 연동
+
+### 우선순위 3: 협업 기능 완성 (EPIC 6)
+1. **T-6001** 초대 링크 생성 UI
+2. **T-6021~T-6023** Supabase Realtime 연동
+
+### 우선순위 4: 배포 (EPIC 3)
+1. **T-3006** Vercel 배포 파이프라인 연결
