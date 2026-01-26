@@ -15,30 +15,37 @@ export default function TripsPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // URL에서 검색어 가져오기 (URL이 source of truth)
+  // 1. URL에서 검색어('q')와 정렬 기준('sort') 가져오기
   const urlQuery = searchParams.get('q') || '';
+  const urlSort = searchParams.get('sort'); // ✅ [추가] URL에서 sort 값 읽기
 
-  // 입력 상태 (사용자가 타이핑 중인 값)
+  // 입력 상태
   const [inputValue, setInputValue] = useState(urlQuery);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
-  // URL 쿼리가 변경되면 입력값도 동기화 (페이지 간 이동 시)
+  // URL 쿼리가 변경되면 입력값도 동기화
   useEffect(() => {
     setInputValue(urlQuery);
   }, [urlQuery]);
 
-  // URL 쿼리가 실제 검색어
   const searchQuery = urlQuery;
 
-  // 정렬 상태
-  const [sortBy, setSortBy] = useState('latest'); // 'latest' | 'popular'
+  // 2. 정렬 상태 초기화 (URL 값이 있으면 그걸 쓰고, 없으면 'latest')
+  const [sortBy, setSortBy] = useState(urlSort || 'latest'); // ✅ [수정] 초기값 설정
+
+  // 3. URL의 sort 파라미터가 바뀌면 상태도 업데이트 (필수)
+  useEffect(() => {
+    if (urlSort) {
+      setSortBy(urlSort);
+    }
+  }, [urlSort]); // ✅ [추가] URL 변경 감지
 
   // 필터 상태
   const [selectedRegion, setSelectedRegion] = useState('전체');
   const [selectedTheme, setSelectedTheme] = useState('전체');
   const [dateFilter, setDateFilter] = useState('전체');
 
-  // 필터 옵션 (DB에서 로드, 여행 수 많은 순)
+  // 필터 옵션 로드
   const [filterOptions, setFilterOptions] = useState({ regions: [], themes: [] });
 
   useEffect(() => {
@@ -59,7 +66,7 @@ export default function TripsPage() {
     enabled: showSuggestions,
   });
 
-  // 여행 목록 조회
+  // 여행 목록 조회 (sortBy가 바뀌면 자동으로 다시 호출됨)
   const { items, hasMore, status, loadMore } = usePublicTrips({
     q: searchQuery,
     limit: 12,
@@ -72,7 +79,7 @@ export default function TripsPage() {
     enabled: hasMore && status !== 'loading',
   });
 
-  // 클라이언트 필터링 (지역, 테마, 기간)
+  // 클라이언트 필터링
   const filteredItems = useMemo(() => {
     return items.filter((trip) => {
       const matchRegion =
@@ -93,7 +100,7 @@ export default function TripsPage() {
     });
   }, [items, selectedRegion, selectedTheme, dateFilter]);
 
-  // 검색 실행 (URL 업데이트)
+  // 검색 핸들러
   const handleSearch = (query = inputValue) => {
     const q = query.trim();
     setShowSuggestions(false);
@@ -104,13 +111,11 @@ export default function TripsPage() {
     }
   };
 
-  // 제안 클릭
   const handleSuggestionClick = (suggestion) => {
     setInputValue(suggestion);
     handleSearch(suggestion);
   };
 
-  // 정규화된 쿼리 적용
   const handleApplyNormalized = () => {
     if (normalizedQuery && normalizedQuery !== inputValue) {
       setInputValue(normalizedQuery);
@@ -122,13 +127,12 @@ export default function TripsPage() {
     navigate(`/trips/${id}`);
   };
 
+  // 좋아요/북마크는 나중에 구현 (placeholder)
   const handleLike = (id) => {
-    // TODO: 좋아요 API 연동
     console.log('Like:', id);
   };
 
   const handleBookmark = (id) => {
-    // TODO: 북마크 API 연동
     console.log('Bookmark:', id);
   };
 
@@ -164,7 +168,6 @@ export default function TripsPage() {
                 onCloseSuggestions={() => setShowSuggestions(false)}
               />
 
-              {/* 현재 검색어 표시 */}
               {searchQuery && (
                 <div className="trips-page__search-result">
                   <span className="fw-semibold">"{searchQuery}"</span> 검색 결과
@@ -196,7 +199,10 @@ export default function TripsPage() {
           <ButtonGroup size="sm" className="trips-page__sort">
             <Button
               variant={sortBy === 'latest' ? 'primary' : 'outline-secondary'}
-              onClick={() => setSortBy('latest')}
+              onClick={() => {
+                setSortBy('latest');
+                // 필요 시 URL 업데이트: navigate(`/trips?sort=latest&q=${encodeURIComponent(searchQuery)}`)
+              }}
               className="d-flex align-items-center gap-1"
             >
               <Clock size={14} />
@@ -204,7 +210,10 @@ export default function TripsPage() {
             </Button>
             <Button
               variant={sortBy === 'popular' ? 'primary' : 'outline-secondary'}
-              onClick={() => setSortBy('popular')}
+              onClick={() => {
+                setSortBy('popular');
+                // 필요 시 URL 업데이트: navigate(`/trips?sort=popular&q=${encodeURIComponent(searchQuery)}`)
+              }}
               className="d-flex align-items-center gap-1"
             >
               <TrendingUp size={14} />
