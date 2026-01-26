@@ -1,6 +1,6 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { formatLocalDate, getTodayString } from '@/utils/date';
-import { updateTripMemberRole } from '@/services/trip-members.service';
+import { getTripMembers, updateTripMemberRole } from '@/services/trip-members.service';
 // Consolidated trip-create state and actions.
 
 const addDays = (value, days) => {
@@ -148,6 +148,38 @@ export const useTripCreateForm = ({ tripId } = {}) => {
     const selectedPlaces = new Set(currentDay.items.map((item) => item.place));
     return base.map((place) => ({ name: place, selected: selectedPlaces.has(place) }));
   }, [currentDay.items, searchQuery]);
+
+  useEffect(() => {
+    if (!tripId) return;
+    let isMounted = true;
+
+    const loadMembers = async () => {
+      try {
+        const result = await getTripMembers({ tripId });
+        const list = result?.data?.members ?? [];
+        if (!isMounted || list.length === 0) return;
+
+        setMembers(
+          list.map((member) => ({
+            id: member.userId,
+            name: member.displayName ?? 'Member',
+            selected: true,
+            isOwner: member.role === 'owner',
+            isSelf: Boolean(member.isSelf),
+            avatarUrl: member.avatarUrl ?? null,
+          })),
+        );
+      } catch (error) {
+        console.error('Failed to load members:', error);
+      }
+    };
+
+    void loadMembers();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [tripId]);
 
   const currentMember = useMemo(
     () => members.find((member) => member.isSelf) ?? null,

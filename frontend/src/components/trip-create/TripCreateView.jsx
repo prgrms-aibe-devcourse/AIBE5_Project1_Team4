@@ -9,7 +9,7 @@ import TripOwnerTransferModal from './TripOwnerTransferModal';
 import { useTripCreateForm } from '../../hooks/trip-create/useTripCreateForm';
 
 // Trip create page composition and wiring of state/handlers.
-const TripCreateView = ({ onNavigate, onSubmit }) => {
+const TripCreateView = ({ onNavigate, onSubmit, tripId }) => {
   const {
     form,
     setFormField,
@@ -52,7 +52,7 @@ const TripCreateView = ({ onNavigate, onSubmit }) => {
     transferOwner,
     removeMember,
     canManageMembers,
-  } = useTripCreateForm();
+  } = useTripCreateForm({ tripId });
 
   const [transferTarget, setTransferTarget] = useState(null);
   const [removeTarget, setRemoveTarget] = useState(null);
@@ -135,7 +135,10 @@ const TripCreateView = ({ onNavigate, onSubmit }) => {
               actions={
                 <TripTopActions
                   onShare={() => {}}
-                  onOpenMembers={() => setActivePanelTab('members')}
+                  onOpenMembers={() => {
+                    setActivePanelTab('members');
+                    setIsPanelOpen(true);
+                  }}
                 />
               }
               isRangeCalendarOpen={isRangeCalendarOpen}

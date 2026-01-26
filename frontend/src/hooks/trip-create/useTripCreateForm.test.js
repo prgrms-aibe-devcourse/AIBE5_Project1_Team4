@@ -1,13 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 
-const { updateTripMemberRoleMock } = vi.hoisted(() => {
+const { updateTripMemberRoleMock, getTripMembersMock } = vi.hoisted(() => {
   const updateTripMemberRoleMock = vi.fn();
-  return { updateTripMemberRoleMock };
+  const getTripMembersMock = vi.fn();
+  return { updateTripMemberRoleMock, getTripMembersMock };
 });
 
 vi.mock('@/services/trip-members.service', () => ({
   updateTripMemberRole: updateTripMemberRoleMock,
+  getTripMembers: getTripMembersMock,
 }));
 
 import { useTripCreateForm } from './useTripCreateForm';
@@ -25,12 +27,14 @@ describe('useTripCreateForm owner transfer', () => {
     });
 
     expect(updateTripMemberRoleMock).not.toHaveBeenCalled();
+    expect(getTripMembersMock).not.toHaveBeenCalled();
     expect(
       result.current.members.find((member) => member.id === 'member-b')?.isOwner,
     ).toBe(true);
   });
 
   it('calls updateTripMemberRole and syncs owner from API roles', async () => {
+    getTripMembersMock.mockResolvedValueOnce({ data: { members: [] } });
     updateTripMemberRoleMock.mockResolvedValueOnce({
       data: {
         members: [
