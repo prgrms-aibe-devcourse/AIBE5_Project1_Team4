@@ -1,4 +1,3 @@
-// src/pages/HomePage.jsx
 import { useState, useEffect, useRef } from 'react';
 import { Container, Row, Col, Badge } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
@@ -17,7 +16,7 @@ const TripSection = ({
   onCardClick,
   onLike,
   onBookmark,
-  isLoading, // ✅ [추가] 로딩 상태 prop
+  isLoading, // ✅ 로딩 상태 prop
 }) => {
   const scrollRef = useRef(null);
 
@@ -50,7 +49,7 @@ const TripSection = ({
 
         <div ref={scrollRef} className="home-section__cards">
           {isLoading ? (
-            // ✅ [추가] 로딩 스켈레톤 (데이터 로딩 중 표시)
+            // ✅ 로딩 스켈레톤 (데이터 로딩 중 표시)
             [...Array(4)].map((_, i) => (
               <div key={i} className="home-section__card">
                 <div
@@ -107,7 +106,7 @@ export default function HomePage() {
   const [recentTrips, setRecentTrips] = useState([]);
   const [popularTrips, setPopularTrips] = useState([]);
   const [recommendTrips, setRecommendTrips] = useState([]);
-  // ✅ [추가] 로딩 상태
+  // ✅ 로딩 상태
   const [isLoading, setIsLoading] = useState(true);
 
   // AI 쿼리 제안
@@ -122,7 +121,7 @@ export default function HomePage() {
     enabled: showSuggestions,
   });
 
-  // ✅ [추가] API 데이터 Fetching 로직
+  // ✅ API 데이터 Fetching 로직
   useEffect(() => {
     const fetchHomeData = async () => {
       try {
@@ -134,12 +133,12 @@ export default function HomePage() {
           listPublicTrips({ limit: 8, sort: 'popular' }),
         ]);
 
-        // 상태 업데이트 (Service에서 items 배열을 반환함)
+        // 상태 업데이트
         setRecentTrips(latestResult.items || []);
         setPopularTrips(popularResult.items || []);
         
-        // 추천 여행: 임시로 최신순 데이터를 사용 (추후 알고리즘 적용)
-        setRecommendTrips(latestResult.items || []);
+        // ✅ [수정] 추천 여행: '최신순' -> '인기순' 데이터를 임시 사용
+        setRecommendTrips(popularResult.items || []); 
 
       } catch (error) {
         console.error('Failed to load home trips:', error);
@@ -155,7 +154,7 @@ export default function HomePage() {
     navigate(`/trips/${id}`);
   };
 
-  // ✅ [추가] UI 업데이트 헬퍼 함수
+  // ✅ UI 업데이트 헬퍼 함수
   const updateTripList = (list, id, field, countField) => {
     return list.map((t) => {
       if (t.id !== id) return t;
@@ -170,14 +169,14 @@ export default function HomePage() {
     });
   };
 
-  // ✅ [추가] 좋아요 핸들러 (UI 즉시 반영)
+  // ✅ 좋아요 핸들러 (UI 즉시 반영 - 낙관적 업데이트)
   const handleLike = (id) => {
     setRecentTrips(prev => updateTripList(prev, id, 'isLiked', 'like_count'));
     setPopularTrips(prev => updateTripList(prev, id, 'isLiked', 'like_count'));
     setRecommendTrips(prev => updateTripList(prev, id, 'isLiked', 'like_count'));
   };
 
-  // ✅ [추가] 북마크 핸들러 (UI 즉시 반영)
+  // ✅ 북마크 핸들러 (UI 즉시 반영 - 낙관적 업데이트)
   const handleBookmark = (id) => {
     setRecentTrips(prev => updateTripList(prev, id, 'isBookmarked', 'bookmark_count'));
     setPopularTrips(prev => updateTripList(prev, id, 'isBookmarked', 'bookmark_count'));
