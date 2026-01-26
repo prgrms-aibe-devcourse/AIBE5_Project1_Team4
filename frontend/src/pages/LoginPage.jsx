@@ -4,29 +4,64 @@ import { Container, Card, Form, Button, Alert } from "react-bootstrap";
 import { Mail, Lock, PlaneTakeoff } from "lucide-react"; 
 import { KakaoLoginButton } from "../components/KakaoLoginButton";
 
+function notifyAuthError(e) {
+  // unwrap()이 던지는 AppError 계약 우선 처리
+  if (e?.name === 'AppError') {
+    if (e.kind === 'validation') return toast(e.message, { icon: 'warning' });
+    if (e.kind === 'network') return toast(e.message, { icon: 'warning' });
+
+    // server / unknown / auth / forbidden 등은 alert로
+    return alert({
+      title: '요청 실패',
+      text: e.message,
+      icon: 'error',
+    });
+  }
+
+  // fallback
+  return alert({
+    title: '요청 실패',
+    text: e?.message ?? '알 수 없는 오류가 발생했습니다.',
+    icon: 'error',
+  });
+}
+
+/**
+ * NOTE:
+ * - 이 페이지는 이메일 로그인과 카카오 로그인 기능만 제공합니다.
+ */
 const LoginPage = () => {
   const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
 
-  const returnTo = new URLSearchParams(location.search).get("returnTo");
+  const returnTo = new URLSearchParams(location.search).get('returnTo');
 
-  const onSubmit = async (e) => {
-    e.preventDefault();
-    setErrorMsg("");
-    if (!email || !password) {
-      setErrorMsg("이메일과 비밀번호를 입력해주세요.");
+  async function onEmailOtpLogin() {
+    if (loading) return;
+
+    if (!email) {
+      toast('이메일을 입력해주세요.', { icon: 'warning' });
       return;
     }
+
     setLoading(true);
     try {
-      setErrorMsg("로그인 기능은 추후 연동됩니다. (현재: 레이아웃 전용)");
+      await signInWithEmailOtp(email);
+      toast(
+        '메일을 보냈어요! 메일함(스팸함 포함)에서 로그인 링크를 확인해주세요.',
+        {
+          icon: 'success',
+          timer: 2500,
+        },
+      );
+    } catch (err) {
+      notifyAuthError(err);
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   return (
     <div style={{ 
