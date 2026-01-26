@@ -1,5 +1,6 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { formatLocalDate, getTodayString } from '@/utils/date';
+import { getTripMembers, updateTripMemberRole } from '@/services/trip-members.service';
 // Consolidated trip-create state and actions.
 
 const addDays = (value, days) => {
@@ -79,7 +80,7 @@ const computeSummary = (items) => {
   };
 };
 
-export const useTripCreateForm = () => {
+export const useTripCreateForm = ({ tripId } = {}) => {
   const today = getTodayString();
   const [form, setForm] = useState({
     title: '서울 2박 3일 맛집 여행',
@@ -103,7 +104,13 @@ export const useTripCreateForm = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [members, setMembers] = useState([
-    { id: 'member-a', name: '참여자 A', selected: true, isOwner: true },
+    {
+      id: 'member-a',
+      name: '참여자 A',
+      selected: true,
+      isOwner: true,
+      isSelf: true,
+    },
     { id: 'member-b', name: '참여자 B', selected: false, isOwner: false },
     { id: 'member-c', name: '참여자 C', selected: true, isOwner: false },
   ]);
@@ -141,6 +148,45 @@ export const useTripCreateForm = () => {
     const selectedPlaces = new Set(currentDay.items.map((item) => item.place));
     return base.map((place) => ({ name: place, selected: selectedPlaces.has(place) }));
   }, [currentDay.items, searchQuery]);
+
+  useEffect(() => {
+    if (!tripId) return;
+    let isMounted = true;
+
+    const loadMembers = async () => {
+      try {
+        const result = await getTripMembers({ tripId });
+        const list = result?.data?.members ?? [];
+        if (!isMounted || list.length === 0) return;
+
+        setMembers(
+          list.map((member) => ({
+            id: member.userId,
+            name: member.displayName ?? 'Member',
+            selected: true,
+            isOwner: member.role === 'owner',
+            isSelf: Boolean(member.isSelf),
+            avatarUrl: member.avatarUrl ?? null,
+          })),
+        );
+      } catch (error) {
+        console.error('Failed to load members:', error);
+      }
+    };
+
+    void loadMembers();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [tripId]);
+
+  const currentMember = useMemo(
+    () => members.find((member) => member.isSelf) ?? null,
+    [members],
+  );
+  const currentUserRole = currentMember?.isOwner ? 'owner' : 'editor';
+  const canManageMembers = currentUserRole === 'owner';
 
   const setFormField = useCallback((field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -330,7 +376,7 @@ export const useTripCreateForm = () => {
     );
   }, []);
 
-  const transferOwner = useCallback((memberId) => {
+  const applyOwnerLocally = useCallback((memberId) => {
     setMembers((prev) =>
       prev.map((member) => ({
         ...member,
@@ -338,6 +384,54 @@ export const useTripCreateForm = () => {
       })),
     );
   }, []);
+
+  const applyRolesFromApi = useCallback((roles) => {
+    if (!Array.isArray(roles) || roles.length === 0) {
+      return false;
+    }
+
+    setMembers((prev) =>
+      prev.map((member) => {
+        const match = roles.find((item) => item.userId === member.id);
+        if (!match) return member;
+        return { ...member, isOwner: match.role === 'owner' };
+      }),
+    );
+
+    return true;
+  }, []);
+
+  const transferOwner = useCallback(
+    (memberId) => {
+      if (!canManageMembers) {
+        return;
+      }
+
+      if (!tripId) {
+        applyOwnerLocally(memberId);
+        return;
+      }
+
+      const doTransfer = async () => {
+        try {
+          const result = await updateTripMemberRole({
+            tripId,
+            memberId,
+            role: 'owner',
+          });
+          const updated = applyRolesFromApi(result?.data?.members);
+          if (!updated) {
+            applyOwnerLocally(memberId);
+          }
+        } catch (error) {
+          console.error('Failed to transfer owner:', error);
+        }
+      };
+
+      void doTransfer();
+    },
+    [applyOwnerLocally, applyRolesFromApi, canManageMembers, tripId],
+  );
 
   const removeMember = useCallback((memberId) => {
     setMembers((prev) => prev.filter((member) => member.id !== memberId));
@@ -389,5 +483,7 @@ export const useTripCreateForm = () => {
     toggleMember,
     transferOwner,
     removeMember,
+    currentUserRole,
+    canManageMembers,
   };
 };

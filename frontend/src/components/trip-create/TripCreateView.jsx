@@ -9,7 +9,7 @@ import TripOwnerTransferModal from './TripOwnerTransferModal';
 import { useTripCreateForm } from '../../hooks/trip-create/useTripCreateForm';
 
 // Trip create page composition and wiring of state/handlers.
-const TripCreateView = ({ onNavigate, onSubmit }) => {
+const TripCreateView = ({ onNavigate, onSubmit, tripId }) => {
   const {
     form,
     setFormField,
@@ -51,7 +51,8 @@ const TripCreateView = ({ onNavigate, onSubmit }) => {
     toggleMember,
     transferOwner,
     removeMember,
-  } = useTripCreateForm();
+    canManageMembers,
+  } = useTripCreateForm({ tripId });
 
   const [transferTarget, setTransferTarget] = useState(null);
   const [removeTarget, setRemoveTarget] = useState(null);
@@ -134,7 +135,10 @@ const TripCreateView = ({ onNavigate, onSubmit }) => {
               actions={
                 <TripTopActions
                   onShare={() => {}}
-                  onOpenMembers={() => setActivePanelTab('members')}
+                  onOpenMembers={() => {
+                    setActivePanelTab('members');
+                    setIsPanelOpen(true);
+                  }}
                 />
               }
               isRangeCalendarOpen={isRangeCalendarOpen}
@@ -178,8 +182,13 @@ const TripCreateView = ({ onNavigate, onSubmit }) => {
               memberProps={{
                 members,
                 onToggleMember: toggleMember,
-                onOpenTransfer: (memberId) => setTransferTarget(memberId),
-                onRemoveMember: (memberId) => setRemoveTarget(memberId),
+                canManageMembers,
+                onOpenTransfer: (memberId) => {
+                  if (canManageMembers) setTransferTarget(memberId);
+                },
+                onRemoveMember: (memberId) => {
+                  if (canManageMembers) setRemoveTarget(memberId);
+                },
               }}
             />
           )}
