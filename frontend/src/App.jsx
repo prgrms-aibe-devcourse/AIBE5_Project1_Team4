@@ -5,6 +5,7 @@ import { Route, Routes } from 'react-router-dom';
 // 페이지 컴포넌트 import
 import HomePage from './pages/HomePage';
 import TripsPage from './pages/TripsPage';
+import MyPage from './pages/MyPage';
 
 // 기존 개발용 컴포넌트
 import AuthCallbackPage from './pages/AuthCallbackPage';
@@ -31,6 +32,8 @@ function App() {
           {/* TripDetailPage 페이지 라우트 */}
           <Route path="/trips/:id" element={<TripDetailPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
+          {/* MyPage 페이지 라우트*/}
+          <Route path="/me" element={<MyPage />} />
 
           <Route path="/login" element={<LoginPage />} />
           <Route path="/logout" element={<LogoutPage />} />
