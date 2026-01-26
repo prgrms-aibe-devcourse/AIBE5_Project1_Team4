@@ -1,119 +1,29 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Container, Row, Col, Badge } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import SearchBar from '@/components/SearchBar';
-import TripCard from '@/components/trip/TripCard';
 import { useAiSuggest } from '@/hooks/useAiSuggest';
 import { listPublicTrips } from '@/services/trips.service';
+import TripSection from '@/components/home/TripSection';
 import './HomePage.css';
 
-// 여행 섹션 컴포넌트
-const TripSection = ({
-  title,
-  subtitle,
-  trips,
-  onCardClick,
-  onLike,
-  onBookmark,
-  isLoading,
-  linkTo = "/trips" // ✅ [수정] 이동할 링크 주소를 prop으로 받음 (기본값: 전체 목록)
-}) => {
-  const scrollRef = useRef(null);
-
-  const scroll = (direction) => {
-    if (scrollRef.current) {
-      const scrollAmount = direction === 'left' ? -320 : 320;
-      scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-    }
-  };
-
-  return (
-    <div className="home-section">
-      <div className="home-section__header">
-        <div>
-          <h4 className="home-section__title">{title}</h4>
-          {subtitle && <p className="home-section__subtitle">{subtitle}</p>}
-        </div>
-        {/* ✅ [수정] 전달받은 linkTo 주소로 이동 */}
-        <Link to={linkTo} className="home-section__more">
-          더보기 <ChevronRight size={16} />
-        </Link>
-      </div>
-
-      <div className="home-section__slider">
-        <button
-          className="home-section__nav home-section__nav--left"
-          onClick={() => scroll('left')}
-        >
-          <ChevronLeft size={24} />
-        </button>
-
-        <div ref={scrollRef} className="home-section__cards">
-          {isLoading ? (
-            // 로딩 스켈레톤
-            [...Array(4)].map((_, i) => (
-              <div key={i} className="home-section__card">
-                <div
-                  className="bg-light rounded"
-                  style={{ 
-                    height: '320px', 
-                    width: '100%', 
-                    animation: 'pulse 1.5s infinite',
-                    backgroundColor: '#f0f0f0' 
-                  }}
-                ></div>
-              </div>
-            ))
-          ) : trips && trips.length > 0 ? (
-            trips.map((trip) => (
-              <div key={trip.id} className="home-section__card">
-                <TripCard
-                  trip={trip}
-                  onCardClick={onCardClick}
-                  onLikeClick={onLike}
-                  onBookmarkClick={onBookmark}
-                  isLiked={trip.isLiked || false}
-                  isBookmarked={trip.isBookmarked || false}
-                />
-              </div>
-            ))
-          ) : (
-            <div className="home-section__empty">
-              등록된 여행이 없습니다.
-            </div>
-          )}
-        </div>
-
-        <button
-          className="home-section__nav home-section__nav--right"
-          onClick={() => scroll('right')}
-        >
-          <ChevronRight size={24} />
-        </button>
-      </div>
-    </div>
-  );
-};
-
 export default function HomePage() {
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // 페이지 이동을 위한 훅
 
-  // 검색 상태
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showSuggestions, setShowSuggestions] = useState(false);
+  // 상태 관리 (State)
+  const [searchTerm, setSearchTerm] = useState(''); // 검색어 입력값
+  const [showSuggestions, setShowSuggestions] = useState(false); // 검색어 제안 표시 여부
 
-  // 데이터 상태
+  // 여행 데이터 상태 (최신, 인기, 추천)
   const [recentTrips, setRecentTrips] = useState([]);
   const [popularTrips, setPopularTrips] = useState([]);
   const [recommendTrips, setRecommendTrips] = useState([]);
-  // 로딩 상태
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true); // 로딩 상태
 
-  // AI 쿼리 제안
+  // 커스텀 훅 (AI 검색 제안)
   const {
-    normalizedQuery,
-    suggestions,
+    normalizedQuery, // 정규화된 쿼리 (오타 교정 등)
+    suggestions,     // 추천 검색어 목록
     isLoading: isAiLoading,
     error: aiError,
   } = useAiSuggest(searchTerm, {
@@ -122,23 +32,21 @@ export default function HomePage() {
     enabled: showSuggestions,
   });
 
-  // API 데이터 Fetching 로직
+  // 초기 데이터 로드 (useEffect)
   useEffect(() => {
     const fetchHomeData = async () => {
       try {
         setIsLoading(true);
-
-        // 최신순, 인기순 병렬 호출
+        // 최신순, 인기순 데이터를 병렬로 동시에 호출하여 속도 최적화
         const [latestResult, popularResult] = await Promise.all([
           listPublicTrips({ limit: 8, sort: 'latest' }),
           listPublicTrips({ limit: 8, sort: 'popular' }),
         ]);
 
+        // 받아온 데이터 상태 업데이트
         setRecentTrips(latestResult.items || []);
         setPopularTrips(popularResult.items || []);
-        
-        // 추천 여행: 현재 인기순 데이터를 사용 중이므로 인기순 링크로 연결 예정
-        setRecommendTrips(popularResult.items || []); 
+        setRecommendTrips(popularResult.items || []); // 추천 로직 개발 전까지 인기순 사용
 
       } catch (error) {
         console.error('Failed to load home trips:', error);
@@ -150,11 +58,11 @@ export default function HomePage() {
     fetchHomeData();
   }, []);
 
-  const handleCardClick = (id) => {
-    navigate(`/trips/${id}`);
-  };
+  // 네비게이션 핸들러
+  const handleCardClick = (id) => navigate(`/trips/${id}`); // 상세 페이지로 이동
 
-  // UI 업데이트 헬퍼 함수
+  // UI 업데이트 헬퍼 함수 (낙관적 업데이트)
+  // API 응답을 기다리지 않고 화면의 좋아요/북마크 숫자를 즉시 변경해주는 함수
   const updateTripList = (list, id, field, countField) => {
     return list.map((t) => {
       if (t.id !== id) return t;
@@ -169,36 +77,41 @@ export default function HomePage() {
     });
   };
 
-  // 좋아요 핸들러
+  // 인터랙션 핸들러 (좋아요/북마크)
+  // 현재는 UI 상태만 변경하고, 실제 DB 연동은 추후 API 개발 후 적용 예정
   const handleLike = (id) => {
     setRecentTrips(prev => updateTripList(prev, id, 'isLiked', 'like_count'));
     setPopularTrips(prev => updateTripList(prev, id, 'isLiked', 'like_count'));
     setRecommendTrips(prev => updateTripList(prev, id, 'isLiked', 'like_count'));
+    console.log("좋아요 클릭 (API 미연동):", id);
   };
 
-  // 북마크 핸들러
   const handleBookmark = (id) => {
     setRecentTrips(prev => updateTripList(prev, id, 'isBookmarked', 'bookmark_count'));
     setPopularTrips(prev => updateTripList(prev, id, 'isBookmarked', 'bookmark_count'));
     setRecommendTrips(prev => updateTripList(prev, id, 'isBookmarked', 'bookmark_count'));
+    console.log("북마크 클릭 (API 미연동):", id);
   };
 
-  // 검색 실행
+  // 검색 관련 핸들러
+  // 검색 실행 (엔터 키 또는 돋보기 클릭 시)
   const handleSearch = (query = searchTerm) => {
     const q = query.trim();
     setShowSuggestions(false);
     if (q) {
-      navigate(`/trips?q=${encodeURIComponent(q)}`);
+      navigate(`/trips?q=${encodeURIComponent(q)}`); // 검색 결과 페이지로 이동
     } else {
-      navigate('/trips');
+      navigate('/trips'); // 전체 목록으로 이동
     }
   };
 
+  // 추천 검색어 클릭 시
   const handleSuggestionClick = (suggestion) => {
     setSearchTerm(suggestion);
     handleSearch(suggestion);
   };
 
+  // 정규화된 쿼리 적용 (오타 교정 제안 클릭 시)
   const handleApplyNormalized = () => {
     if (normalizedQuery && normalizedQuery !== searchTerm) {
       setSearchTerm(normalizedQuery);
@@ -208,22 +121,16 @@ export default function HomePage() {
 
   return (
     <div className="home-page">
-      {/* Hero Section */}
+      {/* A. Hero 섹션: 메인 타이틀 및 검색창 */}
       <div className="home-hero">
         <Container className="home-hero__content">
-          <Badge bg="primary" className="home-hero__badge">
-            Trip Planner
-          </Badge>
+          <Badge bg="primary" className="home-hero__badge">Trip Planner</Badge>
           <h1 className="home-hero__title">당신의 다음 여행은 어디인가요?</h1>
-
           <Row className="justify-content-center">
             <Col md={8} lg={6}>
               <SearchBar
                 value={searchTerm}
-                onChange={(val) => {
-                  setSearchTerm(val);
-                  setShowSuggestions(true);
-                }}
+                onChange={(val) => { setSearchTerm(val); setShowSuggestions(true); }}
                 onSubmit={handleSearch}
                 onFocus={() => setShowSuggestions(true)}
                 placeholder="여행지, 태그, 키워드로 검색"
@@ -241,8 +148,10 @@ export default function HomePage() {
         </Container>
       </div>
 
-      {/* Content Section */}
+      {/* B. 메인 콘텐츠 섹션: 여행 리스트 목록 */}
       <Container className="home-content">
+        
+        {/* 분리된 TripSection 컴포넌트 재사용 */}
         <TripSection
           title="추천 여행"
           subtitle="당신을 위한 맞춤 여행지"
@@ -251,7 +160,7 @@ export default function HomePage() {
           onCardClick={handleCardClick}
           onLike={handleLike}
           onBookmark={handleBookmark}
-          linkTo="/trips?sort=popular" // ✅ [수정] 추천 -> 인기순 정렬 페이지로 이동
+          linkTo="/trips?sort=popular" // 더보기 클릭 시 인기순 정렬
         />
 
         <TripSection
@@ -262,7 +171,7 @@ export default function HomePage() {
           onCardClick={handleCardClick}
           onLike={handleLike}
           onBookmark={handleBookmark}
-          linkTo="/trips?sort=popular" // ✅ [수정] 인기 -> 인기순 정렬 페이지로 이동
+          linkTo="/trips?sort=popular" // 더보기 클릭 시 인기순 정렬
         />
 
         <TripSection
@@ -273,18 +182,14 @@ export default function HomePage() {
           onCardClick={handleCardClick}
           onLike={handleLike}
           onBookmark={handleBookmark}
-          linkTo="/trips?sort=latest" // ✅ [수정] 최근 -> 최신순 정렬 페이지로 이동
+          linkTo="/trips?sort=latest" // 더보기 클릭 시 최신순 정렬
         />
-
-        {/* CTA Section */}
+        
+        {/* C. CTA (Call To Action) 섹션: 여행 만들기 버튼 */}
         <div className="home-cta">
           <div className="home-cta__content">
-            <h2 className="home-cta__title">
-              나만의 여행을 계획할 준비가 되셨나요?
-            </h2>
-            <Link to="/trips/new" className="home-cta__btn">
-              여행 일정 만들기
-            </Link>
+            <h2 className="home-cta__title">나만의 여행을 계획할 준비가 되셨나요?</h2>
+            <Link to="/trips/new" className="home-cta__btn">여행 일정 만들기</Link>
           </div>
           <div className="home-cta__circle home-cta__circle--1" />
           <div className="home-cta__circle home-cta__circle--2" />
