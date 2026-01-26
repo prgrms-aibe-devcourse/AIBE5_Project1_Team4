@@ -21,27 +21,49 @@ export class AppError extends Error {
 
 // Supabase(PostgREST)에서 자주 보는 케이스들 매핑
 export function classifySupabaseError(err) {
-  // supabase-js error는 상황에 따라 구조가 다를 수 있어 방어적으로
   const status = err?.status ?? err?.code ?? null;
-  const message = err?.message ?? 'Unknown error';
 
-  // custom rpc exception message mapping (detail APIs)
-  if (message.includes('trip_not_found'))
+  const message = String(err?.message ?? 'Unknown error');
+  const details = String(err?.details ?? '');
+  const hint = String(err?.hint ?? '');
+  const combined = `${message} ${details} ${hint}`;
+
+  // -------------------------------------------------------
+  // Custom RPC exception mapping (PL/pgSQL raise exception)
+  // -------------------------------------------------------
+  if (combined.includes('UNAUTHORIZED')) return { kind: 'auth', status: 401 };
+  if (combined.includes('FORBIDDEN')) return { kind: 'forbidden', status: 403 };
+  if (combined.includes('NOT_FOUND') || combined.includes('trip_not_found'))
     return { kind: 'not_found', status: 404 };
+  if (combined.includes('BAD_REQUEST'))
+    return { kind: 'validation', status: 400 };
+  if (combined.includes('CONFLICT')) return { kind: 'conflict', status: 409 };
 
-  // PostgREST는 HTTP status를 주는 경우가 많음
+  if (combined.includes('INVALID_DATE_RANGE'))
+    return { kind: 'validation', status: 400 };
+  if (combined.includes('INVALID_TITLE'))
+    return { kind: 'validation', status: 400 };
+  if (combined.includes('INVALID_VISIBILITY'))
+    return { kind: 'validation', status: 400 };
+
+  // -------------------------------------------------------
+  // PostgREST HTTP status mapping
+  // -------------------------------------------------------
   if (err?.status === 401) return { kind: 'auth', status: 401 };
   if (err?.status === 403) return { kind: 'forbidden', status: 403 };
   if (err?.status === 404) return { kind: 'not_found', status: 404 };
   if (err?.status === 409) return { kind: 'conflict', status: 409 };
   if (err?.status >= 500) return { kind: 'server', status: err.status };
 
-  // Postgres error code (예: unique violation 23505)
-  // supabase 에러에 code가 들어오는 경우가 있어 대비
-  if (err?.code === '23505') return { kind: 'conflict', status: 409 }; // unique_violation
-  if (err?.code === '22P02') return { kind: 'validation', status: 400 }; // invalid_text_representation (uuid 파싱 등)
+  // -------------------------------------------------------
+  // Postgres error codes
+  // -------------------------------------------------------
+  if (err?.code === '23505') return { kind: 'conflict', status: 409 };
+  if (err?.code === '22P02') return { kind: 'validation', status: 400 };
 
-  // 네트워크/연결류(브라우저 fetch 에러)
+  // -------------------------------------------------------
+  // Network errors
+  // -------------------------------------------------------
   if (message.toLowerCase().includes('failed to fetch'))
     return { kind: 'network', status: 0 };
 

@@ -1,6 +1,11 @@
 // src/services/trips.service.js
 import { supabase } from '@/lib/supabaseClient';
-import { unwrap, toAppError, logError } from '@/services/_core/errors';
+import {
+  unwrap,
+  toAppError,
+  logError,
+  AppError,
+} from '@/services/_core/errors';
 
 /**
  * 카드에서 바로 쓰는 DTO
@@ -69,8 +74,16 @@ export async function getFilterOptions() {
     const themes = unwrap(themesResult, context) || [];
 
     return {
-      regions: regions.map((r) => ({ name: r.name, slug: r.slug, count: Number(r.trip_count) })),
-      themes: themes.map((t) => ({ name: t.name, slug: t.slug, count: Number(t.trip_count) })),
+      regions: regions.map((r) => ({
+        name: r.name,
+        slug: r.slug,
+        count: Number(r.trip_count),
+      })),
+      themes: themes.map((t) => ({
+        name: t.name,
+        slug: t.slug,
+        count: Number(t.trip_count),
+      })),
     };
   } catch (e) {
     const appErr = toAppError(e, context);
@@ -112,4 +125,54 @@ export async function listPublicTrips(params = {}) {
     logError(appErr);
     throw appErr;
   }
+}
+
+function requireRow(value, context, message = 'RPC returned empty result') {
+  if (!value) throw new AppError({ kind: 'unknown', message, context });
+  return value;
+}
+
+export async function createTripDraft() {
+  const result = await supabase.rpc('create_trip_draft');
+  const data = unwrap(result, 'trips.createTripDraft');
+
+  const tripId = data?.[0]?.trip_id;
+  return requireRow(
+    tripId,
+    'trips.createTripDraft',
+    'create_trip_draft returned no trip_id',
+  );
+}
+
+export async function updateTripMeta({ tripId, title, summary, visibility }) {
+  const result = await supabase.rpc('update_trip_meta', {
+    p_trip_id: tripId,
+    p_title: title ?? null,
+    p_summary: summary ?? null,
+    p_visibility: visibility ?? null,
+  });
+  const data = unwrap(result, 'trips.updateTripMeta');
+
+  const id = data?.[0]?.trip_id;
+  return requireRow(
+    id,
+    'trips.updateTripMeta',
+    'update_trip_meta returned no trip_id',
+  );
+}
+
+export async function adjustTripDates({ tripId, startDate, endDate }) {
+  const result = await supabase.rpc('adjust_trip_dates', {
+    p_trip_id: tripId,
+    p_start_date: startDate,
+    p_end_date: endDate,
+  });
+  const data = unwrap(result, 'trips.adjustTripDates');
+
+  const id = data?.[0]?.trip_id;
+  return requireRow(
+    id,
+    'trips.adjustTripDates',
+    'adjust_trip_dates returned no trip_id',
+  );
 }
