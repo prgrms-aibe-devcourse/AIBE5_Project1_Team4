@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTripDetail } from '../hooks/trips/useTripDetail';
 
@@ -12,7 +12,12 @@ import './TripDetailPage.css';
  */
 const TripDetailPage = () => {
   const { id } = useParams();
-  
+
+  // 진입 시 스크롤 위치 초기화 (이전 페이지 스크롤 유지되는 이슈 대응)
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // 커스텀 훅을 통해 DB 데이터 로드 (작성자 프로필 포함)
   const { tripData, loading, error } = useTripDetail(id);
 
@@ -31,10 +36,7 @@ const TripDetailPage = () => {
 
       {/* 메인 바디 영역 (지도 및 일정 섹션) */}
       <div className="trip-detail-body">
-        <TripMapSection
-          schedules={tripData.schedule?.days} 
-          selectedId={null} 
-        />
+        <TripMapSection schedules={tripData.schedule?.days} selectedId={null} />
       </div>
     </div>
   );
