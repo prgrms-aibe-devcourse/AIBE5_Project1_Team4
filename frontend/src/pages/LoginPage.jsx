@@ -1,20 +1,13 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useLocation } from "react-router-dom";
+import { Container, Card, Form, Button, Alert } from "react-bootstrap";
+import { Mail, Lock, PlaneTakeoff } from "lucide-react"; 
 import { KakaoLoginButton } from "../components/KakaoLoginButton";
 
-/**
- * NOTE:
- * - 이 페이지는 로그인 "UI 레이아웃"만 담당합니다.
- * - 인증/세션 로직은 팀의 useAuth() 또는 상위 AuthProvider에서 처리합니다.
- * - Supabase 직접 호출(signInWithPassword)은 팀 합의에 따라 제거했습니다.
- */
 const LoginPage = () => {
   const location = useLocation();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  // UI 상태(연동 후에는 useAuth() 상태로 대체될 수 있음)
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -23,14 +16,10 @@ const LoginPage = () => {
   const onSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg("");
-
     if (!email || !password) {
       setErrorMsg("이메일과 비밀번호를 입력해주세요.");
       return;
     }
-
-    // 레이아웃-only 버전: 실제 로그인 호출은 하지 않음
-    // 추후 팀장님이 useAuth() 흐름에 연결할 예정
     setLoading(true);
     try {
       setErrorMsg("로그인 기능은 추후 연동됩니다. (현재: 레이아웃 전용)");
@@ -40,117 +29,100 @@ const LoginPage = () => {
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "grid",
-        placeItems: "center",
-        padding: "24px",
-      }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "420px",
-          border: "1px solid rgba(0,0,0,0.1)",
-          borderRadius: "12px",
-          padding: "24px",
-          boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
-          background: "white",
-        }}
-      >
-        <h1 style={{ margin: 0, marginBottom: "16px" }}>로그인</h1>
+    <div style={{ 
+      minHeight: "100vh", 
+      display: "flex", 
+      alignItems: "center", 
+      backgroundColor: "#f8f9fa" 
+    }}>
+      <Container>
+        <Card className="mx-auto border-0 shadow-lg" style={{ maxWidth: "400px", borderRadius: "20px" }}>
+          <Card.Body className="p-5 d-flex flex-column align-items-center">
+            {/* 상단 로고 및 텍스트 수정: Travel Planner -> Trip */}
+            <div className="text-center mb-4">
+              <div className="bg-primary bg-opacity-10 rounded-circle d-inline-flex p-3 mb-3">
+                <PlaneTakeoff size={32} className="text-primary" />
+              </div>
+              <h3 className="fw-bold text-dark">Trip Planner</h3> {/* 이름 수정 완료! */}
+              <p className="text-muted small">당신의 여행을 계획해보세요</p>
+            </div>
 
-        {returnTo && (
-          <p style={{ marginTop: 0, marginBottom: "12px", fontSize: "14px" }}>
-            로그인 후 이전 페이지로 이동합니다.
-          </p>
-        )}
+            {returnTo && (
+              <Alert variant="info" className="py-2 small border-0 text-center w-100" style={{ maxWidth: "300px" }}>
+                로그인 후 이전 페이지로 이동합니다.
+              </Alert>
+            )}
 
-        {errorMsg && (
-          <div
-            style={{
-              marginBottom: "12px",
-              padding: "10px 12px",
-              borderRadius: "8px",
-              border: "1px solid rgba(220, 53, 69, 0.35)",
-              background: "rgba(220, 53, 69, 0.08)",
-              fontSize: "14px",
-            }}
-          >
-            {errorMsg}
-          </div>
-        )}
+            {errorMsg && (
+              <Alert variant="danger" className="py-2 small border-0 w-100" style={{ maxWidth: "300px" }}>
+                {errorMsg}
+              </Alert>
+            )}
 
-        <form onSubmit={onSubmit} style={{ display: "grid", gap: "12px" }}>
-          <label style={{ display: "grid", gap: "6px" }}>
-            <span style={{ fontSize: "14px" }}>이메일</span>
-            <input
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="email@example.com"
-              style={{
-                height: "44px",
-                padding: "0 12px",
-                borderRadius: "10px",
-                border: "1px solid rgba(0,0,0,0.15)",
-                outline: "none",
-              }}
-            />
-          </label>
+            <Form onSubmit={onSubmit} className="w-100 d-flex flex-column align-items-center">
+              {/* 이메일 입력창: 카카오 버튼 크기(300px)에 맞춤 */}
+              <Form.Group className="mb-3 position-relative w-100" style={{ maxWidth: "300px" }}>
+                <Form.Label className="small fw-semibold text-muted">이메일</Form.Label>
+                <div className="position-relative">
+                  <Mail size={18} className="position-absolute text-muted" style={{ left: '12px', top: '13px' }} />
+                  <Form.Control
+                    type="email"
+                    placeholder="email@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    style={{ paddingLeft: '40px', height: '48px', borderRadius: '12px' }}
+                    className="border-light-subtle shadow-sm"
+                  />
+                </div>
+              </Form.Group>
 
-          <label style={{ display: "grid", gap: "6px" }}>
-            <span style={{ fontSize: "14px" }}>비밀번호</span>
-            <input
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="비밀번호"
-              style={{
-                height: "44px",
-                padding: "0 12px",
-                borderRadius: "10px",
-                border: "1px solid rgba(0,0,0,0.15)",
-                outline: "none",
-              }}
-            />
-          </label>
+              {/* 비밀번호 입력창: 카카오 버튼 크기(300px)에 맞춤 */}
+              <Form.Group className="mb-4 position-relative w-100" style={{ maxWidth: "300px" }}>
+                <Form.Label className="small fw-semibold text-muted">비밀번호</Form.Label>
+                <div className="position-relative">
+                  <Lock size={18} className="position-absolute text-muted" style={{ left: '12px', top: '13px' }} />
+                  <Form.Control
+                    type="password"
+                    placeholder="비밀번호"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    style={{ paddingLeft: '40px', height: '48px', borderRadius: '12px' }}
+                    className="border-light-subtle shadow-sm"
+                  />
+                </div>
+              </Form.Group>
 
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              height: "44px",
-              borderRadius: "10px",
-              border: "none",
-              cursor: loading ? "not-allowed" : "pointer",
-              opacity: loading ? 0.7 : 1,
-              fontWeight: 600,
-            }}
-          >
-            {loading ? "로그인 중..." : "로그인"}
-          </button>
-        </form>
+              {/* 일반 로그인 버튼: 카카오 버튼 크기(300px)에 맞춤 */}
+              <Button
+                variant="primary"
+                type="submit"
+                disabled={loading}
+                className="fw-bold shadow-sm"
+                style={{ 
+                  width: '100%', 
+                  maxWidth: '300px', 
+                  height: '48px', 
+                  borderRadius: '12px' 
+                }}
+              >
+                {loading ? "로그인 중..." : "로그인"}
+              </Button>
+            </Form>
 
-<div style={{ marginTop: "12px", display: "grid", gap: "8px" }}>
-  <div style={{ display: "flex", alignItems: "center", gap: "12px", opacity: 0.6 }}>
-    <div style={{ height: "1px", flex: 1, background: "rgba(0,0,0,0.12)" }} />
-    <span style={{ fontSize: "12px" }}>또는</span>
-    <div style={{ height: "1px", flex: 1, background: "rgba(0,0,0,0.12)" }} />
-  </div>
+            {/* 구분선: 카카오 버튼 크기에 맞춤 */}
+            <div className="d-flex align-items-center gap-2 my-4 opacity-50 w-100" style={{ maxWidth: "300px" }}>
+              <hr className="flex-grow-1" />
+              <span className="small text-muted fw-bold">OR</span>
+              <hr className="flex-grow-1" />
+            </div>
 
-  <KakaoLoginButton />
-</div>
-
-
-        {/* 레이아웃-only 안내 (삭제 가능) */}
-        <p style={{ marginTop: "12px", marginBottom: 0, fontSize: "12px", opacity: 0.7 }}>
-          현재 화면은 레이아웃 전용입니다. 로그인 연동은 추후 적용됩니다.
-        </p>
-      </div>
+            {/* 카카오 버튼 영역: 중앙 정렬 */}
+            <div className="d-flex justify-content-center w-100">
+              <KakaoLoginButton />
+            </div>
+          </Card.Body>
+        </Card>
+      </Container>
     </div>
   );
 };
