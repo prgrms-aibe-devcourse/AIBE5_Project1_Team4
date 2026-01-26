@@ -14,6 +14,7 @@ const TripSection = ({
   isLoading,
   linkTo = "/trips"
 }) => {
+  // --- 가로 스크롤 핸들링 ---
   const scrollRef = useRef(null);
 
   const scroll = (direction) => {
@@ -25,6 +26,7 @@ const TripSection = ({
 
   return (
     <div className="home-section">
+      {/* --- 섹션 헤더 (제목 + 더보기 링크) --- */}
       <div className="home-section__header">
         <div>
           <h4 className="home-section__title">{title}</h4>
@@ -36,6 +38,7 @@ const TripSection = ({
       </div>
 
       <div className="home-section__slider">
+        {/* --- 좌측 네비게이션 버튼 --- */}
         <button
           className="home-section__nav home-section__nav--left"
           onClick={() => scroll('left')}
@@ -43,8 +46,10 @@ const TripSection = ({
           <ChevronLeft size={24} />
         </button>
 
+        {/* ---  여행 카드 리스트 (로딩/성공/빈값 처리) --- */}
         <div ref={scrollRef} className="home-section__cards">
           {isLoading ? (
+            // 로딩 중: 스켈레톤 UI
             [...Array(4)].map((_, i) => (
               <div key={i} className="home-section__card">
                 <div
@@ -59,6 +64,7 @@ const TripSection = ({
               </div>
             ))
           ) : trips && trips.length > 0 ? (
+            // 데이터 있음: 카드 목록 렌더링
             trips.map((trip) => (
               <div key={trip.id} className="home-section__card">
                 <TripCard
@@ -72,12 +78,14 @@ const TripSection = ({
               </div>
             ))
           ) : (
+            // 데이터 없음: 안내 메시지
             <div className="home-section__empty">
               등록된 여행이 없습니다.
             </div>
           )}
         </div>
 
+        {/* --- 우측 네비게이션 버튼 --- */}
         <button
           className="home-section__nav home-section__nav--right"
           onClick={() => scroll('right')}
