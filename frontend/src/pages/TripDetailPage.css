@@ -3,9 +3,9 @@
 /* 전체 페이지 레이아웃 (TripCreate와 동일하게) */
 .trip-detail-page {
   background-color: #ffffff; 
-  padding: 64px 48px 48px; /* ⬅ 위에 추가 */
+  padding: 0 48px 48px;   /* overlay: 위 padding 제거 */
   font-family: 'Noto Sans KR', sans-serif;
-  height: 100vh;
+  min-height: 100vh;      /* 스크롤 안정 */
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
@@ -15,9 +15,10 @@
 /* 상단바 영역 */
 .trip-detail-header {
   flex-shrink: 0;
-  z-index: 102;
   position: relative;
-  margin-bottom: 0px; 
+  margin-bottom: 0px;
+  margin-top: 8px;
+  /* z-index 제거: AppHeader(50)보다 위로 올라오지 않게 */
 }
 
 /* 지도+패널 영역 */
