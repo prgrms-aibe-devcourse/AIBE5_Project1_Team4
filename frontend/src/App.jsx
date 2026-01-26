@@ -28,7 +28,7 @@ function App() {
           <Route path="/trips" element={<TripsPage />} />
 
           {/* TripCreate 페이지 라우트 */}
-          <Route path="/trip/create" element={<TripCreate />} />
+          <Route path="/trips/create" element={<TripCreate />} />
           {/* TripDetailPage 페이지 라우트 */}
           <Route path="/trips/:id" element={<TripDetailPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
