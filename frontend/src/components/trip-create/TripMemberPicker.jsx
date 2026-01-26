@@ -1,5 +1,10 @@
 // Member list with owner badge and action buttons.
-const TripMemberPicker = ({ members, onOpenTransfer, onRemoveMember }) => {
+const TripMemberPicker = ({
+  members,
+  onOpenTransfer,
+  onRemoveMember,
+  canManageMembers,
+}) => {
   const totalCount = members.length;
 
   return (
@@ -31,30 +36,32 @@ const TripMemberPicker = ({ members, onOpenTransfer, onRemoveMember }) => {
                 )}
                 {member.name}
               </span>
-              <span
-                className={`trip-member-actions${isOwner ? ' is-hidden' : ''}`}
-              >
-                {!isOwner && (
-                  <>
-                    <button
-                      className="trip-member-icon-btn"
-                      type="button"
-                      aria-label="그룹장 양도"
-                      onClick={() => onOpenTransfer?.(member.id)}
-                    >
-                      ⇄
-                    </button>
-                    <button
-                      className="trip-member-icon-btn"
-                      type="button"
-                      aria-label="내보내기"
-                      onClick={() => onRemoveMember?.(member.id)}
-                    >
-                      ↗
-                    </button>
-                  </>
-                )}
-              </span>
+              {canManageMembers && (
+                <span
+                  className={`trip-member-actions${isOwner ? ' is-hidden' : ''}`}
+                >
+                  {!isOwner && (
+                    <>
+                      <button
+                        className="trip-member-icon-btn"
+                        type="button"
+                        aria-label="그룹장 양도"
+                        onClick={() => onOpenTransfer?.(member.id)}
+                      >
+                        ⇄
+                      </button>
+                      <button
+                        className="trip-member-icon-btn"
+                        type="button"
+                        aria-label="내보내기"
+                        onClick={() => onRemoveMember?.(member.id)}
+                      >
+                        ↗
+                      </button>
+                    </>
+                  )}
+                </span>
+              )}
             </li>
           );
         })}

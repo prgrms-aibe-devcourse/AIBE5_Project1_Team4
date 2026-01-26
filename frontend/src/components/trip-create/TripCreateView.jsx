@@ -51,6 +51,7 @@ const TripCreateView = ({ onNavigate, onSubmit }) => {
     toggleMember,
     transferOwner,
     removeMember,
+    canManageMembers,
   } = useTripCreateForm();
 
   const [transferTarget, setTransferTarget] = useState(null);
@@ -178,8 +179,13 @@ const TripCreateView = ({ onNavigate, onSubmit }) => {
               memberProps={{
                 members,
                 onToggleMember: toggleMember,
-                onOpenTransfer: (memberId) => setTransferTarget(memberId),
-                onRemoveMember: (memberId) => setRemoveTarget(memberId),
+                canManageMembers,
+                onOpenTransfer: (memberId) => {
+                  if (canManageMembers) setTransferTarget(memberId);
+                },
+                onRemoveMember: (memberId) => {
+                  if (canManageMembers) setRemoveTarget(memberId);
+                },
               }}
             />
           )}
