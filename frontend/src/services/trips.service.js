@@ -181,6 +181,14 @@ export async function createTripDraft() {
   );
 }
 
+export async function assertTripEditor({ tripId }) {
+  const result = await supabase.rpc('assert_trip_editor', {
+    p_trip_id: tripId,
+  });
+  unwrap(result, 'trips.assertTripEditor');
+  return true;
+}
+
 export async function updateTripMeta({ tripId, title, summary, visibility }) {
   const result = await supabase.rpc('update_trip_meta', {
     p_trip_id: tripId,
@@ -211,6 +219,20 @@ export async function adjustTripDates({ tripId, startDate, endDate }) {
     id,
     'trips.adjustTripDates',
     'adjust_trip_dates returned no trip_id',
+  );
+}
+
+export async function deleteTrip({ tripId }) {
+  const result = await supabase.rpc('delete_trip', {
+    p_trip_id: tripId,
+  });
+  const data = unwrap(result, 'trips.deleteTrip');
+
+  const id = data?.[0]?.trip_id;
+  return requireRow(
+    id,
+    'trips.deleteTrip',
+    'delete_trip returned no trip_id',
   );
 }
 

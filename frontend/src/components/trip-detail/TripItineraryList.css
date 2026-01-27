@@ -3,10 +3,10 @@
 /* 전체 래퍼: 버튼과 패널을 감싸는 컨테이너 */
 .itinerary-wrapper {
   position: absolute;
-  top: 20px;       /* 지도 상단에서 20px */
-  right: 20px;     /* 지도 우측에서 20px */
-  bottom: 20px;    /* 지도 하단에서 20px */
-  z-index: 100;    /* 지도 위에 뜸 */
+  top: 8px;       /* 지도 상단에서 20px */
+  right: 12px;     /* 지도 우측에서 20px */
+  bottom: 12px;    /* 지도 하단에서 20px */
+  z-index: 30;    /* 지도 위에 뜸 */
   
   /* 닫혔을 때는 버튼 크기만큼만 공간 차지 */
   width: 48px; 
@@ -27,8 +27,8 @@
 /* 1. 토글 버튼 스타일*/
 .schedule-toggle-btn {
   position: absolute;
-  top: 0;
-  right: 0;
+  top: 12px;
+  right: 12px;
   width: 36px;  /* 버튼 크기 */
   height: 36px;
   background-color: #fff;
@@ -52,11 +52,12 @@
 
 /* 패널이 열렸을 때 버튼 스타일 변경 */
 .itinerary-wrapper.open .schedule-toggle-btn {
-  /* 패널 내부 왼쪽 상단으로 이동하는 느낌 */
-  right: 280px; /* 패널 안쪽 위치 조정 */
-  top: 12px;    /* 패널 상단 여백 */
+  /* ?? ?? ???? ?? */
+  left: 12px;
+  right: auto;
+  top: 12px;
   
-  /* 열려있을 땐 심플한 아이콘처럼 보이게 스타일 변경 */
+  /* ?? ?? ?? ? ??? */
   background-color: transparent;
   border-color: transparent;
   box-shadow: none;
@@ -68,7 +69,7 @@
 .trip-schedule-container {
   position: absolute;
   top: 0;
-  right: 0;
+  right: 12px;
   bottom: 0;
   width: 320px;
   background-color: #fff;

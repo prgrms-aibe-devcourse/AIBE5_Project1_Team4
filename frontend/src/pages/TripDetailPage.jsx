@@ -29,11 +29,30 @@ const TripDetailPage = () => {
     return <div className="text-center mt-5">데이터를 불러올 수 없습니다. 😢</div>;
   }
 
+  const summaryPayload = tripData.summary ?? {};
+  const trip = summaryPayload.trip ?? {};
+  const author = summaryPayload.author ?? {};
+  const counts = summaryPayload.counts ?? {};
+  const summaryView = {
+    title: trip.title ?? '',
+    description: trip.summary ?? '',
+    start_date: trip.startDate ?? trip.start_date ?? '',
+    end_date: trip.endDate ?? trip.end_date ?? '',
+    regions: trip.regions ?? [],
+    themes: trip.themes ?? [],
+    author: {
+      name: author.displayName ?? author.name ?? '',
+      avatar_url: author.avatarUrl ?? author.avatar_url ?? null,
+    },
+    like_count: counts.likeCount ?? counts.like_count ?? 0,
+    bookmark_count: counts.bookmarkCount ?? counts.bookmark_count ?? 0,
+  };
+
   return (
     <div className="trip-detail-page">
       {/* 상단 요약 바 영역 (제목, 작성자, 태그 등) */}
       <div className="trip-detail-header">
-        <TripSummaryBar summary={tripData.summary} />
+        <TripSummaryBar summary={summaryView} />
       </div>
 
       {/* 메인 바디 영역 (지도 및 일정 섹션) */}

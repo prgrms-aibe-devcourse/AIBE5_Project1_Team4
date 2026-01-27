@@ -45,9 +45,6 @@ const TripSearchPanel = ({
           <li key={`${item.name}-${index}`} className="trip-search-item">
             <div>
               <div className="trip-search-title">{item.name}</div>
-              <div className="trip-search-meta">
-                4.0 <span className="trip-search-stars">★★★★★</span> 405 리뷰
-              </div>
             </div>
             {item.selected ? (
               <span className="trip-search-check" aria-label="추가됨">
