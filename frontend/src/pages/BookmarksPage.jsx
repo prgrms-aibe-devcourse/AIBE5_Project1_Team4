@@ -10,6 +10,7 @@ import { useBookmarkedTrips } from '@/hooks/trips/useBookmarkedTrips'; //
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll'; //
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { getFilterOptions } from '@/services/trips.service'; //
+import FloatingActionGroup from '@/components/common/FloatingActionGroup';
 
 // 스타일 임포트
 import './BookmarksPage.css';
@@ -136,6 +137,7 @@ export default function BookmarksPage() {
           )}
         </div>
       </Container>
+      <FloatingActionGroup />
     </div>
   );
 }

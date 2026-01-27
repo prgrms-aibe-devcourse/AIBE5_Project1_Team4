@@ -1,0 +1,66 @@
+/* src/components/common/FloatingActionGroup.css */
+
+.floating-action-group {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 1050;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* 메인 버튼 (+ / X) - 사이즈 축소 (48px) */
+.main-fab {
+  width: 48px; 
+  height: 48px; 
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.9;             /* 평소에는 70%만 보임 (반투명) */
+  backdrop-filter: blur(4px); /* 뒤에 있는 내용 흐리게 처리 (지원 브라우저용) */
+  transition: transform 0.3s ease, background-color 0.3s;
+  padding: 0;
+  border: none;
+}
+
+/* 메뉴가 열렸을 때 버튼 회전 (+ -> X 효과) */
+.main-fab.open {
+  transform: rotate(45deg);
+  background-color: #343a40; 
+}
+
+/* 숨겨진 메뉴 버튼들 컨테이너 */
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 10px;
+  
+  /* 애니메이션 초기 상태 */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(20px) scale(0.8);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+}
+
+/* 메뉴가 열렸을 때 */
+.action-buttons.open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+}
+
+/* 개별 액션 버튼 스타일 - 사이즈 축소 (40px) */
+.action-btn {
+  width: 40px;  
+  height: 40px; 
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+}

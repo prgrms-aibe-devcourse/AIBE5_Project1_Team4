@@ -216,6 +216,7 @@ export default function HomePage() {
           <div className="home-cta__circle home-cta__circle--2" />
         </div>
       </Container>
+      <FloatingActionGroup />
     </div>
   );
 }

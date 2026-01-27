@@ -9,6 +9,7 @@ import ProfileCard from '../components/mypage/ProfileCard';
 import StatGroup from '../components/mypage/StatGroup';
 import RecentTrips from '../components/mypage/RecentTrips';
 import StatDetailModal from '../components/mypage/StatDetailModal';
+import FloatingActionGroup from '@/components/common/FloatingActionGroup';
 
 // 📡 DB 조회를 위한 공통 서비스 함수
 import { getQuickStatsList } from '../services/profiles.service';
@@ -131,7 +132,9 @@ const MyPage = () => {
         title={modal.title}
         data={modal.list}
       />
+      <FloatingActionGroup />
     </div>
+    
   );
 };
 

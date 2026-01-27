@@ -9,6 +9,7 @@ import { usePublicTrips } from '@/hooks/trips/usePublicTrips';
 import { useAiSuggest } from '@/hooks/useAiSuggest';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { getFilterOptions } from '@/services/trips.service';
+import FloatingActionGroup from '@/components/common/FloatingActionGroup';
 import './TripsPage.css';
 
 export default function TripsPage() {
@@ -256,6 +257,7 @@ export default function TripsPage() {
           )}
         </div>
       </Container>
+      <FloatingActionGroup />
     </div>
   );
 }
