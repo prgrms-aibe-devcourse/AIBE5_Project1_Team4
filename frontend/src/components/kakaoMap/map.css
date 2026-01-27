@@ -8,7 +8,7 @@
 
 /* 1. 일정 마커 숫자 배지 스타일 */
 /* MapMarker 자식으로 들어가는 div입니다. */
-.badge {
+.trip-map .badge {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -25,7 +25,7 @@
   transition: all 0.2s ease-in-out;
 }
 
-.badge:hover {
+.trip-map .badge:hover {
   transform: translateY(-12px) scale(1.1);
   background-color: #5a39a7;
 }
@@ -36,7 +36,7 @@
   position: relative;
   background: #ffffff;
   padding: 5px 10px;
-  border: 1px solid #4A90E2;
+  border: 1px solid #4a90e2;
   border-radius: 20px;
   font-size: 11px;
   font-weight: 700;
@@ -57,7 +57,7 @@
   transform: translateX(-50%);
   border-left: 6px solid transparent;
   border-right: 6px solid transparent;
-  border-top: 6px solid #4A90E2;
+  border-top: 6px solid #4a90e2;
 }
 
 /* 3. 로딩 및 에러 상태 텍스트 스타일 */
