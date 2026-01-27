@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { setReturnToIfEmpty } from '@/features/auth/auth.feature';
+import { alert } from '@/shared/ui/overlay';
+import { assertTripEditor } from '@/services/trips.service';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 // ✅ [1. 추가] Supabase 클라이언트 불러오기 
 import { supabase } from '../lib/supabaseClient'; 
