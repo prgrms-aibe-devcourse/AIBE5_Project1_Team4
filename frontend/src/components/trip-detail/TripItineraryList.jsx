@@ -92,36 +92,7 @@ const TripItineraryList = ({ schedules = [], members = [], onScheduleClick, sele
         {/* 데이터가 있을 때만 렌더링 */}
         {hasData ? (
           <>
-            {/* 그룹 멤버 정보 섹션 */}
-            {members && members.length > 0 && (
-              <div className="group-members-section">
-                <div className="group-members-title">
-                  여행자 ({members.length})
-                </div>
-                <div className="members-list">
-                  {members.map((member) => (
-                    <div key={member.userId} className="member-badge">
-                      {/* 멤버 이름 */}
-                      <span className="member-name">
-                        {member.displayName}
-                      </span>
-                      {/* 역할 배지 (OWNER인 경우만 표시) */}
-                      {member.role === 'owner' && (
-                        <span className="member-role-badge">
-                          관리자
-                        </span>
-                      )}
-                      {/* 본인 표시 */}
-                      {member.isSelf && (
-                        <span className="member-self-badge">
-                          나
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* 날짜 네비게이션 헤더 영역 */}
             <div className="day-navigation-header">
               <div className="day-nav-controls">
                 {/* 이전 날로 이동 버튼 (첫날이면 비활성화) */}
