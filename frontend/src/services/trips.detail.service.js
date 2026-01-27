@@ -46,7 +46,12 @@ export async function getTripDetail(tripId) {
   const [summary, schedule, members] = await Promise.all([
     getTripDetailSummary(tripId),
     getTripDetailSchedule(tripId),
-    getTripMembers(tripId),
+    // 비멤버가 public trip 조회 시 rpc_trip_members는 정상적으로 에러 반환
+    // → 전체 조회가 실패하지 않도록 catch 처리
+    getTripMembers(tripId).catch(() => ({
+      tripId,
+      members: [],
+    })),
   ]);
 
   return { summary, schedule, members };
