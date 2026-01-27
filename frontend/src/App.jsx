@@ -6,6 +6,7 @@ import { Route, Routes } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import TripsPage from './pages/TripsPage';
 import MyPage from './pages/MyPage';
+import BookmarksPage from './pages/BookmarksPage'; // ✅ 1. 페이지 임포트 추가
 
 // 기존 개발용 컴포넌트
 import AuthCallbackPage from './pages/AuthCallbackPage';
@@ -26,6 +27,8 @@ function App() {
           {/* 1. 메인 기능 라우트 */}
           <Route index element={<HomePage />} />
           <Route path="/trips" element={<TripsPage />} />
+          {/* ✅ 2. 북마크 전용 라우트 추가 */}
+          <Route path="/trips/bookmarks" element={<BookmarksPage />} />
 
           {/* TripCreate 페이지 라우트 */}
           <Route path="/trips/create" element={<TripCreate />} />
