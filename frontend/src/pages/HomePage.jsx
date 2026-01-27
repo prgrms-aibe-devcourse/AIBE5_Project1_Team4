@@ -8,6 +8,7 @@ import TripSection from '@/components/home/TripSection';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { setReturnToIfEmpty } from '@/features/auth/auth.feature';
 import './HomePage.css';
+import FloatingActionGroup from '@/components/common/FloatingActionGroup';
 
 export default function HomePage() {
   const navigate = useNavigate(); // 페이지 이동을 위한 훅
@@ -27,7 +28,7 @@ export default function HomePage() {
   // 커스텀 훅 (AI 검색 제안)
   const {
     normalizedQuery, // 정규화된 쿼리 (오타 교정 등)
-    suggestions,     // 추천 검색어 목록
+    suggestions, // 추천 검색어 목록
     isLoading: isAiLoading,
     error: aiError,
   } = useAiSuggest(searchTerm, {
@@ -51,7 +52,6 @@ export default function HomePage() {
         setRecentTrips(latestResult.items || []);
         setPopularTrips(popularResult.items || []);
         setRecommendTrips(popularResult.items || []); // 추천 로직 개발 전까지 인기순 사용
-
       } catch (error) {
         console.error('Failed to load home trips:', error);
       } finally {
@@ -84,17 +84,27 @@ export default function HomePage() {
   // 인터랙션 핸들러 (좋아요/북마크)
   // 현재는 UI 상태만 변경하고, 실제 DB 연동은 추후 API 개발 후 적용 예정
   const handleLike = (id) => {
-    setRecentTrips(prev => updateTripList(prev, id, 'isLiked', 'like_count'));
-    setPopularTrips(prev => updateTripList(prev, id, 'isLiked', 'like_count'));
-    setRecommendTrips(prev => updateTripList(prev, id, 'isLiked', 'like_count'));
-    console.log("좋아요 클릭 (API 미연동):", id);
+    setRecentTrips((prev) => updateTripList(prev, id, 'isLiked', 'like_count'));
+    setPopularTrips((prev) =>
+      updateTripList(prev, id, 'isLiked', 'like_count'),
+    );
+    setRecommendTrips((prev) =>
+      updateTripList(prev, id, 'isLiked', 'like_count'),
+    );
+    console.log('좋아요 클릭 (API 미연동):', id);
   };
 
   const handleBookmark = (id) => {
-    setRecentTrips(prev => updateTripList(prev, id, 'isBookmarked', 'bookmark_count'));
-    setPopularTrips(prev => updateTripList(prev, id, 'isBookmarked', 'bookmark_count'));
-    setRecommendTrips(prev => updateTripList(prev, id, 'isBookmarked', 'bookmark_count'));
-    console.log("북마크 클릭 (API 미연동):", id);
+    setRecentTrips((prev) =>
+      updateTripList(prev, id, 'isBookmarked', 'bookmark_count'),
+    );
+    setPopularTrips((prev) =>
+      updateTripList(prev, id, 'isBookmarked', 'bookmark_count'),
+    );
+    setRecommendTrips((prev) =>
+      updateTripList(prev, id, 'isBookmarked', 'bookmark_count'),
+    );
+    console.log('북마크 클릭 (API 미연동):', id);
   };
 
   // 검색 관련 핸들러
@@ -138,13 +148,18 @@ export default function HomePage() {
       {/* A. Hero 섹션: 메인 타이틀 및 검색창 */}
       <div className="home-hero">
         <Container className="home-hero__content">
-          <Badge bg="primary" className="home-hero__badge">Trip Planner</Badge>
+          <Badge bg="primary" className="home-hero__badge">
+            Trip Planner
+          </Badge>
           <h1 className="home-hero__title">당신의 다음 여행은 어디인가요?</h1>
           <Row className="justify-content-center">
             <Col md={8} lg={6}>
               <SearchBar
                 value={searchTerm}
-                onChange={(val) => { setSearchTerm(val); setShowSuggestions(true); }}
+                onChange={(val) => {
+                  setSearchTerm(val);
+                  setShowSuggestions(true);
+                }}
                 onSubmit={handleSearch}
                 onFocus={() => setShowSuggestions(true)}
                 placeholder="여행지, 태그, 키워드로 검색"
@@ -164,7 +179,6 @@ export default function HomePage() {
 
       {/* B. 메인 콘텐츠 섹션: 여행 리스트 목록 */}
       <Container className="home-content">
-        
         {/* 분리된 TripSection 컴포넌트 재사용 */}
         <TripSection
           title="추천 여행"
@@ -198,11 +212,13 @@ export default function HomePage() {
           onBookmark={handleBookmark}
           linkTo="/trips?sort=latest" // 더보기 클릭 시 최신순 정렬
         />
-        
+
         {/* C. CTA (Call To Action) 섹션: 여행 만들기 버튼 */}
         <div className="home-cta">
           <div className="home-cta__content">
-            <h2 className="home-cta__title">나만의 여행을 계획할 준비가 되셨나요?</h2>
+            <h2 className="home-cta__title">
+              나만의 여행을 계획할 준비가 되셨나요?
+            </h2>
             <button
               type="button"
               className="home-cta__btn"
