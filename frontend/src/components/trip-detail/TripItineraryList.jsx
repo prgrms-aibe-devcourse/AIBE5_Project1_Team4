@@ -7,6 +7,7 @@ import './TripItineraryList.css';
  * 
  * 기능:
  * - 여행의 각 날짜별 일정을 "Day 1", "Day 2" 형식으로 표시
+ * - 여행 멤버 정보 표시
  * - 좌우 화살표로 날짜 네비게이션
  * - 토글 버튼으로 일정 패널 열고 닫기
  * - 각 일정 항목 클릭 시 콜백 함수 실행
@@ -27,10 +28,20 @@ import './TripItineraryList.css';
  *         ]
  *       }
  *     ]
+ *   - members: RPC rpc_trip_members에서 반환된 members 배열
+ *     예시 구조:
+ *     [
+ *       {
+ *         userId: "uuid",
+ *         role: "owner",
+ *         displayName: "서일현",
+ *         isSelf: true
+ *       }
+ *     ]
  *   - onScheduleClick: 일정 항목 클릭 시 실행될 콜백 함수 (itemId 전달)
  *   - selectedId: 현재 선택된 일정의 ID (UI 강조용)
  */
-const TripItineraryList = ({ schedules = [], onScheduleClick, selectedId }) => {
+const TripItineraryList = ({ schedules = [], members = [], onScheduleClick, selectedId }) => {
   // 패널 열림/닫힘 상태 (초기값: false로 닫혀있음)
   const [isOpen, setIsOpen] = useState(false);
   
@@ -81,7 +92,66 @@ const TripItineraryList = ({ schedules = [], onScheduleClick, selectedId }) => {
         {/* 데이터가 있을 때만 렌더링 */}
         {hasData ? (
           <>
-            {/* 날짜 네비게이션 헤더 영역 */}
+            {/* 그룹 멤버 정보 섹션 */}
+            {members && members.length > 0 && (
+              <div className="group-members-section" style={{ padding: '12px 16px', borderBottom: '1px solid #e5e7eb', backgroundColor: '#f9fafb' }}>
+                <div style={{ fontSize: '12px', fontWeight: '600', color: '#6b7280', marginBottom: '8px' }}>
+                  여행자 ({members.length})
+                </div>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {members.map((member) => (
+                    <div
+                      key={member.userId}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        padding: '4px 8px',
+                        backgroundColor: '#ffffff',
+                        borderRadius: '4px',
+                        fontSize: '12px',
+                        border: '1px solid #d1d5db'
+                      }}
+                    >
+                      {/* 멤버 이름 */}
+                      <span style={{ fontWeight: '500', color: '#1f2937' }}>
+                        {member.displayName}
+                      </span>
+                      {/* 역할 배지 (OWNER인 경우만 표시) */}
+                      {member.role === 'owner' && (
+                        <span
+                          style={{
+                            fontSize: '10px',
+                            fontWeight: '600',
+                            backgroundColor: '#fef3c7',
+                            color: '#92400e',
+                            padding: '1px 6px',
+                            borderRadius: '2px'
+                          }}
+                        >
+                          관리자
+                        </span>
+                      )}
+                      {/* 본인 표시 */}
+                      {member.isSelf && (
+                        <span
+                          style={{
+                            fontSize: '10px',
+                            fontWeight: '600',
+                            backgroundColor: '#dbeafe',
+                            color: '#1e40af',
+                            padding: '1px 6px',
+                            borderRadius: '2px'
+                          }}
+                        >
+                          나
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="day-navigation-header">
               <div className="day-nav-controls">
                 {/* 이전 날로 이동 버튼 (첫날이면 비활성화) */}

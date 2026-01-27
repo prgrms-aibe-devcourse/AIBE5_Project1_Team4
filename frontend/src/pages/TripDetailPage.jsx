@@ -36,7 +36,11 @@ const TripDetailPage = () => {
 
       {/* 메인 바디 영역 (지도 및 일정 섹션) */}
       <div className="trip-detail-body">
-        <TripMapSection schedules={tripData.schedule?.days} selectedId={null} />
+        <TripMapSection 
+          schedules={tripData.schedule?.days} 
+          members={tripData.members?.members}
+          selectedId={null} 
+        />
       </div>
     </div>
   );
