@@ -18,6 +18,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  opacity: 0.9;             /* 평소에는 70%만 보임 (반투명) */
+  backdrop-filter: blur(4px); /* 뒤에 있는 내용 흐리게 처리 (지원 브라우저용) */
   transition: transform 0.3s ease, background-color 0.3s;
   padding: 0;
   border: none;
