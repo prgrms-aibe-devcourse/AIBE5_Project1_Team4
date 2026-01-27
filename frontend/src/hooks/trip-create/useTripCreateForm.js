@@ -107,7 +107,7 @@ export const useTripCreateForm = ({ tripId } = {}) => {
     startDate: today,
     endDate: addDays(today, 2),
     region: '서울',
-    isPublic: true,
+    visibility: 'public',
   });
   const [days, setDays] = useState(() => createInitialDays(today));
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
