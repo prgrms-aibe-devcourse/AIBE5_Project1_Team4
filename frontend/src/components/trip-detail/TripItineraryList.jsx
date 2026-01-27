@@ -94,56 +94,26 @@ const TripItineraryList = ({ schedules = [], members = [], onScheduleClick, sele
           <>
             {/* 그룹 멤버 정보 섹션 */}
             {members && members.length > 0 && (
-              <div className="group-members-section" style={{ padding: '12px 16px', borderBottom: '1px solid #e5e7eb', backgroundColor: '#f9fafb' }}>
-                <div style={{ fontSize: '12px', fontWeight: '600', color: '#6b7280', marginBottom: '8px' }}>
+              <div className="group-members-section">
+                <div className="group-members-title">
                   여행자 ({members.length})
                 </div>
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <div className="members-list">
                   {members.map((member) => (
-                    <div
-                      key={member.userId}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        padding: '4px 8px',
-                        backgroundColor: '#ffffff',
-                        borderRadius: '4px',
-                        fontSize: '12px',
-                        border: '1px solid #d1d5db'
-                      }}
-                    >
+                    <div key={member.userId} className="member-badge">
                       {/* 멤버 이름 */}
-                      <span style={{ fontWeight: '500', color: '#1f2937' }}>
+                      <span className="member-name">
                         {member.displayName}
                       </span>
                       {/* 역할 배지 (OWNER인 경우만 표시) */}
                       {member.role === 'owner' && (
-                        <span
-                          style={{
-                            fontSize: '10px',
-                            fontWeight: '600',
-                            backgroundColor: '#fef3c7',
-                            color: '#92400e',
-                            padding: '1px 6px',
-                            borderRadius: '2px'
-                          }}
-                        >
+                        <span className="member-role-badge">
                           관리자
                         </span>
                       )}
                       {/* 본인 표시 */}
                       {member.isSelf && (
-                        <span
-                          style={{
-                            fontSize: '10px',
-                            fontWeight: '600',
-                            backgroundColor: '#dbeafe',
-                            color: '#1e40af',
-                            padding: '1px 6px',
-                            borderRadius: '2px'
-                          }}
-                        >
+                        <span className="member-self-badge">
                           나
                         </span>
                       )}
