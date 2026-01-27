@@ -1,6 +1,7 @@
 // src/services/ai.service.js
 import { invokeFunction } from './_core/functions';
 import { toAppError, logError } from './_core/errors';
+import { getSession } from './auth.service';
 
 /**
  * AI 쿼리 제안 응답
@@ -36,13 +37,17 @@ export async function suggestQuery(query, { signal } = {}) {
   if (trimmedQuery.length > 200) {
     throw toAppError(
       { status: 400, message: '검색어는 200자 이하로 입력해주세요.' },
-      context
+      context,
     );
   }
 
   try {
     const result = await invokeFunction('ai-suggest-query', {
       body: { q: trimmedQuery },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+      },
       signal,
     });
 

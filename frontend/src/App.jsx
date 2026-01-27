@@ -12,6 +12,7 @@ import BookmarksPage from './pages/BookmarksPage'; // ✅ 1. 페이지 임포트
 import AuthCallbackPage from './pages/AuthCallbackPage';
 import Health from './pages/Health';
 import TripCreate from './pages/TripCreate';
+import TripCreateEntry from './pages/TripCreateEntry';
 import TripDetailPage from './pages/TripDetailPage';
 import UiPreview from './pages/UiPreview';
 import LoginPage from './pages/LoginPage';
@@ -31,7 +32,8 @@ function App() {
           <Route path="/trips/bookmarks" element={<BookmarksPage />} />
 
           {/* TripCreate 페이지 라우트 */}
-          <Route path="/trips/create" element={<TripCreate />} />
+          <Route path="/trips/create" element={<TripCreateEntry />} />
+          <Route path="/trips/:id/edit" element={<TripCreate />} />
           {/* TripDetailPage 페이지 라우트 */}
           <Route path="/trips/:id" element={<TripDetailPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
