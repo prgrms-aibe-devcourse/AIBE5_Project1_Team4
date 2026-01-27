@@ -78,9 +78,9 @@ export const useTripCreateForm = ({ tripId } = {}) => {
   const [form, setForm] = useState({
     title: '',
     startDate: today,
-    endDate: today,
-    region: '',
-    isPublic: false,
+    endDate: addDays(today, 2),
+    region: '서울',
+    visibility: 'public',
   });
   const [days, setDays] = useState([]);
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
