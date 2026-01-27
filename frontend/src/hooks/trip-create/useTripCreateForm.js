@@ -497,6 +497,29 @@ export const useTripCreateForm = ({ tripId } = {}) => {
 
   const summary = computeSummary(currentDay.items);
 
+  //지도 변수 계산
+  //현재 요일의 일정 좌표 리스트
+  const mapCurrentDayPos = useMemo(() => {
+    return (currentDay?.items || [])
+      .map(item => ({
+        ...item,
+        lat: Number(item.lat), // 강제 숫자 변환
+        lng: Number(item.lng)
+      }))
+      .filter(item => !isNaN(item.lat) && !isNaN(item.lng)); // 유효한 좌표만 추출
+  }, [currentDay?.items]);
+  //검색 결과 좌표 리스트
+  const mapSearchPlacePos = useMemo(() => {
+    return (searchResults || [])
+      .map(place => ({
+        ...place,
+        lat: Number(place.lat),
+        lng: Number(place.lng)
+      }))
+      .filter(place => !isNaN(place.lat) && !isNaN(place.lng));
+  }, [searchResults]);
+
+
   return {
     form,
     setFormField,
@@ -543,5 +566,9 @@ export const useTripCreateForm = ({ tripId } = {}) => {
     removeMember,
     currentUserRole,
     canManageMembers,
+
+    //지도 관련 변수
+    mapCurrentDayPos,
+    mapSearchPlacePos
   };
 };

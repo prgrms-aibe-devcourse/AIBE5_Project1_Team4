@@ -258,15 +258,22 @@
 }
 
 .trip-create-map-inner {
-  position: relative;
-  border-radius: 10px;
+position: relative;
+  height: 600px; 
+  background: #eee;
   overflow: hidden;
-  min-height: 600px;
-  background: #d9d9d9;
-  border: none;
 }
 
-.trip-create-map-inner::before {
+.trip-map-main-container {
+  width: 100%;
+  height: 100%;
+  position: absolute; /* 버튼들 아래에 깔리도록 설정 */
+  top: 0;
+  left: 0;
+  z-index: 1; /* 버튼(z-index: 2)보다 낮게 설정 */
+}
+
+/* .trip-create-map-inner::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -276,7 +283,7 @@
     linear-gradient(135deg, #dfe7ef 0%, #cdd8e5 45%, #b8c7d9 100%);
   background-size: cover;
   background-position: center;
-}
+} */
 
 .trip-map-overlay {
   position: absolute;
