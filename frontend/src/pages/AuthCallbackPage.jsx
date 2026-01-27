@@ -32,6 +32,7 @@ export default function AuthCallbackPage() {
         setMessage('로그인 완료!');
 
         const returnTo = popReturnTo();
+
         window.location.replace(returnTo);
       } catch (e) {
         if (cancelled) return;

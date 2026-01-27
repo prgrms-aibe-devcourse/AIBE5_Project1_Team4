@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { formatLocalDate, getTodayString } from '@/utils/date';
 import { getTripMembers, updateTripMemberRole } from '@/services/trip-members.service';
+import { getTripDetail } from '@/services/trips.detail.service';
 // Consolidated trip-create state and actions.
 
 const addDays = (value, days) => {
@@ -62,6 +63,25 @@ const createInitialDays = (startDate) => [
   },
 ];
 
+const mapScheduleToDays = (scheduleDays, fallbackStartDate) => {
+  if (!Array.isArray(scheduleDays) || scheduleDays.length === 0) {
+    return createInitialDays(fallbackStartDate);
+  }
+
+  return scheduleDays.map((day, index) => ({
+    id: day.dayId ?? `day-${index + 1}`,
+    label: `${index + 1}일차`,
+    date: day.date ?? fallbackStartDate,
+    items: Array.isArray(day.items)
+      ? day.items.map((item, itemIndex) => ({
+          id: item.itemId ?? `item-${index + 1}-${itemIndex + 1}`,
+          time: item.time ?? '09:00',
+          place: item.place?.name ?? '장소 미정',
+        }))
+      : [],
+  }));
+};
+
 const computeSummary = (items) => {
   const stops = items.length;
   const travelMinutes = Math.max(0, stops - 1) * 40;
@@ -117,6 +137,44 @@ export const useTripCreateForm = ({ tripId } = {}) => {
 
   const currentDay = days[currentDayIndex];
   const todayString = today;
+
+  useEffect(() => {
+    if (!tripId) return;
+    let isMounted = true;
+
+    const loadTrip = async () => {
+      try {
+        const { summary, schedule } = await getTripDetail(tripId);
+        if (!isMounted) return;
+
+        const trip = summary?.trip;
+        if (trip) {
+          setForm((prev) => ({
+            ...prev,
+            title: trip.title ?? prev.title,
+            startDate: trip.startDate ?? prev.startDate,
+            endDate: trip.endDate ?? prev.endDate,
+            isPublic: trip.visibility === 'public',
+          }));
+        }
+
+        const nextDays = mapScheduleToDays(
+          schedule?.days,
+          trip?.startDate ?? today,
+        );
+        setDays(nextDays);
+        setCurrentDayIndex(0);
+      } catch (error) {
+        console.error('Failed to load trip detail:', error);
+      }
+    };
+
+    void loadTrip();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [tripId, today]);
 
   const calendarInfo = useMemo(() => {
     const baseDate = calendarMonth ?? currentDay.date;
