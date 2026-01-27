@@ -15,7 +15,7 @@ const TripScheduleEditor = ({
   const startEdit = (item) => {
     setEditingId(item.id);
     setDraftTime(item.time);
-    setDraftPlace(item.place);
+    setDraftPlace(item.placeName ?? item.place ?? '');
   };
 
   const cancelEdit = () => {
@@ -28,7 +28,7 @@ const TripScheduleEditor = ({
     if (!editingId) {
       return;
     }
-    onUpdateItem(editingId, { time: draftTime, place: draftPlace });
+    onUpdateItem(editingId, { time: draftTime, placeName: draftPlace });
     cancelEdit();
   };
 
@@ -67,7 +67,9 @@ const TripScheduleEditor = ({
               ) : (
                 <>
                   <span className="trip-schedule-time-text">{item.time}</span>
-                  <span className="trip-schedule-place-text">{item.place}</span>
+                  <span className="trip-schedule-place-text">
+                    {item.placeName ?? item.place}
+                  </span>
                 </>
               )}
               <span className="trip-panel-item-actions">

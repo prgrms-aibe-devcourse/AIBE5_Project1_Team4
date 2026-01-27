@@ -136,6 +136,15 @@
   stroke-linejoin: round;
 }
 
+.trip-title-icon-btn.trip-title-icon-danger {
+  border-color: #fca5a5;
+  background: #fee2e2;
+}
+
+.trip-title-icon-btn.trip-title-icon-danger svg {
+  stroke: #b91c1c;
+}
+
 /* Basics form */
 .trip-basics {
   display: flex;

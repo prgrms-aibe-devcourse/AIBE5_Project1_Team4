@@ -52,7 +52,7 @@ export default function AppHeader() {
       style={{
         position: 'sticky',
         top: 0,
-        zIndex: 50,
+        zIndex: 100,
         backdropFilter: 'blur(8px)',
         background: 'rgba(255,255,255,0.85)',
         borderBottom: '1px solid rgba(0,0,0,0.08)',
