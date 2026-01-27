@@ -192,10 +192,8 @@ export default function TripsPage() {
         </div>
 
         {/* 결과 헤더: 카운트 + 정렬 */}
-        <div className="trips-page__result-header">
-          <div className="trips-page__count">
-            총 <span className="fw-bold text-dark">{filteredItems.length}</span>개의 여행
-          </div>
+        <div className="trips-page__result-header d-flex justify-content-end mb-3">
+
           <ButtonGroup size="sm" className="trips-page__sort">
             <Button
               variant={sortBy === 'latest' ? 'primary' : 'outline-secondary'}

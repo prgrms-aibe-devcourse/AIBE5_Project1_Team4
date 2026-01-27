@@ -82,10 +82,8 @@ export default function BookmarksPage() {
         </div>
 
         {/* 결과 요약 및 정렬 바 */}
-        <div className="bookmarks-page__result-header mt-4">
-          <div className="bookmarks-page__count">
-            총 <span className="fw-bold text-dark">{items.length}</span>개의 저장된 여행
-          </div>
+        <div className="bookmarks-page__result-header mt-4 d-flex justify-content-end">
+
 
           <ButtonGroup size="sm">
             <Button 
