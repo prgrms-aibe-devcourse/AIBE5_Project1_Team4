@@ -5,6 +5,7 @@ import SearchBar from '@/components/SearchBar';
 import { useAiSuggest } from '@/hooks/useAiSuggest';
 import { listPublicTrips } from '@/services/trips.service';
 import TripSection from '@/components/home/TripSection';
+import FloatingActionGroup from '@/components/common/FloatingActionGroup';
 import './HomePage.css';
 
 export default function HomePage() {
@@ -195,6 +196,7 @@ export default function HomePage() {
           <div className="home-cta__circle home-cta__circle--2" />
         </div>
       </Container>
+      <FloatingActionGroup />
     </div>
   );
 }
