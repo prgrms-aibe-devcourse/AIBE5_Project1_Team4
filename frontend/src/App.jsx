@@ -7,6 +7,7 @@ import HomePage from './pages/HomePage';
 import TripsPage from './pages/TripsPage';
 import MyPage from './pages/MyPage';
 import BookmarksPage from './pages/BookmarksPage'; // ✅ 1. 페이지 임포트 추가
+import LikedListPage from './pages/LikedListPage';
 
 // 기존 개발용 컴포넌트
 import AuthCallbackPage from './pages/AuthCallbackPage';
@@ -30,6 +31,7 @@ function App() {
           <Route path="/trips" element={<TripsPage />} />
           {/* ✅ 2. 북마크 전용 라우트 추가 */}
           <Route path="/trips/bookmarks" element={<BookmarksPage />} />
+          <Route path="/trips/likedList" element={<LikedListPage />} />
 
           {/* TripCreate 페이지 라우트 */}
           <Route path="/trips/create" element={<TripCreateEntry />} />
