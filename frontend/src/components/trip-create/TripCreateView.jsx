@@ -9,7 +9,7 @@ import TripOwnerTransferModal from './TripOwnerTransferModal';
 import { useTripCreateForm } from '../../hooks/trip-create/useTripCreateForm';
 
 // Trip create page composition and wiring of state/handlers.
-const TripCreateView = ({ onNavigate, onSubmit, tripId }) => {
+const TripCreateView = ({ onNavigate, onSubmit }) => {
   const {
     form,
     setFormField,
@@ -52,7 +52,7 @@ const TripCreateView = ({ onNavigate, onSubmit, tripId }) => {
     transferOwner,
     removeMember,
     canManageMembers,
-  } = useTripCreateForm({ tripId });
+  } = useTripCreateForm();
 
   const [transferTarget, setTransferTarget] = useState(null);
   const [removeTarget, setRemoveTarget] = useState(null);

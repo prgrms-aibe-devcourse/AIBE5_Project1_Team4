@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { Button, Card, Container } from 'react-bootstrap';
 import { exchangeCodeForSession, getSession } from '@/services/auth.service';
 import FullScreenLoader from '../components/FullScreenLoader';
-import { popReturnTo } from '../features/auth/auth.feature';
+import { popPostLoginAction, popReturnTo } from '../features/auth/auth.feature';
 
 export default function AuthCallbackPage() {
   const [status, setStatus] = useState('loading'); // "loading" | "success" | "error"
@@ -31,7 +31,14 @@ export default function AuthCallbackPage() {
         setStatus('success');
         setMessage('로그인 완료!');
 
+        const postLoginAction = popPostLoginAction();
         const returnTo = popReturnTo();
+
+        if (postLoginAction === 'goTripCreate') {
+          window.location.replace('/trips/create');
+          return;
+        }
+
         window.location.replace(returnTo);
       } catch (e) {
         if (cancelled) return;

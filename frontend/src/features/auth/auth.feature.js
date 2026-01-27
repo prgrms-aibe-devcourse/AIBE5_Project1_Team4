@@ -1,6 +1,7 @@
 import { signInWithOAuth } from '@/services/auth.service';
 
 const KEY = 'auth:returnTo';
+const ACTION_KEY = 'auth:postLoginAction';
 const DEFAULT_RETURN_TO = '/';
 
 // 여기 포함된 경로로는 returnTo를 절대 저장/복원하지 않음(루프 방지)
@@ -25,6 +26,17 @@ export function popReturnTo() {
 
 export function clearReturnTo() {
   localStorage.removeItem(KEY);
+}
+
+export function setPostLoginAction(action) {
+  if (!action) return;
+  localStorage.setItem(ACTION_KEY, String(action));
+}
+
+export function popPostLoginAction() {
+  const raw = localStorage.getItem(ACTION_KEY);
+  localStorage.removeItem(ACTION_KEY);
+  return raw || null;
 }
 
 export function sanitizeReturnTo(input) {

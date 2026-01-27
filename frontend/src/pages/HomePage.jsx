@@ -1,14 +1,18 @@
 import { useState, useEffect } from 'react';
 import { Container, Row, Col, Badge } from 'react-bootstrap';
-import { Link, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import SearchBar from '@/components/SearchBar';
 import { useAiSuggest } from '@/hooks/useAiSuggest';
 import { listPublicTrips } from '@/services/trips.service';
 import TripSection from '@/components/home/TripSection';
+import { useAuth } from '@/features/auth/hooks/useAuth';
+import { setPostLoginAction, setReturnToIfEmpty } from '@/features/auth/auth.feature';
 import './HomePage.css';
 
 export default function HomePage() {
   const navigate = useNavigate(); // 페이지 이동을 위한 훅
+  const location = useLocation();
+  const { user, loading: isAuthLoading } = useAuth();
 
   // 상태 관리 (State)
   const [searchTerm, setSearchTerm] = useState(''); // 검색어 입력값
@@ -119,6 +123,17 @@ export default function HomePage() {
     }
   };
 
+  const handleCreateTrip = async () => {
+    if (isAuthLoading) return;
+    if (!user) {
+      setPostLoginAction('goTripCreate');
+      setReturnToIfEmpty(location.pathname + location.search);
+      navigate('/login', { replace: true });
+      return;
+    }
+    navigate('/trips/create');
+  };
+
   return (
     <div className="home-page">
       {/* A. Hero 섹션: 메인 타이틀 및 검색창 */}
@@ -189,7 +204,14 @@ export default function HomePage() {
         <div className="home-cta">
           <div className="home-cta__content">
             <h2 className="home-cta__title">나만의 여행을 계획할 준비가 되셨나요?</h2>
-            <Link to="/trips/new" className="home-cta__btn">여행 일정 만들기</Link>
+            <button
+              type="button"
+              className="home-cta__btn"
+              onClick={handleCreateTrip}
+              disabled={isAuthLoading}
+            >
+              {isAuthLoading ? '로그인 확인 중...' : '여행 일정 만들기'}
+            </button>
           </div>
           <div className="home-cta__circle home-cta__circle--1" />
           <div className="home-cta__circle home-cta__circle--2" />
