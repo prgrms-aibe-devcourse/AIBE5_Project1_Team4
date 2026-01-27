@@ -5,7 +5,7 @@ const StatDetailModal = ({ show, onHide, title, data = [], loading }) => {
   return (
     <Modal show={show} onHide={onHide} centered scrollable>
       <Modal.Header closeButton className="border-0">
-        <Modal.Title className="fw-bold fs-5">{title} 목록 (최근 5개)</Modal.Title>
+        <Modal.Title className="fw-bold fs-5">{title} 목록</Modal.Title>
       </Modal.Header>
       <Modal.Body className="pt-0">
         {loading ? (
@@ -19,7 +19,7 @@ const StatDetailModal = ({ show, onHide, title, data = [], loading }) => {
               data.map((item, idx) => (
                 <ListGroup.Item key={idx} className="py-3 border-light">
                   <div className="fw-bold text-dark">{item.title || item.name || '제목 없음'}</div>
-                  <div className="text-muted small">{item.description || item.location || '상세 정보가 없습니다.'}</div>
+                  <div className="text-muted small">{item.date || item.description || item.location || '상세 정보가 없습니다.'}</div>
                 </ListGroup.Item>
               ))
             ) : (
