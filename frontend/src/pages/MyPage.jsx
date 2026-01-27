@@ -13,6 +13,7 @@ import FloatingActionGroup from '@/components/common/FloatingActionGroup';
 
 // 📡 DB 조회를 위한 공통 서비스 함수
 import { getQuickStatsList } from '../services/profiles.service';
+import { listLikedTrips } from '../services/trips.service';
 
 const MyPage = () => {
   const navigate = useNavigate();
@@ -63,18 +64,51 @@ const MyPage = () => {
   /**
    * 📊 통계 카드(찜/북마크) 클릭 시 상세 리스트 모달 오픈
    * @param {string} title - 모달 상단에 표시할 한글 제목 (예: 찜)
-   * @param {string} type - DB 조회를 위한 영어 타입 (예: likes)
+   * @param {string} type - DB 조회를 위한 영어 타입 (예: likes, bookmarks)
    */
   const handleStatClick = async (title, type) => {
     if (!currentUser) return;
     
-    // 클릭한 시점에 최신 리스트를 다시 조회하여 모달에 전달
-    const data = await getQuickStatsList(currentUser.id, type);
     setModal({
       show: true,
       title: title,
-      list: data || []
+      list: [],
+      loading: true
     });
+
+    try {
+      let data = [];
+      
+      // "찜(likes)" 타입일 때는 새로운 listLikedTrips RPC 함수 사용
+      // 이 함수는 좋아요한 여행들의 상세 정보를 반환하고, 간단한 형식으로 변환해서 모달에 전달
+      if (type === 'likes') {
+        const result = await listLikedTrips({ limit: 20 });
+        // RPC에서 반환된 여행 객체들을 간단한 형식으로 변환
+        data = (result.items || []).map(trip => ({
+          id: trip.id,
+          title: trip.title,
+          date: `${trip.start_date} ~ ${trip.end_date}`
+        }));
+      } else {
+        // "북마크(bookmarks)" 타입은 기존 로직 유지
+        data = await getQuickStatsList(currentUser.id, type);
+      }
+      
+      setModal({
+        show: true,
+        title: title,
+        list: data || [],
+        loading: false
+      });
+    } catch (error) {
+      console.error("통계 리스트 조회 실패:", error);
+      setModal({
+        show: true,
+        title: title,
+        list: [],
+        loading: false
+      });
+    }
   };
 
   /**
@@ -131,6 +165,7 @@ const MyPage = () => {
         onHide={() => setModal({ ...modal, show: false })}
         title={modal.title}
         data={modal.list}
+        loading={modal.loading}
       />
       <FloatingActionGroup />
     </div>
