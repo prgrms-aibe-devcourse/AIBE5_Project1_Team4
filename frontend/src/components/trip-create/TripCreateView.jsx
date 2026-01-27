@@ -10,8 +10,8 @@ import TripTopActions from './TripTopActions';
 import TripOwnerTransferModal from './TripOwnerTransferModal';
 import { useTripCreateForm } from '../../hooks/trip-create/useTripCreateForm';
 
-// Trip create page composition and wiring of state/handlers.
-const TripCreateView = ({ onNavigate, onSubmit, tripId }) => {
+// ✅ [수정] 부모(TripCreate)에게서 onInvite를 받아옵니다.
+const TripCreateView = ({ tripId, onInvite }) => {
   const {
     form,
     setFormField,
@@ -262,6 +262,9 @@ const TripCreateView = ({ onNavigate, onSubmit, tripId }) => {
               onShiftRangeMonth={shiftRangeCalendarMonth}
               onSelectRangeDate={selectRangeDate}
               onTitleChange={(nextTitle) => setFormField('title', nextTitle)}
+              
+              // ✅ [추가] 여기가 핵심! 드롭다운 값을 폼 상태(visibility)에 저장합니다.
+              onVisibilityChange={(nextVis) => setFormField('visibility', nextVis)}
             />
           </div>
         </section>
@@ -297,10 +300,13 @@ const TripCreateView = ({ onNavigate, onSubmit, tripId }) => {
               onChangeTab={setActivePanelTab}
               dayNavProps={dayNavProps}
               scheduleProps={scheduleProps}
+              
+              // ✅ [유지] memberProps에 onInvite가 잘 들어가 있습니다.
               memberProps={{
                 members,
                 onToggleMember: toggleMember,
                 canManageMembers,
+                onInvite, 
                 onOpenTransfer: (memberId) => {
                   if (canManageMembers) setTransferTarget(memberId);
                 },

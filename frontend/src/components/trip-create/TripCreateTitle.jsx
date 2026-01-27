@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { formatDateDot } from '@/utils/date';
 
 // Editable trip title and date-range picker in the header.
@@ -15,12 +15,7 @@ const TripCreateTitle = ({
   const [isEditing, setIsEditing] = useState(false);
   const [draftTitle, setDraftTitle] = useState(form.title);
 
-  useEffect(() => {
-    if (!isEditing) {
-      setDraftTitle(form.title);
-    }
-  }, [form.title, isEditing]);
-
+  
   const commitTitle = () => {
     const next = draftTitle.trim();
     if (next) {
@@ -54,7 +49,11 @@ const TripCreateTitle = ({
     <button
       className="trip-title-button"
       type="button"
-      onClick={() => setIsEditing(true)}
+      // ✅ [수정] 클릭 시 최신 제목을 불러오도록 변경 (에러 해결)
+      onClick={() => {
+        setDraftTitle(form.title);
+        setIsEditing(true);
+      }}
     >
       {form.title || '새 여행'}
     </button>
