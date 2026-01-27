@@ -6,7 +6,7 @@ import { useAiSuggest } from '@/hooks/useAiSuggest';
 import { listPublicTrips } from '@/services/trips.service';
 import TripSection from '@/components/home/TripSection';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { setPostLoginAction, setReturnToIfEmpty } from '@/features/auth/auth.feature';
+import { setReturnToIfEmpty } from '@/features/auth/auth.feature';
 import './HomePage.css';
 
 export default function HomePage() {
@@ -126,7 +126,6 @@ export default function HomePage() {
   const handleCreateTrip = async () => {
     if (isAuthLoading) return;
     if (!user) {
-      setPostLoginAction('goTripCreate');
       setReturnToIfEmpty(location.pathname + location.search);
       navigate('/login', { replace: true });
       return;

@@ -1,12 +1,14 @@
 import { useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { setReturnToIfEmpty } from '@/features/auth/auth.feature';
 import TripCreateView from '../components/trip-create/TripCreateView';
+import './trip-create.css';
 
 const TripCreate = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { id: tripId } = useParams();
   const { user, loading } = useAuth();
 
   useEffect(() => {
@@ -33,6 +35,7 @@ const TripCreate = () => {
     <TripCreateView
       onNavigate={handleNavigate}
       onSubmit={handleSubmit}
+      tripId={tripId}
     />
   );
 };
