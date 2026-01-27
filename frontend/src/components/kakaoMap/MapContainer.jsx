@@ -91,7 +91,7 @@ const MapContainer = ({ mapCurrentDayPos = [], mapSearchPlacePos = [] }) => {
     );
 
   return (
-    <div className="trip-map">
+    <div className="trip-map" style={{ width: '100%', height: '100%' }}>
       <Map
         center={center}
         style={{ width: '100%', height: '100%' }}
