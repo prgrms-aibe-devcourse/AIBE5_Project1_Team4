@@ -52,6 +52,9 @@ const TripCreateView = ({ onNavigate, onSubmit, tripId }) => {
     transferOwner,
     removeMember,
     canManageMembers,
+    mapCurrentDayPos,
+    mapSearchPlacePos,
+
   } = useTripCreateForm({ tripId });
 
   const [transferTarget, setTransferTarget] = useState(null);
@@ -160,6 +163,11 @@ const TripCreateView = ({ onNavigate, onSubmit, tripId }) => {
           onClosePanel={() => setIsPanelOpen(false)}
           onCloseSearch={() => setIsSearchOpen(false)}
           onMapClick={closeMenus}
+
+          //지도에 마킹할 데이터 전달
+          mapCurrentDayPos={mapCurrentDayPos} //검색 장소들
+          mapSearchPlacePos={mapSearchPlacePos} //일정 장소들
+
           searchPanel={
             <TripSearchPanel
               isOpen={isSearchOpen}

@@ -1,3 +1,5 @@
+import MapContainer from "../kakaoMap/MapContainer";
+
 // Layout frame hosting map, search panel, and side panel.
 const TripCreateFrame = ({
   isPanelOpen,
@@ -9,6 +11,10 @@ const TripCreateFrame = ({
   onMapClick,
   searchPanel,
   sidePanel,
+  currentDay,
+  searchResults,
+  mapCurrentDayPos,
+  mapSearchPlacePos
 }) => {
   return (
     <section className="trip-create-map">
@@ -16,6 +22,16 @@ const TripCreateFrame = ({
         className={`trip-create-map-inner ${isPanelOpen ? 'is-panel-open' : ''}`}
         onClick={onMapClick}
       >
+
+        {/* 지도 표시 */}
+        <div className="trip-map-main-container">
+          <MapContainer
+              mapCurrentDayPos = {mapCurrentDayPos}
+              mapSearchPlacePos = {mapSearchPlacePos}
+          />
+        </div>
+
+
         <button
           className={`trip-map-btn trip-map-btn-left ${
             isSearchOpen ? '' : 'is-visible'

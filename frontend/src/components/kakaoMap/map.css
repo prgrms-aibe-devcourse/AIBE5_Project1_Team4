@@ -1,0 +1,79 @@
+/* 지도 컨테이너 기본 설정 */
+.map-container-wrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background-color: #f8f9fa;
+}
+
+/* 1. 일정 마커 숫자 배지 스타일 */
+/* MapMarker 자식으로 들어가는 div입니다. */
+.badge {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 26px;
+  height: 26px;
+  background-color: #6e48c6; /* 브랜드 메인 컬러 (보라색 계열) */
+  color: #ffffff;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  font-weight: 700;
+  font-size: 13px;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
+  transform: translateY(-10px); /* 마커 정중앙에 위치시키기 위한 조정 */
+  transition: all 0.2s ease-in-out;
+}
+
+.badge:hover {
+  transform: translateY(-12px) scale(1.1);
+  background-color: #5a39a7;
+}
+
+/* 2. 구간 정보 (시간/거리) 말풍선 스타일 */
+/* CustomOverlayMap 내부의 route-info-bubble입니다. */
+.route-info-bubble {
+  position: relative;
+  background: #ffffff;
+  padding: 5px 10px;
+  border: 1px solid #4A90E2;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #222;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 말풍선 아래쪽 삼각형 화살표 */
+.route-info-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid #4A90E2;
+}
+
+/* 3. 로딩 및 에러 상태 텍스트 스타일 */
+.map-loading-state p,
+.map-error-state p {
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+}
+
+.map-error-state p {
+  color: #e03131;
+}
+
+/* 4. (추가 팁) 지도 위 버튼 z-index 관리 */
+/* 지도가 그려진 후에도 버튼이 위로 올라오도록 합니다. */
+.trip-map-btn {
+  z-index: 2;
+}
