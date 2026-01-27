@@ -1,9 +1,11 @@
 import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { Container } from 'react-bootstrap';
 import { useTripDetail } from '../hooks/trips/useTripDetail';
 
 import TripSummaryBar from '../components/trip-detail/TripSummaryBar';
 import TripMapSection from '../components/trip-detail/TripMapSection';
+import { TripReviewSection } from '../components/review';
 import './TripDetailPage.css';
 
 /**
@@ -38,6 +40,11 @@ const TripDetailPage = () => {
       <div className="trip-detail-body">
         <TripMapSection schedules={tripData.schedule?.days} selectedId={null} />
       </div>
+
+      {/* 리뷰 섹션 */}
+      <Container className="py-4">
+        <TripReviewSection tripId={id} />
+      </Container>
     </div>
   );
 };
