@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { formatLocalDate, getTodayString } from '@/utils/date';
 import { getTripMembers, updateTripMemberRole, upsertTripMember } from '@/services/trip-members.service';
 import { updateTripMeta, deleteTrip, adjustTripDates } from '@/services/trips.service';
@@ -131,6 +131,7 @@ export const useTripCreateForm = ({ tripId } = {}) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [members, setMembers] = useState([]);
   const [viewerRole, setViewerRole] = useState(null);
+  const originalDatesRef = useRef({ startDate: null, endDate: null });
 
   const currentDay =
     days[currentDayIndex] ??
@@ -148,13 +149,18 @@ export const useTripCreateForm = ({ tripId } = {}) => {
 
     const trip = summary?.trip;
     if (trip) {
-      setForm((prev) => ({
-        ...prev,
-        title: trip.title ?? prev.title,
-        startDate: trip.startDate ?? prev.startDate,
-        endDate: trip.endDate ?? prev.endDate,
-        isPublic: trip.visibility === 'public',
-      }));
+      setForm((prev) => {
+        const nextStart = trip.startDate ?? prev.startDate;
+        const nextEnd = trip.endDate ?? prev.endDate;
+        originalDatesRef.current = { startDate: nextStart, endDate: nextEnd };
+        return {
+          ...prev,
+          title: trip.title ?? prev.title,
+          startDate: nextStart,
+          endDate: nextEnd,
+          isPublic: trip.visibility === 'public',
+        };
+      });
     }
 
     const nextDays = mapScheduleToDays(
@@ -374,19 +380,22 @@ export const useTripCreateForm = ({ tripId } = {}) => {
   const updateCurrentDayDate = useCallback(
     (value) => {
       setDays((prev) => {
-        const nextDays = prev.map((day, index) =>
-          index === currentDayIndex ? { ...day, date: value } : day,
-        );
-        const dates = nextDays.map((day) => day.date).filter(Boolean);
-        if (dates.length > 0) {
-          const nextStart = dates.reduce((min, date) => (date < min ? date : min), dates[0]);
-          const nextEnd = dates.reduce((max, date) => (date > max ? date : max), dates[0]);
-          setForm((prevForm) => ({
-            ...prevForm,
-            startDate: nextStart,
-            endDate: nextEnd,
-          }));
+        if (prev.length === 0) {
+          return prev;
         }
+
+        const nextStart = addDays(value, -currentDayIndex);
+        const nextDays = prev.map((day, index) => ({
+          ...day,
+          date: addDays(nextStart, index),
+        }));
+
+        setForm((prevForm) => ({
+          ...prevForm,
+          startDate: nextStart,
+          endDate: addDays(nextStart, prev.length - 1),
+        }));
+
         return nextDays;
       });
     },
@@ -697,6 +706,14 @@ export const useTripCreateForm = ({ tripId } = {}) => {
       title: safeTitle,
       visibility: form.isPublic ? 'public' : 'private',
     });
+
+    const originalDates = originalDatesRef.current;
+    const dateChanged =
+      Boolean(originalDates.startDate) &&
+      (form.startDate !== originalDates.startDate ||
+        form.endDate !== originalDates.endDate);
+    const hasScheduleItems = days.some((day) => (day.items || []).length > 0);
+
     try {
       await adjustTripDates({
         tripId,
@@ -714,9 +731,77 @@ export const useTripCreateForm = ({ tripId } = {}) => {
       }
       throw error;
     }
+
+    if (dateChanged && hasScheduleItems) {
+      const snapshot = days.map((day) => ({
+        items: (day.items || []).map((item) => ({
+          placeId: item.placeId ?? null,
+          time: item.time ?? null,
+        })),
+      }));
+
+      const detail = await loadTripDetail({ resetDayIndex: false });
+      const targetDays = detail?.schedule?.days ?? [];
+
+      const existingItemIds = targetDays
+        .flatMap((day) => day.items || [])
+        .map((item) => item.itemId ?? item.id)
+        .filter((id) => isValidUuid(id));
+
+      if (existingItemIds.length > 0) {
+        await Promise.all(existingItemIds.map((id) => deleteScheduleItem(id)));
+      }
+
+      const insertTasks = [];
+      let skipped = 0;
+
+      snapshot.forEach((daySnapshot, index) => {
+        const tripDayId = targetDays[index]?.dayId ?? null;
+        if (!isValidUuid(tripDayId)) {
+          skipped += daySnapshot.items.length;
+          return;
+        }
+        daySnapshot.items.forEach((item) => {
+          if (!isValidUuid(item.placeId)) {
+            skipped += 1;
+            return;
+          }
+          insertTasks.push(
+            upsertScheduleItem({
+              tripDayId,
+              placeId: item.placeId,
+              time: item.time ?? null,
+            }),
+          );
+        });
+      });
+
+      if (insertTasks.length > 0) {
+        await Promise.all(insertTasks);
+      }
+
+      if (skipped > 0) {
+        toast(`장소 정보가 없는 일정 ${skipped}개는 복원되지 않았어요.`, {
+          icon: 'error',
+        });
+      }
+
+      await loadTripDetail({ resetDayIndex: false });
+      return true;
+    }
+
     await loadTripDetail();
     return true;
-  }, [form.endDate, form.isPublic, form.startDate, form.title, loadTripDetail, tripId]);
+  }, [
+    days,
+    deleteScheduleItem,
+    form.endDate,
+    form.isPublic,
+    form.startDate,
+    form.title,
+    loadTripDetail,
+    tripId,
+  ]);
 
   const toggleVisibility = useCallback(async () => {
     const nextVisibility = form.isPublic ? 'private' : 'public';
