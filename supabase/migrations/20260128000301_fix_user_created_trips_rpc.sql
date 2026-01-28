@@ -1,6 +1,6 @@
--- Create RPC function to get user's created trips
--- Filters trips by created_by for current user
--- Supports filtering by region, theme, date, and sorting
+-- Fix RPC function get_user_created_trips
+-- Previous version had syntax error with format() function and NULL handling
+-- This version uses parameterized queries instead of format() with %s
 
 DROP FUNCTION IF EXISTS public.get_user_created_trips(uuid, int, timestamptz, uuid, text, text, text, int);
 
