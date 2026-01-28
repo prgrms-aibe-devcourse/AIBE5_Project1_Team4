@@ -3,8 +3,8 @@
 .trip-summary-container {
   background-color: transparent; /* 배경 투명 */
   /* TripCreate: padding: 0 0 8px; (아래쪽 여백만 있음) */
-  padding: 24px 0 16px; 
-  border-bottom: none; 
+  padding: 24px 0 16px;
+  border-bottom: none;
   display: flex;
   justify-content: space-between;
   align-items: flex-start; /* 상단 기준 정렬 */
@@ -15,7 +15,7 @@
 .summary-left {
   display: flex;
   flex-direction: column;
-  gap: 12px; 
+  gap: 12px;
   max-width: 800px;
 }
 
@@ -36,24 +36,38 @@
   align-items: center;
   gap: 12px;
   color: #333;
-  font-size: 0.95rem; 
+  font-size: 0.95rem;
   font-weight: 500;
   margin-top: 4px;
 }
 
-.meta-item { display: flex; align-items: center; gap: 6px; }
-.meta-item.author { font-weight: 600; color: #111; font-size: 1rem; }
-.meta-divider { width: 1px; height: 12px; background-color: #e0e0e0; } 
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.meta-item.author {
+  font-weight: 600;
+  color: #111;
+  font-size: 1rem;
+}
+
+.meta-divider {
+  width: 1px;
+  height: 12px;
+  background-color: #e0e0e0;
+}
 
 /* 3. 날짜 행 */
 .summary-date-row {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #666; 
-  font-size: 0.85rem; 
+  color: #666;
+  font-size: 0.85rem;
   font-weight: 400;
-  margin-top: -2px; 
+  margin-top: -2px;
 }
 
 /* 4. 설명 & 태그 */
@@ -86,34 +100,64 @@
 /* --- 우측 영역 (버튼 그룹) --- */
 .summary-right {
   display: flex;
-  gap: 8px; 
+  gap: 8px;
   padding-top: 6px;
 }
 
-/* 버튼 스타일  */
+/* ------------------------------------------------------------------
+   일반 버튼 스타일 (공유, 수정 등 텍스트 버튼용)
+   ※ 좋아요 / 북마크 아이콘 버튼에는 사용하지 않음
+------------------------------------------------------------------ */
 .summary-btn-flat {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 10px;        
-  background-color: transparent; 
-  border: none;            
-  border-radius: 6px;      
-  
-  font-size: 0.85rem;    
-  font-weight: 600;        
-  color: #111;             
-  
+  padding: 6px 10px;
+  background-color: transparent;
+  border: none;
+  border-radius: 6px;
+
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #111;
+
   cursor: pointer;
   transition: background-color 0.2s;
 }
 
 .summary-btn-flat:hover {
-  background-color: rgba(0,0,0,0.04);
+  background-color: rgba(0, 0, 0, 0.04);
 }
 
 .summary-btn-flat svg {
-  width: 16px; 
+  width: 16px;
   height: 16px;
   stroke-width: 1.8px;
+}
+
+/* ------------------------------------------------------------------
+   아이콘 전용 버튼 (좋아요 ❤️ / 북마크 🔖)
+   - 피그마 기준: 배경 없음, 테두리 없음, 아이콘만 표시
+   - 기존 summary-btn-flat 스타일을 확실히 덮어쓰기 위함
+------------------------------------------------------------------ */
+.summary-icon-btn {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  cursor: pointer;
+  color: inherit;
+}
+
+.summary-icon-btn:hover {
+  background: transparent !important;
+}
+
+.summary-icon-btn:focus {
+  outline: none;
 }
