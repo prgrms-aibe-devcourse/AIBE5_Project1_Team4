@@ -6,7 +6,8 @@ import { Route, Routes } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import TripsPage from './pages/TripsPage';
 import MyPage from './pages/MyPage';
-import BookmarksPage from './pages/BookmarksPage'; 
+import BookmarksPage from './pages/BookmarksPage';
+import MyTripsPage from './pages/MyTripsPage';
 import LikedListPage from './pages/LikedListPage';
 import TripAccept from './pages/TripAccept'; // ✅ 1. 초대 수락 페이지 임포트 추가
 
@@ -31,6 +32,7 @@ function App() {
           <Route index element={<HomePage />} />
           <Route path="/trips" element={<TripsPage />} />
           <Route path="/trips/bookmarks" element={<BookmarksPage />} />
+          <Route path="/trips/myTrips" element={<MyTripsPage />} />
           <Route path="/trips/likedList" element={<LikedListPage />} />
           {/* TripAceept 페이지 라우트 */}
           <Route path="/invite" element={<TripAccept />} /> 
