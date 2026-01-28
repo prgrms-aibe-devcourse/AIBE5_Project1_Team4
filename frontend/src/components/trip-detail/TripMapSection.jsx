@@ -13,11 +13,14 @@ import './TripMapSection.css';
  *   - members: RPC에서 받은 멤버 데이터 배열
  *     구조: [ { userId, role, displayName, isSelf } ]
  *   - selectedId: 현재 선택된 일정 항목의 ID (지도 마커 강조용)
+ *   - onScheduleClick: 일정 항목 클릭 시 호출될 콜백함수 (itemId 전달)
  */
-const TripMapSection = ({ schedules = [], members = [], selectedId = null }) => {
+const TripMapSection = ({ schedules = [], members = [], selectedId = null, onScheduleClick }) => {
   // 지도 줌 레벨 상태 (향후 지도 라이브러리 연동용)
   const [zoomLevel, setZoomLevel] = useState(1);
   const [routeSummary, setRouteSummary] = useState(null);
+  // 선택된 일정 항목의 좌표 (null이면 기본값 사용)
+  const [selectedLocation, setSelectedLocation] = useState(null);
 
   const mapCurrentDayPos = useMemo(() => {
     const points = [];
@@ -52,6 +55,27 @@ const TripMapSection = ({ schedules = [], members = [], selectedId = null }) => 
     setZoomLevel(prev => Math.max(prev - 0.2, 0.5));
   };
 
+  // 일정 항목 클릭 시 지도 중심 이동
+  const handleScheduleClick = (itemId) => {
+    // 콜백함수 호출 (부모 컴포넌트에서 UI 상태 관리)
+    if (onScheduleClick) {
+      onScheduleClick(itemId);
+    }
+
+    // selectedId와 동일한 항목 찾기
+    for (const day of schedules) {
+      const item = day?.items?.find(i => i?.itemId === itemId);
+      if (item && item?.place) {
+        const lat = Number(item.place.lat);
+        const lng = Number(item.place.lng);
+        if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
+          setSelectedLocation({ lat, lng, name: item.place.name });
+          return;
+        }
+      }
+    }
+  };
+
   return (
     <div className="trip-detail-map-container" style={{ 
       position: 'relative', 
@@ -64,6 +88,7 @@ const TripMapSection = ({ schedules = [], members = [], selectedId = null }) => 
           mapCurrentDayPos={mapCurrentDayPos}
           mapSearchPlacePos={[]}
           drawSimplePath
+          selectedLocation={selectedLocation}
           onRouteData={(data) => {
             if (data?.path?.length > 0) {
               setRouteSummary({
@@ -83,6 +108,7 @@ const TripMapSection = ({ schedules = [], members = [], selectedId = null }) => 
         members={members}
         selectedId={selectedId}
         routeSummary={routeSummary}
+        onScheduleClick={handleScheduleClick}
       />
       
       {/* 줌 컨트롤 */}

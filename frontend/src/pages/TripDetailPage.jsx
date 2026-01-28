@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Container } from 'react-bootstrap';
 import { useTripDetail } from '../hooks/trips/useTripDetail';
@@ -14,6 +14,7 @@ import './TripDetailPage.css';
 */
 const TripDetailPage = () => {
 const { id } = useParams();
+const [selectedId, setSelectedId] = useState(null);
 
 // 진입 시 스크롤 위치 초기화 (이전 페이지 스크롤 유지되는 이슈 대응)
 useEffect(() => {
@@ -61,7 +62,8 @@ return <div className="text-center mt-5">데이터를 불러올 수 없습니다
         <TripMapSection 
           schedules={tripData.schedule?.days} 
           members={tripData.members?.members}
-          selectedId={null} 
+          selectedId={selectedId}
+          onScheduleClick={setSelectedId}
         />
       </div>
 
