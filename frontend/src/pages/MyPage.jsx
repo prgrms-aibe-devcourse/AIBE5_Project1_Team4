@@ -13,7 +13,7 @@ import FloatingActionGroup from '@/components/common/FloatingActionGroup';
 
 // 📡 DB 조회를 위한 공통 서비스 함수
 import { getQuickStatsList } from '../services/profiles.service';
-import { listLikedTrips } from '../services/trips.service';
+import { listLikedTrips, listMyTrips } from '../services/trips.service';
 
 const MyPage = () => {
   const navigate = useNavigate();
@@ -41,76 +41,66 @@ const MyPage = () => {
           email: user.email,
           avatar_url: user.user_metadata?.avatar_url || null 
         });
+      try {
+        // ⚡️ 중요: 데이터를 가져오지 않고(head: true), 숫자만 정확히 세어옴(count: 'exact')
+        const [likesCount, tripsCount, bookmarksCount] = await Promise.all([
+          supabase.from('trip_likes').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
+          supabase.from('trips').select('*', { count: 'exact', head: true }).eq('created_by', user.id),
+          supabase.from('trip_bookmarks').select('*', { count: 'exact', head: true }).eq('user_id', user.id)
+        ]);
 
-        // 3. ⚡️ 실시간 DB 데이터 개수(Count) 반영 로직
-        try {
-          // DB에서 실제 저장된 리스트를 가져와서 길이를 기반으로 숫자 세팅
-          const likesData = await getQuickStatsList(user.id, 'likes');
-          const bookmarksData = await getQuickStatsList(user.id, 'bookmarks');
-          
-          setStats({
-            likes: likesData ? likesData.length : 0, 
-            trips: 0, // 피드백 반영: '내 여행' 카운트 로직은 추후 확장 예정
-            bookmarks: bookmarksData ? bookmarksData.length : 0
-          });
-        } catch (error) {
-          console.error("실시간 수치 로드 실패:", error);
-        }
+        setStats({
+          // .length 대신 .count를 사용합니다.
+          likes: likesCount.count || 0, 
+          trips: tripsCount.count || 0,    // ✅ 이제 5를 넘어 10, 20 등 실제 전체 개수가 표시됩니다.
+          bookmarks: bookmarksCount.count || 0
+        });
+      } catch (error) {
+        console.error("실시간 수치 로드 실패:", error);
       }
-    };
-    loadUserDataAndStats();
-  }, []);
+        }
+      };
+      loadUserDataAndStats();
+    }, []);
 
   /**
-   * 📊 통계 카드(찜/북마크) 클릭 시 상세 리스트 모달 오픈
-   * @param {string} title - 모달 상단에 표시할 한글 제목 (예: 찜)
-   * @param {string} type - DB 조회를 위한 영어 타입 (예: likes, bookmarks)
+   * 📊 통계 카드 클릭 시 상세 리스트 모달 오픈 (Likes 패턴과 100% 일치)
    */
   const handleStatClick = async (title, type) => {
     if (!currentUser) return;
-    
-    setModal({
-      show: true,
-      title: title,
-      list: [],
-      loading: true
-    });
+    setModal({ show: true, title, list: [], loading: true });
 
     try {
-      let data = [];
+      let result;
       
-      // "찜(likes)" 타입일 때는 새로운 listLikedTrips RPC 함수 사용
-      // 이 함수는 좋아요한 여행들의 상세 정보를 반환하고, 간단한 형식으로 변환해서 모달에 전달
+      // 1. 타입에 따른 RPC 호출
       if (type === 'likes') {
-        const result = await listLikedTrips({ limit: 20 });
-        // RPC에서 반환된 여행 객체들을 간단한 형식으로 변환
-        data = (result.items || []).map(trip => ({
-          id: trip.id,
-          title: trip.title,
-          date: `${trip.start_date} ~ ${trip.end_date}`
-        }));
+        result = await listLikedTrips({ limit: 5 });
+      } else if (type === 'trips') {
+        result = await listMyTrips({ limit: 5 }); // ✅ 이제 400 에러 없이 호출됩니다.
       } else {
-        // "북마크(bookmarks)" 타입은 기존 로직 유지
-        data = await getQuickStatsList(currentUser.id, type);
+        // 북마크 등 기타 처리
+        result = await getQuickStatsList(currentUser.id, type);
       }
+
+      // 2. 데이터 가공 (mapRowToCard에서 이미 summary -> description으로 바뀜)
+      // 찜(Likes)에서 쓰신 trip.summary 대신 trip.description을 써야 실제 내용이 나옵니다.
+      const rawItems = Array.isArray(result) ? result : (result?.items || []);
       
-      setModal({
-        show: true,
-        title: title,
-        list: data || [],
-        loading: false
-      });
+      const data = rawItems.map(trip => ({
+        id: trip.id,
+        title: trip.title,
+        // DB의 summary가 NULL이면 날짜를 대신 보여주어 UI 보강
+        description: trip.description || (trip.start_date ? `${trip.start_date} ~ ${trip.end_date}` : '상세 정보가 없습니다.'),
+        date: `${trip.start_date} ~ ${trip.end_date}`
+      }));
+
+      setModal({ show: true, title, list: data, loading: false });
     } catch (error) {
-      console.error("통계 리스트 조회 실패:", error);
-      setModal({
-        show: true,
-        title: title,
-        list: [],
-        loading: false
-      });
+      console.error(`${title} 조회 실패:`, error);
+      setModal({ show: true, title, list: [], loading: false });
     }
   };
-
   /**
    * 🚪 로그아웃 처리 핸들러
    * 세션 종료 후 피드백대로 메인/로그인 페이지로 네비게이션 처리

@@ -51,28 +51,24 @@ function mapRowToCard(row) {
     regions: row.regions ?? [],
     themes: row.themes ?? [],
   };
-}
-
-/**
- * 내 여행 목록 조회 (최신순 + 커서 페이지네이션)
- * @param {{ limit?: number, cursor?: { createdAt: string, id: string } }} params
+}/**
+ * 내 여행 목록 조회 (Liked 방식과 100% 동일한 구조)
  */
 export async function listMyTrips(params = {}) {
   const { limit = 10, cursor } = params;
   const context = 'tripsService.listMyTrips';
 
   try {
-    // RPC 호출
+    // RPC 호출 (p_user_id 파라미터 제거, SQL 내부에서 처리함)
     const result = await supabase.rpc('list_my_trips', {
       p_limit: limit,
       p_cursor_created_at: cursor?.createdAt ?? null,
       p_cursor_id: cursor?.id ?? null,
-      // p_user_id는 전달하지 않으면 RPC 내부에서 auth.uid()를 사용함
     });
 
     const rows = unwrap(result, context) || [];
     
-    // 기존에 만들어둔 매퍼(mapRowToCard)를 재사용해 DTO 변환
+    // 매퍼(mapRowToCard) 재사용
     const items = rows.map(mapRowToCard);
 
     // 다음 페이지 커서 계산
