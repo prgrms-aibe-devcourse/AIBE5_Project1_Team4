@@ -718,51 +718,120 @@
 }
 
 .trip-schedule-list {
-  gap: 6px;
-  font-size: 0.8rem;
+  gap: 8px;
+  font-size: 0.85rem;
 }
 
 .trip-schedule-list li {
-  display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) 32px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed #f1f3f5;
+}
+
+.trip-schedule-list li:last-child {
+  border-bottom: none;
+}
+
+.trip-schedule-item {
+  transition: background-color 0.2s;
+}
+
+.trip-schedule-item:hover {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 8px;
+  margin: -8px 0 4px 0;
+}
+
+/* 번호 배지 스타일 (Detail 페이지와 일치) */
+.trip-schedule-number {
+  display: flex;
+  justify-content: center;
   align-items: center;
-  justify-content: stretch;
-  column-gap: 8px;
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
+  background-color: #6e48c6;
+  color: #ffffff;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  font-weight: 700;
+  font-size: 13px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
+}
+
+/* 컨텐츠 영역 */
+.trip-schedule-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
 }
 
 .trip-schedule-time-text {
-  min-width: 44px;
-  font-weight: 700;
-  color: #111;
-  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #343a40;
   white-space: nowrap;
 }
 
 .trip-schedule-place-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: #343a40;
+  word-break: break-word;
+  white-space: normal;
+}
+
+/* 편집 입력 필드 */
+.trip-schedule-edit-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   min-width: 0;
-  color: #111;
-  text-align: center;
-  word-break: keep-all;
-  white-space: nowrap;
 }
 
 .trip-schedule-time-input,
 .trip-schedule-place-input {
   border: 1px solid #e0e0e0;
   border-radius: 6px;
-  padding: 4px 6px;
-  font-size: 0.75rem;
-  text-align: center;
+  padding: 8px 10px;
+  font-size: 14px;
+  font-family: 'Noto Sans KR', sans-serif;
 }
 
+.trip-schedule-time-input::placeholder,
+.trip-schedule-place-input::placeholder {
+  color: #adb5bd;
+}
+
+/* 버튼 스타일 */
 .trip-schedule-icon-btn {
-  border: none;
-  background: transparent;
-  font-size: 0.8rem;
+  border: 1px solid #e9ecef;
+  background: #f8f9fa;
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
   line-height: 1;
   padding: 0;
-  color: #111;
+  color: #495057;
   cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 0.2s;
+}
+
+.trip-schedule-icon-btn:hover {
+  background-color: #e9ecef;
+  color: #212529;
 }
 
 .trip-panel-item-actions {

@@ -45,32 +45,37 @@ const TripScheduleEditor = ({
   return (
     <div className="trip-schedule-editor">
       <ul className="trip-panel-list trip-schedule-list">
-        {items.map((item) => {
+        {items.map((item, index) => {
           const isEditing = editingId === item.id;
           return (
-            <li key={item.id} className="trip-panel-item">
+            <li key={item.id} className="trip-panel-item trip-schedule-item">
+              {/* 번호 배지 */}
+              <div className="trip-schedule-number">{index + 1}</div>
+              
               {isEditing ? (
-                <>
+                <div className="trip-schedule-edit-group">
                   <input
                     className="trip-schedule-time-input"
                     value={draftTime}
                     onChange={(event) => setDraftTime(event.target.value)}
                     onKeyDown={handleKeyDown}
+                    placeholder="시간"
                   />
                   <input
                     className="trip-schedule-place-input"
                     value={draftPlace}
                     onChange={(event) => setDraftPlace(event.target.value)}
                     onKeyDown={handleKeyDown}
+                    placeholder="장소"
                   />
-                </>
+                </div>
               ) : (
-                <>
-                  <span className="trip-schedule-time-text">{item.time}</span>
-                  <span className="trip-schedule-place-text">
+                <div className="trip-schedule-content">
+                  <div className="trip-schedule-time-text">{item.time || "-"}</div>
+                  <div className="trip-schedule-place-text">
                     {item.placeName ?? item.place}
-                  </span>
-                </>
+                  </div>
+                </div>
               )}
               <span className="trip-panel-item-actions">
                 {isEditing ? (
