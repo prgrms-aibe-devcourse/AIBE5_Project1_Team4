@@ -12,7 +12,10 @@ const TripSection = ({
   onLike,
   onBookmark,
   isLoading,
-  linkTo = "/trips"
+  isLoadingMore = false,
+  hasMore = true,
+  onLoadMore,
+  linkTo = '/trips',
 }) => {
   // --- 가로 스크롤 핸들링 ---
   const scrollRef = useRef(null);
@@ -21,6 +24,23 @@ const TripSection = ({
     if (scrollRef.current) {
       const scrollAmount = direction === 'left' ? -320 : 320;
       scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
+
+  const shouldLoadMore = () => {
+    if (!scrollRef.current) return false;
+    const { scrollLeft, clientWidth, scrollWidth } = scrollRef.current;
+    return scrollLeft + clientWidth >= scrollWidth - 64;
+  };
+
+  const handleRightNav = () => {
+    scroll('right');
+    if (onLoadMore && hasMore && !isLoadingMore) {
+      requestAnimationFrame(() => {
+        if (shouldLoadMore()) {
+          onLoadMore();
+        }
+      });
     }
   };
 
@@ -64,17 +84,24 @@ const TripSection = ({
               </div>
             ))
           ) : trips && trips.length > 0 ? (
-            // 데이터 있음: 카드 목록 렌더링
-            trips.map((trip) => (
-              <div key={trip.id} className="home-section__card">
-                <TripCard
-                  trip={trip}
-                  onCardClick={onCardClick}
-                  onLikeClick={onLike}
-                  onBookmarkClick={onBookmark}
-                />
-              </div>
-            ))
+            // Data available: render cards
+            <>
+              {trips.map((trip) => (
+                <div key={trip.id} className="home-section__card">
+                  <TripCard
+                    trip={trip}
+                    onCardClick={onCardClick}
+                    onLikeClick={onLike}
+                    onBookmarkClick={onBookmark}
+                  />
+                </div>
+              ))}
+              {isLoadingMore && (
+                <div className="home-section__card home-section__card--loading">
+                  <div className="home-section__loading-skeleton" />
+                </div>
+              )}
+            </>
           ) : (
             // 데이터 없음: 안내 메시지
             <div className="home-section__empty">
@@ -86,7 +113,7 @@ const TripSection = ({
         {/* --- 우측 네비게이션 버튼 --- */}
         <button
           className="home-section__nav home-section__nav--right"
-          onClick={() => scroll('right')}
+          onClick={handleRightNav}
         >
           <ChevronRight size={24} />
         </button>
