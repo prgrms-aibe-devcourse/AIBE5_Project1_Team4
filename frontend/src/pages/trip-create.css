@@ -918,6 +918,21 @@
   padding: 0;
   vertical-align: middle;
   flex-shrink: 0;
+  cursor: pointer;
+}
+
+.trip-panel-icon-btn:hover {
+  background: #f5f5f5;
+}
+
+.trip-panel-icon-btn-danger:hover {
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+
+.trip-panel-icon-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .trip-chevron {

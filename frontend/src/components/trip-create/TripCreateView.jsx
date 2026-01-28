@@ -10,6 +10,7 @@ import TripOwnerTransferModal from './TripOwnerTransferModal';
 import { useTripCreateForm } from '../../hooks/trip-create/useTripCreateForm';
 import { alert, confirm, toast } from '@/shared/ui/overlay';
 
+
 // ✅ [수정 1] 부모(TripCreate)에게서 onInvite를 받아옵니다.
 const TripCreateView = ({ tripId, onInvite }) => {
   const navigate = useNavigate();
@@ -33,8 +34,6 @@ const TripCreateView = ({ tripId, onInvite }) => {
     setIsSearchOpen,
     activePanelTab,
     setActivePanelTab,
-    isDayMenuOpen,
-    setIsDayMenuOpen,
     isCalendarOpen,
     setIsCalendarOpen,
     calendarInfo,
@@ -58,6 +57,7 @@ const TripCreateView = ({ tripId, onInvite }) => {
     addingPlaceId,
     updateScheduleItem,
     removeScheduleItem,
+    deleteCurrentDay,
     members,
     toggleMember,
     transferOwner,
@@ -119,7 +119,6 @@ const TripCreateView = ({ tripId, onInvite }) => {
   }, [signature, tripId, isLoaded]);
 
   const closeMenus = () => {
-    setIsDayMenuOpen(false);
     setIsCalendarOpen(false);
   };
 
@@ -148,10 +147,30 @@ const TripCreateView = ({ tripId, onInvite }) => {
   };
 
   const handleToggleCalendar = () => {
-    setIsDayMenuOpen(false);
     setCalendarMonth(currentDay.date);
     setIsCalendarOpen((prev) => !prev);
   };
+
+  const [isDeletingDay, setIsDeletingDay] = useState(false);
+
+  const handleDeleteDay = useCallback(async () => {
+    const isConfirmed = await confirm({
+      title: '일차 삭제',
+      text: '이 Day의 모든 일정이 함께 삭제됩니다. 정말 삭제할까요?',
+      confirmText: '삭제',
+      cancelText: '취소',
+      danger: true,
+    });
+    if (!isConfirmed) return;
+
+    setIsDeletingDay(true);
+    try {
+      await deleteCurrentDay();
+      pendingSaveRef.current = true;
+    } finally {
+      setIsDeletingDay(false);
+    }
+  }, [deleteCurrentDay]);
 
   const handleSave = useCallback(async () => {
     if (!tripId) return;
@@ -251,16 +270,8 @@ const TripCreateView = ({ tripId, onInvite }) => {
     onPrevDay: handlePrevDay,
     onNextDay: handleNextDay,
     onAddDay: handleAddDay,
-    isDayMenuOpen,
-    onToggleDayMenu: (event) => {
-      event.stopPropagation();
-      setIsCalendarOpen(false);
-      setIsDayMenuOpen((prev) => !prev);
-    },
-    onCloseDayMenu: () => {
-      setIsDayMenuOpen(false);
-      setIsCalendarOpen(false);
-    },
+    onDeleteDay: handleDeleteDay,
+    isDeletingDay,
     isCalendarOpen,
     onToggleCalendar: handleToggleCalendar,
     calendarInfo,
