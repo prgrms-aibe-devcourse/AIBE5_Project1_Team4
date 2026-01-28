@@ -223,6 +223,48 @@
 .place-name { font-size: 15px; font-weight: 600; color: #343a40; display: block; }
 .place-category { font-size: 12px; color: #adb5bd; }
 
+/* 이동 시간 표시 스타일 */
+.travel-time-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 12px 38px; /* 번호 배지 너비(26px) + gap(12px) */
+  padding-left: 8px;
+}
+
+.travel-time-line {
+  width: 2px;
+  height: 24px;
+  background: linear-gradient(to bottom, #4A90E2 0%, #4A90E2 50%, transparent 50%, transparent 100%);
+  background-size: 2px 8px;
+  flex-shrink: 0;
+}
+
+.travel-time-info {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #6b7280;
+  background-color: #f8f9fa;
+  padding: 4px 8px;
+  border-radius: 12px;
+}
+
+.travel-icon {
+  font-size: 14px;
+}
+
+.travel-duration {
+  font-weight: 600;
+  color: #4A90E2;
+}
+
+.travel-distance {
+  color: #9ca3af;
+  font-size: 11px;
+}
+
 /* 그룹 멤버 섹션 스타일 */
 .group-members-section {
   padding: 12px 16px;
