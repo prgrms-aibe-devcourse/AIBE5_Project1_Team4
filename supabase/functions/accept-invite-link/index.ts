@@ -80,16 +80,16 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    // 6. 멤버 추가 (Editor 역할)
-    const { error: memberError } = await supabase
-      .from('trip_members')
-      .insert({
-        trip_id: inviteLink.trip_id,
-        user_id: user.id,
-        role: 'editor',
-      })
+// 6. 멤버 추가 (Editor 역할) - 직접 Insert 대신 관리자 권한 RPC 호출
+const { error: rpcError } = await supabase.rpc('accept_trip_invitation', {
+  p_trip_id: inviteLink.trip_id,
+  p_user_id: user.id
+})
 
-    if (memberError) throw memberError
+if (rpcError) {
+  console.error('RPC Error:', rpcError)
+  throw rpcError
+}
 
     // 7. 사용 횟수 증가
     await supabase
