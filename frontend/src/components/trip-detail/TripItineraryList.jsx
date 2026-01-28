@@ -131,12 +131,15 @@ const TripItineraryList = ({
             <div className="schedule-list-scroll-area">
               {currentDayItems.length > 0 ? (
                 // 현재 날의 모든 일정 항목을 시간순으로 렌더링
-                currentDayItems.map((item) => (
+                currentDayItems.map((item, index) => (
                   <div 
                     key={item.itemId}  // 각 항목의 고유 ID
                     className={`schedule-item ${selectedId === item.itemId ? 'active' : ''}`}
                     onClick={() => onScheduleClick && onScheduleClick(item.itemId)}
                   >
+                    {/* 지도 마커 번호와 동일한 번호 표시 */}
+                    <div className="schedule-number">{index + 1}</div>
+                    
                     {/* 일정 시간 표시 */}
                     <div className="schedule-time">{item.time || "-"}</div>
                     
