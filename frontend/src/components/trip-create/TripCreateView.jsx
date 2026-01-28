@@ -73,12 +73,24 @@ const TripCreateView = ({ tripId, onInvite }) => {
 
   const [transferTarget, setTransferTarget] = useState(null);
   const [removeTarget, setRemoveTarget] = useState(null);
+  const [selectedScheduleId, setSelectedScheduleId] = useState(null);
   const [saveState, setSaveState] = useState(tripId ? 'saved' : 'dirty');
   const lastSavedSignature = useRef('');
   const pendingSaveRef = useRef(false);
   const hasInitialized = useRef(false);
   const transferMember = members.find((member) => member.id === transferTarget);
   const removeMemberTarget = members.find((member) => member.id === removeTarget);
+
+  // 선택된 일정 항목의 좌표 계산
+  const selectedLocation = useMemo(() => {
+    if (!selectedScheduleId || !currentDay.items) return null;
+    const selectedItem = currentDay.items.find((item) => item.id === selectedScheduleId);
+    if (!selectedItem || !selectedItem.lat || !selectedItem.lng) return null;
+    return {
+      lat: Number(selectedItem.lat),
+      lng: Number(selectedItem.lng),
+    };
+  }, [selectedScheduleId, currentDay.items]);
 
   const signature = useMemo(
     () => JSON.stringify({ form, days }),
@@ -229,6 +241,8 @@ const TripCreateView = ({ tripId, onInvite }) => {
     onAddItem: () => addScheduleItem(), 
     onRemoveItem: removeScheduleItem,
     onUpdateItem: updateScheduleItem,
+    onSelectSchedule: setSelectedScheduleId,
+    selectedId: selectedScheduleId,
   };
 
   const dayNavProps = {
@@ -296,6 +310,7 @@ const TripCreateView = ({ tripId, onInvite }) => {
           onMapClick={closeMenus}
           mapCurrentDayPos={mapCurrentDayPos}
           mapSearchPlacePos={mapSearchPlacePos}
+          selectedLocation={selectedLocation}
           searchPanel={
             <TripSearchPanel
               isOpen={isSearchOpen}

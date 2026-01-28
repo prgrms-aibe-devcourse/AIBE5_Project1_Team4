@@ -745,6 +745,13 @@
   margin: -8px 0 4px 0;
 }
 
+.trip-schedule-item.active {
+  background-color: #e7f5ff;
+  border-radius: 8px;
+  padding: 8px;
+  margin: -8px 0 4px 0;
+}
+
 /* 번호 배지 스타일 (Detail 페이지와 일치) */
 .trip-schedule-number {
   display: flex;

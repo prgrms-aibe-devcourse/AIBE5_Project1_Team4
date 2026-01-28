@@ -7,6 +7,8 @@ const TripScheduleEditor = ({
   onAddItem,
   onRemoveItem,
   onUpdateItem,
+  onSelectSchedule,
+  selectedId,
 }) => {
   const [editingId, setEditingId] = useState(null);
   const [draftTime, setDraftTime] = useState('');
@@ -47,8 +49,13 @@ const TripScheduleEditor = ({
       <ul className="trip-panel-list trip-schedule-list">
         {items.map((item, index) => {
           const isEditing = editingId === item.id;
+          const isSelected = selectedId === item.id;
           return (
-            <li key={item.id} className="trip-panel-item trip-schedule-item">
+            <li 
+              key={item.id} 
+              className={`trip-panel-item trip-schedule-item ${isSelected ? 'active' : ''}`}
+              onClick={() => onSelectSchedule && onSelectSchedule(item.id)}
+            >
               {/* 번호 배지 */}
               <div className="trip-schedule-number">{index + 1}</div>
               
