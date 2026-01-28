@@ -282,7 +282,7 @@ export const useTripCreateForm = ({ tripId } = {}) => {
     const loadMembers = async () => {
       try {
         const result = await getTripMembers({ tripId });
-        const list = result?.data?.members ?? [];
+        const list = result?.members || result?.data?.members || [];
         if (!isMounted) return;
 
         if (list.length === 0 && user) {
@@ -309,6 +309,9 @@ export const useTripCreateForm = ({ tripId } = {}) => {
             }
           }
           return;
+
+
+          
         }
         if (list.length === 0) return;
 
@@ -764,3 +767,4 @@ export const useTripCreateForm = ({ tripId } = {}) => {
     mapSearchPlacePos
   };
 };
+
