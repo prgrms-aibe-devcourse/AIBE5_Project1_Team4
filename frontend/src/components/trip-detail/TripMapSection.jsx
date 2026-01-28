@@ -63,6 +63,7 @@ const TripMapSection = ({ schedules = [], members = [], selectedId = null }) => 
         <MapContainer
           mapCurrentDayPos={mapCurrentDayPos}
           mapSearchPlacePos={[]}
+          drawSimplePath
           onRouteData={(data) => {
             if (data?.path?.length > 0) {
               setRouteSummary({

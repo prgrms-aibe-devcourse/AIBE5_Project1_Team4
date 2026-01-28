@@ -13,6 +13,7 @@ const MapContainer = ({
   mapCurrentDayPos = [],
   mapSearchPlacePos = [],
   onRouteData,
+  drawSimplePath = false,
 }) => {
   // 1. 카카오 지도 SDK 로드 (JS API 키를 통해 지도를 실제 호출)
   const [loading, error] = useKakaoMap();
@@ -35,6 +36,15 @@ const MapContainer = ({
 
     return { lat: 37.5665, lng: 126.978 }; // 기본값: 서울시청
   }, [mapSearchPlacePos, mapCurrentDayPos]);
+
+  const simplePath = useMemo(() => {
+    return (mapCurrentDayPos || [])
+      .map((point) => ({
+        lat: Number(point?.lat),
+        lng: Number(point?.lng),
+      }))
+      .filter((point) => !Number.isNaN(point.lat) && !Number.isNaN(point.lng));
+  }, [mapCurrentDayPos]);
 
   //데이터 잘 들어오는지 확인-----------------------------------------------
   useEffect(() => {
@@ -130,9 +140,9 @@ const MapContainer = ({
         ))}
 
         {/* --- [3] 경로선 --- */}
-        {routeData.path.length > 0 && (
+        {(routeData.path.length > 0 || (drawSimplePath && simplePath.length > 1)) && (
           <Polyline
-            path={routeData.path}
+            path={routeData.path.length > 0 ? routeData.path : simplePath}
             strokeWeight={5}
             strokeColor="#4A90E2"
             strokeOpacity={0.8}
