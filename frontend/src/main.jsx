@@ -6,6 +6,10 @@ import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './features/auth/components/AuthProvider.jsx';
 import AppGate from './features/auth/components/AppGate.jsx';
 
+const isDevelopment = import.meta.env.MODE === 'development';
+
+const Root = isDevelopment ? ({ children }) => children : StrictMode;
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>

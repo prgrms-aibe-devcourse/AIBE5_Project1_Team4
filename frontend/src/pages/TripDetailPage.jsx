@@ -34,6 +34,7 @@ return <div className="text-center mt-5">데이터를 불러올 수 없습니다
   const author = summaryPayload.author ?? {};
   const counts = summaryPayload.counts ?? {};
   const summaryView = {
+    id: trip.id ?? id,
     title: trip.title ?? '',
     description: trip.summary ?? '',
     start_date: trip.startDate ?? trip.start_date ?? '',

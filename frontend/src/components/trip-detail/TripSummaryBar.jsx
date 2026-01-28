@@ -1,6 +1,7 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { 
-  Calendar, Bookmark, Share2, User, MapPin, Siren, Heart 
+  Calendar, Bookmark, Share2, User, MapPin, Siren, Heart, Pencil
 } from 'lucide-react';
 import './TripSummaryBar.css';
 
@@ -14,6 +15,7 @@ const TripSummaryBar = ({ summary }) => {
 
   // 구조 분해 할당을 통해 가독성 확보
   const {
+    id,
     title,
     description,
     start_date,
@@ -76,6 +78,9 @@ const TripSummaryBar = ({ summary }) => {
 
       {/* 우측 액션 버튼 영역 */}
       <div className="summary-right">
+        <Link className="summary-btn-flat" to={`/trips/${id}/edit`}>
+          <Pencil size={18} strokeWidth={2} /> <span>편집하기</span>
+        </Link>
         <button className="summary-btn-flat">
           <Bookmark size={18} strokeWidth={2} /> <span>저장됨</span>
         </button>

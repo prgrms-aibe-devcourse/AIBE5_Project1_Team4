@@ -9,6 +9,12 @@
 
 }
 
+.trip-map-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
 /* 줌 컨트롤 (우측 하단 유지) */
 .map-zoom-controls {
   position: absolute;
