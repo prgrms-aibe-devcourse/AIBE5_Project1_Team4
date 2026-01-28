@@ -9,7 +9,21 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
+// 탭 이동/백그라운드 이후 fetch가 영원히 pending 되는 현상 방지
+function fetchWithTimeout(input, init = {}) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000); // 8초
+
+  return fetch(input, {
+    ...init,
+    signal: controller.signal,
+  }).finally(() => clearTimeout(timeoutId));
+}
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  global: {
+    fetch: fetchWithTimeout,
+  },
   auth: {
     // OAuth callback에서 세션 저장/복원에 도움
     persistSession: true,

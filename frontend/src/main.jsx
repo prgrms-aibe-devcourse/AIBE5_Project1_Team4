@@ -8,12 +8,12 @@ import AppGate from './features/auth/components/AppGate.jsx';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <AuthProvider>
-      <AppGate>
-        <BrowserRouter>
+    <BrowserRouter>
+      <AuthProvider>
+        <AppGate>
           <App />
-        </BrowserRouter>
-      </AppGate>
-    </AuthProvider>
+        </AppGate>
+      </AuthProvider>
+    </BrowserRouter>
   </StrictMode>,
 );

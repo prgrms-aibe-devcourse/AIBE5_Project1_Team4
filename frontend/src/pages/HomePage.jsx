@@ -1,9 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Container, Row, Col, Badge } from 'react-bootstrap';
 import { useLocation, useNavigate } from 'react-router-dom';
 import SearchBar from '@/components/SearchBar';
 import { useAiSuggest } from '@/hooks/useAiSuggest';
-import { listPublicTrips } from '@/services/trips.service';
+import {
+  listPublicTrips,
+  toggleTripLike,
+  toggleTripBookmark,
+} from '@/services/trips.service';
 import TripSection from '@/components/home/TripSection';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { setReturnToIfEmpty } from '@/features/auth/auth.feature';
@@ -48,10 +52,20 @@ export default function HomePage() {
           listPublicTrips({ limit: 8, sort: 'popular' }),
         ]);
 
+        const normalizeTrips = (items = []) =>
+          items.map((t) => ({
+            ...t,
+            is_liked: Boolean(t.is_liked ?? t.isLiked),
+            is_bookmarked: Boolean(t.is_bookmarked ?? t.isBookmarked),
+          }));
+
+        const latestItems = normalizeTrips(latestResult.items || []);
+        const popularItems = normalizeTrips(popularResult.items || []);
+
         // 받아온 데이터 상태 업데이트
-        setRecentTrips(latestResult.items || []);
-        setPopularTrips(popularResult.items || []);
-        setRecommendTrips(popularResult.items || []); // 추천 로직 개발 전까지 인기순 사용
+        setRecentTrips(latestItems);
+        setPopularTrips(popularItems);
+        setRecommendTrips(popularItems); // 추천 로직 개발 전까지 인기순 사용
       } catch (error) {
         console.error('Failed to load home trips:', error);
       } finally {
@@ -65,67 +79,69 @@ export default function HomePage() {
   // 네비게이션 핸들러
   const handleCardClick = (id) => navigate(`/trips/${id}`); // 상세 페이지로 이동
 
-  // UI 업데이트 헬퍼 함수 (낙관적 업데이트)
-  // API 응답을 기다리지 않고 화면의 좋아요/북마크 숫자를 즉시 변경해주는 함수
-  const updateTripList = (list, id, field, countField) => {
-    return list.map((t) => {
-      if (t.id !== id) return t;
-      const currentVal = t[field];
-      return {
-        ...t,
-        [field]: !currentVal,
-        [countField]: !currentVal
-          ? (t[countField] || 0) + 1
-          : (t[countField] || 0) - 1,
-      };
-    });
+  // 연타/중복 클릭 방지 (like/bookmark 공용)
+  const inFlightRef = useRef(new Set());
+
+  const handleLike = async (id) => {
+    if (inFlightRef.current.has(`like:${id}`)) return;
+    inFlightRef.current.add(`like:${id}`);
+
+    try {
+      console.log('[handleLike] clicked', id);
+
+      const { is_liked, like_count } = await toggleTripLike(id);
+
+      const applyServer = (list) =>
+        list.map((t) => (t.id !== id ? t : { ...t, is_liked, like_count }));
+
+      setRecentTrips((prev) => applyServer(prev));
+      setPopularTrips((prev) => applyServer(prev));
+      setRecommendTrips((prev) => applyServer(prev));
+    } catch (e) {
+      console.error('좋아요 토글 실패:', e);
+    } finally {
+      inFlightRef.current.delete(`like:${id}`);
+    }
   };
 
-  // 인터랙션 핸들러 (좋아요/북마크)
-  // 현재는 UI 상태만 변경하고, 실제 DB 연동은 추후 API 개발 후 적용 예정
-  const handleLike = (id) => {
-    setRecentTrips((prev) => updateTripList(prev, id, 'isLiked', 'like_count'));
-    setPopularTrips((prev) =>
-      updateTripList(prev, id, 'isLiked', 'like_count'),
-    );
-    setRecommendTrips((prev) =>
-      updateTripList(prev, id, 'isLiked', 'like_count'),
-    );
-    console.log('좋아요 클릭 (API 미연동):', id);
-  };
+  const handleBookmark = async (id) => {
+    if (inFlightRef.current.has(`bm:${id}`)) return;
+    inFlightRef.current.add(`bm:${id}`);
 
-  const handleBookmark = (id) => {
-    setRecentTrips((prev) =>
-      updateTripList(prev, id, 'isBookmarked', 'bookmark_count'),
-    );
-    setPopularTrips((prev) =>
-      updateTripList(prev, id, 'isBookmarked', 'bookmark_count'),
-    );
-    setRecommendTrips((prev) =>
-      updateTripList(prev, id, 'isBookmarked', 'bookmark_count'),
-    );
-    console.log('북마크 클릭 (API 미연동):', id);
+    try {
+      const { is_bookmarked, bookmark_count } = await toggleTripBookmark(id);
+
+      const applyServer = (list) =>
+        list.map((t) =>
+          t.id !== id ? t : { ...t, is_bookmarked, bookmark_count },
+        );
+
+      setRecentTrips((prev) => applyServer(prev));
+      setPopularTrips((prev) => applyServer(prev));
+      setRecommendTrips((prev) => applyServer(prev));
+    } catch (e) {
+      console.error('북마크 토글 실패:', e);
+    } finally {
+      inFlightRef.current.delete(`bm:${id}`);
+    }
   };
 
   // 검색 관련 핸들러
-  // 검색 실행 (엔터 키 또는 돋보기 클릭 시)
   const handleSearch = (query = searchTerm) => {
     const q = query.trim();
     setShowSuggestions(false);
     if (q) {
-      navigate(`/trips?q=${encodeURIComponent(q)}`); // 검색 결과 페이지로 이동
+      navigate(`/trips?q=${encodeURIComponent(q)}`);
     } else {
-      navigate('/trips'); // 전체 목록으로 이동
+      navigate('/trips');
     }
   };
 
-  // 추천 검색어 클릭 시
   const handleSuggestionClick = (suggestion) => {
     setSearchTerm(suggestion);
     handleSearch(suggestion);
   };
 
-  // 정규화된 쿼리 적용 (오타 교정 제안 클릭 시)
   const handleApplyNormalized = () => {
     if (normalizedQuery && normalizedQuery !== searchTerm) {
       setSearchTerm(normalizedQuery);
@@ -151,7 +167,9 @@ export default function HomePage() {
           <Badge bg="primary" className="home-hero__badge">
             Trip Planner
           </Badge>
-          <h1 className="home-hero__title">당신의 다음 여행은 어디인가요?</h1>
+          <h1 className="home-hero__title">
+            당신의 다음 여행은 어디인가요?
+          </h1>
           <Row className="justify-content-center">
             <Col md={8} lg={6}>
               <SearchBar
@@ -179,7 +197,6 @@ export default function HomePage() {
 
       {/* B. 메인 콘텐츠 섹션: 여행 리스트 목록 */}
       <Container className="home-content">
-        {/* 분리된 TripSection 컴포넌트 재사용 */}
         <TripSection
           title="추천 여행"
           subtitle="당신을 위한 맞춤 여행지"
@@ -188,7 +205,7 @@ export default function HomePage() {
           onCardClick={handleCardClick}
           onLike={handleLike}
           onBookmark={handleBookmark}
-          linkTo="/trips?sort=popular" // 더보기 클릭 시 인기순 정렬
+          linkTo="/trips?sort=popular"
         />
 
         <TripSection
@@ -199,7 +216,7 @@ export default function HomePage() {
           onCardClick={handleCardClick}
           onLike={handleLike}
           onBookmark={handleBookmark}
-          linkTo="/trips?sort=popular" // 더보기 클릭 시 인기순 정렬
+          linkTo="/trips?sort=popular"
         />
 
         <TripSection
@@ -210,7 +227,7 @@ export default function HomePage() {
           onCardClick={handleCardClick}
           onLike={handleLike}
           onBookmark={handleBookmark}
-          linkTo="/trips?sort=latest" // 더보기 클릭 시 최신순 정렬
+          linkTo="/trips?sort=latest"
         />
 
         {/* C. CTA (Call To Action) 섹션: 여행 만들기 버튼 */}
@@ -225,7 +242,9 @@ export default function HomePage() {
               onClick={handleCreateTrip}
               disabled={isAuthLoading}
             >
-              {isAuthLoading ? '로그인 확인 중...' : '여행 일정 만들기'}
+              {isAuthLoading
+                ? '로그인 확인 중...'
+                : '여행 일정 만들기'}
             </button>
           </div>
           <div className="home-cta__circle home-cta__circle--1" />
