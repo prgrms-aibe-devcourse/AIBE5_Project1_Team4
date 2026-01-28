@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Container, Row, Col, Badge } from 'react-bootstrap';
 import { useLocation, useNavigate } from 'react-router-dom';
 import SearchBar from '@/components/SearchBar';
@@ -23,13 +23,23 @@ export default function HomePage() {
   const [searchTerm, setSearchTerm] = useState(''); // 검색어 입력값
   const [showSuggestions, setShowSuggestions] = useState(false); // 검색어 제안 표시 여부
 
+  const initialLimit = 8;
+
   // 여행 데이터 상태 (최신, 인기, 추천)
   const [recentTrips, setRecentTrips] = useState([]);
   const [popularTrips, setPopularTrips] = useState([]);
   const [recommendTrips, setRecommendTrips] = useState([]);
   const [isLoading, setIsLoading] = useState(true); // 로딩 상태
+  const [recentCursor, setRecentCursor] = useState(null);
+  const [recentHasMore, setRecentHasMore] = useState(true);
+  const [recentLoadingMore, setRecentLoadingMore] = useState(false);
+  const [popularLimit, setPopularLimit] = useState(initialLimit);
+  const [popularHasMore, setPopularHasMore] = useState(true);
+  const [popularLoadingMore, setPopularLoadingMore] = useState(false);
+  const [recommendLimit, setRecommendLimit] = useState(initialLimit);
+  const [recommendHasMore, setRecommendHasMore] = useState(true);
+  const [recommendLoadingMore, setRecommendLoadingMore] = useState(false);
 
-  // 커스텀 훅 (AI 검색 제안)
   const {
     normalizedQuery, // 정규화된 쿼리 (오타 교정 등)
     suggestions, // 추천 검색어 목록
@@ -42,30 +52,40 @@ export default function HomePage() {
   });
 
   // 초기 데이터 로드 (useEffect)
+  const normalizeTrips = useCallback((items = []) =>
+    items.map((t) => ({
+      ...t,
+      is_liked: Boolean(t.is_liked ?? t.isLiked),
+      is_bookmarked: Boolean(t.is_bookmarked ?? t.isBookmarked),
+    })), []);
+
   useEffect(() => {
     const fetchHomeData = async () => {
       try {
         setIsLoading(true);
-        // 최신순, 인기순 데이터를 병렬로 동시에 호출하여 속도 최적화
-        const [latestResult, popularResult] = await Promise.all([
-          listPublicTrips({ limit: 8, sort: 'latest' }),
-          listPublicTrips({ limit: 8, sort: 'popular' }),
+        // 최신/인기/추천 데이터를 병렬로 로드
+        const [latestResult, popularResult, recommendResult] = await Promise.all([
+          listPublicTrips({ limit: initialLimit, sort: 'latest' }),
+          listPublicTrips({ limit: initialLimit, sort: 'popular' }),
+          listPublicTrips({ limit: initialLimit, sort: 'popular' }),
         ]);
-
-        const normalizeTrips = (items = []) =>
-          items.map((t) => ({
-            ...t,
-            is_liked: Boolean(t.is_liked ?? t.isLiked),
-            is_bookmarked: Boolean(t.is_bookmarked ?? t.isBookmarked),
-          }));
 
         const latestItems = normalizeTrips(latestResult.items || []);
         const popularItems = normalizeTrips(popularResult.items || []);
+        const recommendItems = normalizeTrips(recommendResult.items || []);
 
-        // 받아온 데이터 상태 업데이트
+        // 상태 업데이트
         setRecentTrips(latestItems);
+        setRecentCursor(latestResult.nextCursor ?? null);
+        setRecentHasMore(Boolean(latestResult.nextCursor));
+
         setPopularTrips(popularItems);
-        setRecommendTrips(popularItems); // 추천 로직 개발 전까지 인기순 사용
+        setPopularLimit(initialLimit);
+        setPopularHasMore(popularItems.length === initialLimit && initialLimit < 100);
+
+        setRecommendTrips(recommendItems);
+        setRecommendLimit(initialLimit);
+        setRecommendHasMore(recommendItems.length === initialLimit && initialLimit < 100);
       } catch (error) {
         console.error('Failed to load home trips:', error);
       } finally {
@@ -74,12 +94,12 @@ export default function HomePage() {
     };
 
     fetchHomeData();
-  }, []);
+  }, [initialLimit, normalizeTrips]);
 
   // 네비게이션 핸들러
   const handleCardClick = (id) => navigate(`/trips/${id}`); // 상세 페이지로 이동
 
-  // 연타/중복 클릭 방지 (like/bookmark 공용)
+        // 최신/인기/추천 데이터를 병렬로 로드
   const inFlightRef = useRef(new Set());
 
   const handleLike = async (id) => {
@@ -168,9 +188,93 @@ export default function HomePage() {
     }
   };
 
+  const recentLoadingRef = useRef(false);
+  const popularLoadingRef = useRef(false);
+  const recommendLoadingRef = useRef(false);
+
+  const loadMoreRecent = useCallback(async () => {
+    if (recentLoadingRef.current || !recentHasMore) return;
+    if (!recentCursor) {
+      setRecentHasMore(false);
+      return;
+    }
+
+    recentLoadingRef.current = true;
+    setRecentLoadingMore(true);
+
+    try {
+      const res = await listPublicTrips({
+        limit: initialLimit,
+        sort: 'latest',
+        cursor: recentCursor,
+      });
+      const items = normalizeTrips(res.items || []);
+      setRecentTrips((prev) => [...prev, ...items]);
+      setRecentCursor(res.nextCursor ?? null);
+      setRecentHasMore(Boolean(res.nextCursor));
+    } catch (error) {
+      console.error('Failed to load more recent trips:', error);
+    } finally {
+      setRecentLoadingMore(false);
+      recentLoadingRef.current = false;
+    }
+  }, [initialLimit, normalizeTrips, recentCursor, recentHasMore]);
+
+  const loadMorePopular = useCallback(async () => {
+    if (popularLoadingRef.current || !popularHasMore) return;
+
+    const nextLimit = Math.min(popularLimit + initialLimit, 100);
+    if (nextLimit === popularLimit) {
+      setPopularHasMore(false);
+      return;
+    }
+
+    popularLoadingRef.current = true;
+    setPopularLoadingMore(true);
+
+    try {
+      const res = await listPublicTrips({ limit: nextLimit, sort: 'popular' });
+      const items = normalizeTrips(res.items || []);
+      setPopularTrips(items);
+      setPopularLimit(nextLimit);
+      setPopularHasMore(items.length === nextLimit && nextLimit < 100);
+    } catch (error) {
+      console.error('Failed to load more popular trips:', error);
+    } finally {
+      setPopularLoadingMore(false);
+      popularLoadingRef.current = false;
+    }
+  }, [initialLimit, normalizeTrips, popularHasMore, popularLimit]);
+
+  const loadMoreRecommend = useCallback(async () => {
+    if (recommendLoadingRef.current || !recommendHasMore) return;
+
+    const nextLimit = Math.min(recommendLimit + initialLimit, 100);
+    if (nextLimit === recommendLimit) {
+      setRecommendHasMore(false);
+      return;
+    }
+
+    recommendLoadingRef.current = true;
+    setRecommendLoadingMore(true);
+
+    try {
+      const res = await listPublicTrips({ limit: nextLimit, sort: 'popular' });
+      const items = normalizeTrips(res.items || []);
+      setRecommendTrips(items);
+      setRecommendLimit(nextLimit);
+      setRecommendHasMore(items.length === nextLimit && nextLimit < 100);
+    } catch (error) {
+      console.error('Failed to load more recommended trips:', error);
+    } finally {
+      setRecommendLoadingMore(false);
+      recommendLoadingRef.current = false;
+    }
+  }, [initialLimit, normalizeTrips, recommendHasMore, recommendLimit]);
+
   return (
     <div className="home-page">
-      {/* A. Hero 섹션: 메인 타이틀 및 검색창 */}
+      {/* A. Hero 섹션: 메인 타이틀 및 검색 */}
       <div className="home-hero">
         <Container className="home-hero__content">
           <Badge bg="primary" className="home-hero__badge">
@@ -209,6 +313,9 @@ export default function HomePage() {
           subtitle="당신을 위한 맞춤 여행지"
           trips={recommendTrips}
           isLoading={isLoading}
+          isLoadingMore={recommendLoadingMore}
+          hasMore={recommendHasMore}
+          onLoadMore={loadMoreRecommend}
           onCardClick={handleCardClick}
           onLike={handleLike}
           onBookmark={handleBookmark}
@@ -220,6 +327,9 @@ export default function HomePage() {
           subtitle="가장 많은 사랑을 받은 여행지입니다"
           trips={popularTrips}
           isLoading={isLoading}
+          isLoadingMore={popularLoadingMore}
+          hasMore={popularHasMore}
+          onLoadMore={loadMorePopular}
           onCardClick={handleCardClick}
           onLike={handleLike}
           onBookmark={handleBookmark}
@@ -231,6 +341,9 @@ export default function HomePage() {
           subtitle="따끈따끈한 여행 계획들입니다"
           trips={recentTrips}
           isLoading={isLoading}
+          isLoadingMore={recentLoadingMore}
+          hasMore={recentHasMore}
+          onLoadMore={loadMoreRecent}
           onCardClick={handleCardClick}
           onLike={handleLike}
           onBookmark={handleBookmark}
