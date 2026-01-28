@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { formatLocalDate, getTodayString } from '@/utils/date';
-import { getTripMembers, updateTripMemberRole, upsertTripMember } from '@/services/trip-members.service';
+// 👇 [수정됨] deleteTripMember 추가
+import { getTripMembers, updateTripMemberRole, upsertTripMember, deleteTripMember } from '@/services/trip-members.service';
 import { updateTripMeta, deleteTrip, adjustTripDates } from '@/services/trips.service';
 import { getTripDetail } from '@/services/trips.detail.service';
 import { usePlaceSearch } from '@/hooks/usePlaceSearch';
@@ -668,11 +669,12 @@ export const useTripCreateForm = ({ tripId } = {}) => {
     );
   }, []);
 
-  const applyOwnerLocally = useCallback((memberId) => {
+ const applyOwnerLocally = useCallback((newOwnerId) => {
     setMembers((prev) =>
       prev.map((member) => ({
         ...member,
-        isOwner: member.id === memberId,
+        // ✅ ID가 일치하는 사람만 왕(true), 나머지는 무조건 평민(false)
+        isOwner: member.id === newOwnerId, 
       })),
     );
   }, []);
@@ -725,9 +727,26 @@ export const useTripCreateForm = ({ tripId } = {}) => {
     [applyOwnerLocally, applyRolesFromApi, canManageMembers, tripId],
   );
 
+  // ✅ [수정됨] 멤버 삭제(강퇴) 로직
   const removeMember = useCallback((memberId) => {
+    // 1. 화면에서 먼저 지움 (Optimistic UI)
     setMembers((prev) => prev.filter((member) => member.id !== memberId));
-  }, []);
+
+    // 2. 서버 통신 (RPC 호출)
+    if (tripId) {
+      const doDelete = async () => {
+        try {
+          await deleteTripMember({ tripId, memberId });
+          console.log('✅ 멤버 강퇴 성공');
+        } catch (error) {
+          console.error('❌ 멤버 강퇴 실패:', error);
+          toast('멤버 삭제에 실패했습니다.', { icon: 'error' });
+          // 필요하다면 여기서 멤버 목록을 다시 불러오는 로직(rollback)을 넣을 수 있음
+        }
+      };
+      void doDelete();
+    }
+  }, [tripId]);
 
   const saveTripChanges = useCallback(async () => {
     if (!tripId) return null;
@@ -941,4 +960,3 @@ export const useTripCreateForm = ({ tripId } = {}) => {
     mapSearchPlacePos
   };
 };
-
