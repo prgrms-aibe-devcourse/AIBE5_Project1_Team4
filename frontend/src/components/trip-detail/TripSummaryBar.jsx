@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { 
   Calendar, Bookmark, Share2, User, MapPin, Siren, Heart, Pencil
 } from 'lucide-react';
+import { alert, toast } from '@/shared/ui/overlay';
 import './TripSummaryBar.css';
 
 /**
@@ -26,6 +27,28 @@ const TripSummaryBar = ({ summary }) => {
     like_count = 0,
     bookmark_count = 0
   } = summary;
+
+    const handleShare = async () => {
+    const url = window.location.href;
+
+    try {
+      if (!navigator.clipboard?.writeText) {
+        throw new Error('clipboard-not-available');
+      }
+
+      await navigator.clipboard.writeText(url);
+      await toast('상세페이지 링크가 복사되었습니다.');
+    } catch (error) {
+      await alert({
+        title: '링크 복사 실패',
+        text: `아래 링크를 복사해 주세요.
+
+${url}`,
+        icon: 'info',
+        confirmText: '확인',
+      });
+    }
+  };
 
   return (
     <div className="trip-summary-container">
@@ -81,14 +104,12 @@ const TripSummaryBar = ({ summary }) => {
         <Link className="summary-btn-flat" to={`/trips/${id}/edit`}>
           <Pencil size={18} strokeWidth={2} /> <span>편집하기</span>
         </Link>
-        <button className="summary-btn-flat">
-          <Bookmark size={18} strokeWidth={2} /> <span>저장됨</span>
-        </button>
+        
         <button className="summary-btn-flat">
           <Siren size={18} strokeWidth={2} /> <span>신고</span>
         </button>
-        <button className="summary-btn-flat">
-          <Share2 size={18} strokeWidth={2} /> <span>공개하기</span>
+        <button className="summary-btn-flat" onClick={handleShare} type="button">
+          <Share2 size={18} strokeWidth={2} /> <span>공유하기</span>
         </button>
       </div>
     </div>
