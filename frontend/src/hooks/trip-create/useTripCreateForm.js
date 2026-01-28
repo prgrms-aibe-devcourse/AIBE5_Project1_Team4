@@ -7,6 +7,7 @@ import { usePlaceSearch } from '@/hooks/usePlaceSearch';
 import { useAddScheduleItem } from '@/hooks/useAddScheduleItem';
 import { upsertScheduleItem, deleteScheduleItem } from '@/services/scheduleItems.service';
 import { updatePlaceName } from '@/services/places.service';
+import { deleteTripDay } from '@/services/trips.editDays.service';
 import { toast } from '@/shared/ui/overlay';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 // Consolidated trip-create state and actions.
@@ -572,6 +573,37 @@ export const useTripCreateForm = ({ tripId } = {}) => {
     [currentDayIndex, loadTripDetail],
   );
 
+  const deleteCurrentDay = useCallback(async () => {
+    if (!tripId || !currentDay.date) return;
+
+    try {
+      await deleteTripDay({ tripId, date: currentDay.date });
+      // 삭제 후 서버에서 최신 데이터 재조회
+      const { summary, schedule } = await getTripDetail(tripId);
+      const trip = summary?.trip;
+      if (trip) {
+        setForm((prev) => ({
+          ...prev,
+          title: trip.title ?? prev.title,
+          startDate: trip.startDate ?? prev.startDate,
+          endDate: trip.endDate ?? prev.endDate,
+          isPublic: trip.visibility === 'public',
+        }));
+      }
+      const nextDays = mapScheduleToDays(
+        schedule?.days,
+        trip?.startDate ?? today,
+      );
+      setDays(nextDays);
+      // 삭제된 day 이후 selection 보정: 앞쪽 day 우선
+      setCurrentDayIndex((prev) => Math.min(prev, nextDays.length - 1));
+      toast('일차가 삭제되었습니다.', { icon: 'success' });
+    } catch (error) {
+      console.error('Failed to delete trip day:', error);
+      toast('일차 삭제에 실패했습니다.', { icon: 'error' });
+    }
+  }, [tripId, currentDay.date, today]);
+
   const shiftCalendarMonth = useCallback(
     (delta) => {
       const base = (calendarMonth ?? currentDay.date).split('-').map(Number);
@@ -893,6 +925,7 @@ export const useTripCreateForm = ({ tripId } = {}) => {
     addingPlaceId,
     updateScheduleItem,
     removeScheduleItem,
+    deleteCurrentDay,
     members,
     toggleMember,
     transferOwner,

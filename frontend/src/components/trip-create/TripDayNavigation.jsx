@@ -1,17 +1,17 @@
 import { formatDateDot } from '@/utils/date';
+import { Delete, Trash } from 'lucide-react';
 
 // Day navigation and calendar for schedule panel.
 const TripDayNavigation = ({
   currentDay,
   todayString,
-  isDayMenuOpen,
   isCalendarOpen,
   calendarInfo,
   onPrevDay,
   onNextDay,
   onAddDay,
-  onToggleDayMenu,
-  onCloseDayMenu,
+  onDeleteDay,
+  isDeletingDay,
   onToggleCalendar,
   onShiftCalendarMonth,
   onSelectDate,
@@ -45,35 +45,16 @@ const TripDayNavigation = ({
           >
             +
           </button>
-          <div
-            className="trip-panel-menu-wrap"
-            onClick={(event) => event.stopPropagation()}
+
+          <button
+            className="trip-panel-icon-btn trip-panel-icon-btn-danger"
+            type="button"
+            aria-label="일차 삭제"
+            disabled={isDeletingDay}
+            onClick={onDeleteDay}
           >
-            <button
-              className="trip-panel-icon-btn"
-              type="button"
-              aria-label="일차 메뉴 열기"
-              onClick={onToggleDayMenu}
-            >
-              &#8230;
-            </button>
-            {isDayMenuOpen && (
-              <div
-                className="trip-panel-menu"
-                onClick={(event) => event.stopPropagation()}
-              >
-                <button type="button" onClick={onCloseDayMenu}>
-                  일정 추가
-                </button>
-                <button type="button" onClick={onCloseDayMenu}>
-                  일정 수정
-                </button>
-                <button type="button" onClick={onCloseDayMenu}>
-                  일정 삭제
-                </button>
-              </div>
-            )}
-          </div>
+            &#128465;
+          </button>
         </div>
       </div>
       <div className="trip-panel-date-row">
@@ -114,7 +95,8 @@ const TripDayNavigation = ({
                   &#8249;
                 </button>
                 <span>
-                  {calendarInfo.year}.{String(calendarInfo.month).padStart(2, '0')}
+                  {calendarInfo.year}.
+                  {String(calendarInfo.month).padStart(2, '0')}
                 </span>
                 <button
                   className="trip-panel-calendar-nav"
