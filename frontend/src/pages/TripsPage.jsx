@@ -8,7 +8,7 @@ import TripFilterPanel from '@/components/trip/TripFilterPanel';
 import { usePublicTrips } from '@/hooks/trips/usePublicTrips';
 import { useAiSuggest } from '@/hooks/useAiSuggest';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
-import { getFilterOptions, toggleTripLike } from '@/services/trips.service';
+import { getFilterOptions, toggleTripLike, toggleTripBookmark } from '@/services/trips.service';
 import FloatingActionGroup from '@/components/common/FloatingActionGroup';
 import './TripsPage.css';
 
@@ -23,13 +23,18 @@ export default function TripsPage() {
   // 입력 상태
   const [inputValue, setInputValue] = useState(urlQuery);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [likeOverride, setLikeOverride] = useState({});
 
-  // 좋아요 연타/응답 꼬임 방지용 pending
+  // 좋아요/북마크 override
+  const [likeOverride, setLikeOverride] = useState({});
+  const [bookmarkOverride, setBookmarkOverride] = useState({});
+
+  // 좋아요/북마크 연타/응답 꼬임 방지용 pending
   const [pendingLike, setPendingLike] = useState({}); // { [tripId]: true/false }
+  const [pendingBookmark, setPendingBookmark] = useState({}); // { [tripId]: true/false }
 
   // 마지막 요청 토큰(응답 역전 방지)
   const likeReqSeq = useRef({}); // { [tripId]: number }
+  const bookmarkReqSeq = useRef({}); // { [tripId]: number }
 
   // URL 쿼리가 변경되면 입력값도 동기화
   useEffect(() => {
@@ -135,29 +140,23 @@ export default function TripsPage() {
     navigate(`/trips/${id}`);
   };
 
-  // 좋아요 override를 trip에 합쳐서 카드에 내려주는 함수
-  // likeOverride[trip.id]가 { is_liked, like_count } 형태라서 그대로 덮어쓰면 됨
-  const mergeTripLike = (trip) => {
-    const likeRow = likeOverride[trip.id];
-    if (!likeRow) return trip;
-    return { ...trip, ...likeRow };
+  // override를 trip에 합쳐서 카드에 내려주는 함수
+  const mergeTripOverrides = (trip) => {
+    return {
+      ...trip,
+      ...(likeOverride[trip.id] ?? {}),
+      ...(bookmarkOverride[trip.id] ?? {}),
+    };
   };
 
   // 좋아요: UI 즉시 반영(낙관적) + 연타 방지 + 실패 롤백 + 응답 역전 방지
   const handleLike = async (id) => {
-    // 이미 요청중이면 무시(연타 방지)
     if (pendingLike[id]) return;
 
-    // 현재 화면에 보여줄 "기준값" 계산:
-    // - override가 있으면 그 값이 최신(우리 UI 기준)
-    // - 없으면 items에서 값을 찾아서 사용
     const baseTrip = items.find((t) => t.id === id);
     const baseLiked = Boolean(likeOverride[id]?.is_liked ?? baseTrip?.is_liked);
-    const baseCount = Number(
-      likeOverride[id]?.like_count ?? baseTrip?.like_count ?? 0,
-    );
+    const baseCount = Number(likeOverride[id]?.like_count ?? baseTrip?.like_count ?? 0);
 
-    // 1) 낙관적 업데이트(즉시 UI 반영)
     const optimisticLiked = !baseLiked;
     const optimisticCount = baseCount + (baseLiked ? -1 : 1);
 
@@ -166,16 +165,13 @@ export default function TripsPage() {
       [id]: { is_liked: optimisticLiked, like_count: optimisticCount },
     }));
 
-    // pending + 요청 토큰
     setPendingLike((prev) => ({ ...prev, [id]: true }));
     const seq = (likeReqSeq.current[id] ?? 0) + 1;
     likeReqSeq.current[id] = seq;
 
-    // 2) 서버 반영
     try {
       const row = await toggleTripLike(id); // { is_liked, like_count }
 
-      // 응답 역전 방지: 가장 최신 요청만 반영
       if (likeReqSeq.current[id] !== seq) return;
 
       setLikeOverride((prev) => ({
@@ -185,7 +181,6 @@ export default function TripsPage() {
     } catch (e) {
       console.error('[TripsPage] toggleTripLike error:', e);
 
-      // 실패 시 롤백 (원래 값으로 되돌림)
       if (likeReqSeq.current[id] === seq) {
         setLikeOverride((prev) => ({
           ...prev,
@@ -193,15 +188,59 @@ export default function TripsPage() {
         }));
       }
     } finally {
-      // pending 해제
       if (likeReqSeq.current[id] === seq) {
         setPendingLike((prev) => ({ ...prev, [id]: false }));
       }
     }
   };
 
-  const handleBookmark = (id) => {
-    console.log('Bookmark:', id);
+  // 북마크: 좋아요와 동일 패턴 (낙관적 최소 + 실패 롤백 + 응답 역전 방지)
+  const handleBookmark = async (id) => {
+    if (pendingBookmark[id]) return;
+
+    const baseTrip = items.find((t) => t.id === id);
+    const baseBookmarked = Boolean(
+      bookmarkOverride[id]?.is_bookmarked ?? baseTrip?.is_bookmarked
+    );
+    const baseCount = Number(
+      bookmarkOverride[id]?.bookmark_count ?? baseTrip?.bookmark_count ?? 0
+    );
+
+    const optimisticBookmarked = !baseBookmarked;
+    const optimisticCount = baseCount + (baseBookmarked ? -1 : 1);
+
+    setBookmarkOverride((prev) => ({
+      ...prev,
+      [id]: { is_bookmarked: optimisticBookmarked, bookmark_count: optimisticCount },
+    }));
+
+    setPendingBookmark((prev) => ({ ...prev, [id]: true }));
+    const seq = (bookmarkReqSeq.current[id] ?? 0) + 1;
+    bookmarkReqSeq.current[id] = seq;
+
+    try {
+      const row = await toggleTripBookmark(id); // { is_bookmarked, bookmark_count }
+
+      if (bookmarkReqSeq.current[id] !== seq) return;
+
+      setBookmarkOverride((prev) => ({
+        ...prev,
+        [id]: row,
+      }));
+    } catch (e) {
+      console.error('[TripsPage] toggleTripBookmark error:', e);
+
+      if (bookmarkReqSeq.current[id] === seq) {
+        setBookmarkOverride((prev) => ({
+          ...prev,
+          [id]: { is_bookmarked: baseBookmarked, bookmark_count: baseCount },
+        }));
+      }
+    } finally {
+      if (bookmarkReqSeq.current[id] === seq) {
+        setPendingBookmark((prev) => ({ ...prev, [id]: false }));
+      }
+    }
   };
 
   return (
@@ -302,7 +341,7 @@ export default function TripsPage() {
             {filteredItems.map((trip) => (
               <Col key={trip.id}>
                 <TripCard
-                  trip={mergeTripLike(trip)}
+                  trip={mergeTripOverrides(trip)}
                   onCardClick={handleCardClick}
                   onLikeClick={handleLike}
                   onBookmarkClick={handleBookmark}

@@ -8,13 +8,13 @@ import './TripSummaryBar.css';
 
 /**
  * 여행 상세 정보 상단 요약 바 컴포넌트
- * @param {Object} summary - DB(RPC)에서 받아온 여행 요약 데이터
+ * @param {Object} summary - 정규화된 summary 데이터
+ * @param {Function} onLikeClick - 좋아요 토글 핸들러
+ * @param {Function} onBookmarkClick - 북마크 토글 핸들러
  */
-const TripSummaryBar = ({ summary }) => {
-  // 데이터가 로드되지 않았을 경우 렌더링 방지
+const TripSummaryBar = ({ summary, onLikeClick, onBookmarkClick }) => {
   if (!summary) return null;
 
-  // 구조 분해 할당을 통해 가독성 확보
   const {
     id,
     title,
@@ -23,9 +23,11 @@ const TripSummaryBar = ({ summary }) => {
     end_date,
     regions = [],
     themes = [],
-    author, // { name, avatar_url } 구조
+    author,
     like_count = 0,
-    bookmark_count = 0
+    bookmark_count = 0,
+    is_liked = false,
+    is_bookmarked = false,
   } = summary;
 
     const handleShare = async () => {
@@ -53,35 +55,51 @@ ${url}`,
   return (
     <div className="trip-summary-container">
       <div className="summary-left">
-        {/* 여행 제목 */}
         <h1 className="summary-title">{title}</h1>
 
-        {/* 작성자 정보 및 소셜 통계 */}
+        {/* 작성자 + 카운트 */}
         <div className="summary-meta-row">
           <div className="meta-item author">
             <User size={18} />
-            {/* 작성자 이름 출력 (서일현 등 실명 연동 완료) */}
             <span>{author?.name || '여행자'}</span>
           </div>
+
           <div className="meta-divider"></div>
-          <div className="meta-item">
-            <Bookmark size={18} />
-            <span>{bookmark_count}</span>
-          </div>
-          <div className="meta-item">
-            <Heart size={18} />
+
+          {/* 좋아요(아이콘+숫자) */}
+          <button
+            type="button"
+            className="meta-item summary-icon-btn"
+            onClick={onLikeClick}
+            aria-pressed={is_liked}
+            title="좋아요"
+          >
+            <Heart size={18} fill={is_liked ? 'currentColor' : 'none'} />
             <span>{like_count}</span>
-          </div>
+          </button>
+
+          {/* 북마크(아이콘+숫자) */}
+          <button
+            type="button"
+            className="meta-item summary-icon-btn"
+            onClick={onBookmarkClick}
+            aria-pressed={is_bookmarked}
+            title="북마크"
+          >
+            <Bookmark size={18} fill={is_bookmarked ? 'currentColor' : 'none'} />
+            <span>{bookmark_count}</span>
+          </button>
         </div>
 
-        {/* 여행 일정 기간 */}
         <div className="summary-date-row">
           <Calendar size={18} />
-          <span>{start_date} ~ {end_date}</span>
+          <span>
+            {start_date} ~ {end_date}
+          </span>
         </div>
 
-        {/* 여행 설명 및 테마 태그 */}
         <p className="summary-desc">{description}</p>
+
         <div className="summary-tags">
           {themes && themes.length > 0 ? (
             themes.map((tag, index) => <span key={index}>#{tag}</span>)
@@ -90,16 +108,15 @@ ${url}`,
           )}
         </div>
 
-        {/* 여행 경로 요약 */}
         <div className="summary-route">
           <MapPin size={16} className="text-muted" />
           <span className="route-text">
-            {regions && regions.length > 0 ? regions.join(' → ') : "경로 정보 없음"}
+            {regions && regions.length > 0 ? regions.join(' → ') : '경로 정보 없음'}
           </span>
         </div>
       </div>
 
-      {/* 우측 액션 버튼 영역 */}
+      {/* 우측 액션 */}
       <div className="summary-right">
         <Link className="summary-btn-flat" to={`/trips/${id}/edit`}>
           <Pencil size={18} strokeWidth={2} /> <span>편집하기</span>
