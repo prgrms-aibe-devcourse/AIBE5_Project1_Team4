@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'; 
 import { Card, Badge, Button, Spinner } from 'react-bootstrap';
 import { Map, ChevronRight, Calendar, Plus } from 'lucide-react';
-import { listMyTrips, listLikedTrips } from '@/services/trips.service';
+import { listMyTrips, listLikedTrips, listBookmarkedTrips } from '@/services/trips.service';
 
 const ProfileTripList = ({ type }) => {
   const navigate = useNavigate(); 
@@ -20,8 +20,17 @@ const ProfileTripList = ({ type }) => {
     setLoading(true);
     try {
       const params = { limit: 5, cursor: isMore ? cursor : null };
-      const result = type === 'trips' ? await listMyTrips(params) : await listLikedTrips(params);
-      
+
+      let result;
+      // ✅ 타입별 분기 처리 완성
+      if (type === 'trips') {
+        result = await listMyTrips(params);
+      } else if (type === 'likes') {
+        result = await listLikedTrips(params);
+      } else if (type === 'bookmarks') {
+        result = await listBookmarkedTrips(params); 
+      }
+
       if (result) {
         setItems(prev => (isMore ? [...prev, ...result.items] : result.items));
         setCursor(result.nextCursor);
@@ -60,7 +69,6 @@ const ProfileTripList = ({ type }) => {
 
   return (
     <div>
-      {/* ✅ 상단 더보기 버튼 노출 조건에 type === 'trips' 추가 */}
       <div className="d-flex justify-content-end mb-2">
         {(type === 'trips' || type === 'likes' || type === 'bookmarks') && (
           <Button 

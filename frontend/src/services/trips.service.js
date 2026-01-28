@@ -52,7 +52,7 @@ function mapRowToCard(row) {
     themes: row.themes ?? [],
   };
 }/**
- * 내 여행 목록 조회 (Liked 방식과 100% 동일한 구조)
+ * 내 여행 목록 조회
  */
 export async function listMyTrips(params = {}) {
   const { limit = 10, cursor } = params;
@@ -85,6 +85,40 @@ export async function listMyTrips(params = {}) {
     throw appErr;
   }
 }
+/**
+ * 사용자가 북마크한 여행 목록 조회 (신규 RPC list_bookmarked_trips 연동)
+ */
+export async function listBookmarkedTrips(params = {}) {
+  const { limit = 10, cursor } = params;
+  const context = 'tripsService.listBookmarkedTrips';
+
+  try {
+    const result = await supabase.rpc('list_bookmarked_trips', {
+      p_limit: limit,
+      p_cursor_created_at: cursor?.createdAt ?? null,
+      p_cursor_id: cursor?.id ?? null,
+    });
+
+    const rows = unwrap(result, context) || [];
+    const items = rows.map(mapRowToCard);
+
+    const last = items[items.length - 1];
+    const nextCursor = last && rows.length === limit
+      ? { 
+          // SQL에서 정렬 기준인 tb.created_at(북마크일)을 createdAt으로 넘깁니다.
+          createdAt: rows[rows.length - 1].created_at, 
+          id: last.id 
+        }
+      : null;
+
+    return { items, nextCursor };
+  } catch (e) {
+    const appErr = toAppError(e, context);
+    logError(appErr);
+    throw appErr;
+  }
+}
+
 
 /**
  * 공개 Trip 리스트 조회 (RPC 기반)
