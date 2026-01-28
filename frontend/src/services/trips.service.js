@@ -52,6 +52,7 @@ function mapRowToCard(row) {
     themes: row.themes ?? [],
 
     is_liked: Boolean(row.is_liked),
+    is_bookmarked: Boolean(row.is_bookmarked),
   };
 }/**
  * 사용자가 직접 생성한 여행 목록 조회
@@ -159,11 +160,15 @@ export async function getFilterOptions() {
 
 export async function listPublicTrips(params = {}) {
   const { q, limit = 20, cursor, sort = 'latest' } = params;
-
   const context = 'tripsService.listPublicTrips';
 
   try {
     const realLimit = Math.max(1, Math.min(50, limit));
+
+    // 로그인 유저 가져오기 (is_liked 계산용)
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     const result = await supabase.rpc('list_public_trips', {
       p_limit: realLimit,
@@ -171,6 +176,10 @@ export async function listPublicTrips(params = {}) {
       p_cursor_created_at: cursor?.createdAt ?? null,
       p_cursor_id: cursor?.id ?? null,
       p_sort: sort,
+
+      // 이 두 개가 핵심
+      p_is_bookmarked: false,
+      p_user_id: user?.id ?? null,
     });
 
     const rows = unwrap(result, context) || [];
@@ -197,6 +206,10 @@ function requireRow(value, context, message = 'RPC returned empty result') {
   return value;
 }
 
+/**
+ * 여행 초안 생성
+ * @returns {Promise<string>} tripId
+ */
 export async function createTripDraft() {
   const result = await supabase.rpc('create_trip_draft');
   const data = unwrap(result, 'trips.createTripDraft');
@@ -300,38 +313,92 @@ export async function listLikedTrips(params = {}) {
   }
 }
 
+/**
+ * 좋아요 토글: service 레이어에서는 auth getSession/getUser 호출하지 않음
+ */
 export async function toggleTripLike(tripId) {
+  console.log('[toggleTripLike] rpc start', tripId);
   const context = 'tripsService.toggleTripLike';
 
+  // 라벨을 tripId별로 유니크하게 (Timer already exists 방지)
+  const label = `[toggleTripLike] rpc time ${tripId}`;
+
   try {
+    console.time(label);
+
     const result = await supabase.rpc('toggle_trip_like', {
       p_trip_id: tripId,
     });
 
-    // 1) RPC 자체 에러를 제일 먼저 까보기 (RLS/권한/제약조건 에러가 여기로 옴)
+    console.timeEnd(label);
+    console.log('[toggleTripLike] result=', result);
+
+    // RPC 자체 에러
     if (result?.error) {
       console.error('[toggleTripLike] rpc error=', result.error);
       throw result.error;
     }
 
-    // 2) 여기서부터 기존 로직 그대로
     const data = unwrap(result, context);
     const row = Array.isArray(data) ? data[0] : data;
-
     requireRow(row, context, 'toggle_trip_like returned empty result');
-    console.log('[toggleTripLike] row=', row);
-
-    const rawIsLiked =
-      row.is_liked ?? row.isLiked ?? row.liked ?? row.result_is_liked;
-
-    const rawLikeCount =
-      row.like_count ?? row.likeCount ?? row.likes_count ?? row.result_like_count;
 
     return {
-      is_liked: Boolean(rawIsLiked),
-      like_count: Number(rawLikeCount) || 0,
+      is_liked: Boolean(row.is_liked),
+      like_count: Number(row.like_count) || 0,
     };
   } catch (e) {
+    // 예외로 빠져도 timeEnd가 호출되게 방어
+    try {
+      console.timeEnd(label);
+    } catch (_) {}
+
+    const appErr = toAppError(e, context);
+    logError(appErr);
+    throw appErr;
+  }
+}
+
+/**
+ * 북마크 토글: service 레이어에서는 auth getSession/getUser 호출하지 않음
+ */
+export async function toggleTripBookmark(tripId) {
+  console.log('[toggleTripBookmark] rpc start', tripId);
+  const context = 'tripsService.toggleTripBookmark';
+
+  // label을 함수 스코프에 선언해야 catch에서도 쓸 수 있음
+  const label = `[toggleTripBookmark] rpc time ${tripId}`;
+
+  try {
+    console.time(label);
+
+    const result = await supabase.rpc('toggle_trip_bookmark', {
+      p_trip_id: tripId,
+    });
+
+    console.timeEnd(label);
+    console.log('[toggleTripBookmark] result=', result);
+
+    // RPC 자체 에러
+    if (result?.error) {
+      console.error('[toggleTripBookmark] rpc error=', result.error);
+      throw result.error;
+    }
+
+    const data = unwrap(result, context);
+    const row = Array.isArray(data) ? data[0] : data;
+    requireRow(row, context, 'toggle_trip_bookmark returned empty result');
+
+    return {
+      is_bookmarked: Boolean(row.is_bookmarked),
+      bookmark_count: Number(row.bookmark_count) || 0,
+    };
+  } catch (e) {
+    // 예외로 빠져도 timeEnd가 호출되게 방어
+    try {
+      console.timeEnd(label);
+    } catch (_) {}
+
     const appErr = toAppError(e, context);
     logError(appErr);
     throw appErr;

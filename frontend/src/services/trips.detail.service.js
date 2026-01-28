@@ -32,10 +32,15 @@ export async function getTripDetailSchedule(tripId) {
  * - returns jsonb { tripId, members: [{ userId, role, displayName, isSelf }] }
  */
 export async function getTripMembers(tripId) {
-  const result = await supabase.rpc('rpc_trip_members', {
-    p_trip_id: tripId,
-  });
-  return unwrap(result, 'trips.detail.getTripMembers');
+  try {
+    const result = await supabase.rpc('rpc_trip_members', {
+      p_trip_id: tripId,
+    });
+    return unwrap(result, 'trips.detail.getTripMembers');
+  } catch (e) {
+    console.warn('[rpc_trip_members] ignored:', e);
+    return { tripId, members: [] };
+  }
 }
 
 /**
@@ -43,16 +48,29 @@ export async function getTripMembers(tripId) {
  * - UI에서 1번에 쓰고 싶을 때 사용
  */
 export async function getTripDetail(tripId) {
-  const [summary, schedule, members] = await Promise.all([
+  const results = await Promise.allSettled([
     getTripDetailSummary(tripId),
     getTripDetailSchedule(tripId),
-    // 비멤버가 public trip 조회 시 rpc_trip_members는 정상적으로 에러 반환
-    // → 전체 조회가 실패하지 않도록 catch 처리
-    getTripMembers(tripId).catch(() => ({
-      tripId,
-      members: [],
-    })),
+    getTripMembers(tripId),
   ]);
+
+  const summary =
+    results[0].status === 'fulfilled'
+      ? results[0].value
+      : (console.warn('[rpc_trip_detail_summary] ignored:', results[0].reason),
+        null);
+
+  const schedule =
+    results[1].status === 'fulfilled'
+      ? results[1].value
+      : (console.warn('[rpc_trip_detail_schedule] ignored:', results[1].reason),
+        null);
+
+  const members =
+    results[2].status === 'fulfilled'
+      ? results[2].value
+      : (console.warn('[rpc_trip_members] ignored:', results[2].reason),
+        { tripId, members: [] });
 
   return { summary, schedule, members };
 }
