@@ -1,0 +1,78 @@
+/* MyTripsPage.css */
+
+.mytrips-page {
+  min-height: 100vh;
+  padding: 40px 0;
+  background: linear-gradient(135deg, rgba(240, 248, 255, 0.5) 0%, rgba(245, 245, 250, 0.5) 100%);
+}
+
+.mytrips-page__header {
+  text-align: center;
+  margin-bottom: 50px;
+  animation: fadeInDown 0.6s ease-out;
+}
+
+.mytrips-page__title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 8px;
+}
+
+.mytrips-page__subtitle {
+  font-size: 1rem;
+  color: #666;
+  margin: 0;
+}
+
+.mytrips-page__filter {
+  margin-bottom: 30px;
+  animation: fadeInUp 0.6s ease-out 0.1s backwards;
+}
+
+.mytrips-page__result-header {
+  margin-bottom: 24px;
+}
+
+.mytrips-page__empty {
+  text-align: center;
+  padding: 80px 20px;
+  border-radius: 12px;
+  background: white;
+  border: 2px dashed #ddd;
+  margin: 40px 0;
+}
+
+.mytrips-page__empty h5 {
+  color: #666;
+  font-weight: 600;
+}
+
+.mytrips-page__sentinel {
+  display: flex;
+  justify-content: center;
+  padding: 40px 0;
+  min-height: 100px;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

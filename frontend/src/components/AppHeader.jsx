@@ -114,6 +114,15 @@ export default function AppHeader() {
             )}
             {isAuthed && (
               <Link
+                to="/trips/myTrips"
+                style={{ textDecoration: 'none', color: 'inherit' }}
+                onClick={() => setOpen(false)}
+              >
+                myTrips
+              </Link>
+            )}
+            {isAuthed && (
+              <Link
                 to="/me"
                 style={{ textDecoration: 'none', color: 'inherit' }}
               >
