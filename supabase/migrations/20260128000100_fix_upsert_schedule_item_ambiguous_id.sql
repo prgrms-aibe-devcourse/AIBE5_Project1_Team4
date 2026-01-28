@@ -1,4 +1,4 @@
-﻿create or replace function public.upsert_schedule_item(
+create or replace function public.upsert_schedule_item(
   p_id uuid default null,
   p_trip_day_id uuid default null,
   p_place_id uuid default null,

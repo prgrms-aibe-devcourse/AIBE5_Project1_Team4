@@ -1,4 +1,4 @@
-﻿create or replace function public.rpc_upsert_trip_member(
+create or replace function public.rpc_upsert_trip_member(
   p_trip_id uuid,
   p_user_id uuid,
   p_role text default 'editor'
