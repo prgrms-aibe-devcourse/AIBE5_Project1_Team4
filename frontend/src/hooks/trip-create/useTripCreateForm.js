@@ -54,6 +54,8 @@ const mapScheduleToDays = (scheduleDays, fallbackStartDate) => {
           time: formatTime(item.time),
           placeId: item.place?.id ?? null,
           placeName: item.place?.name ?? '',
+          lat: item.place?.lat,
+          lng: item.place?.lng,
         }))
       : [],
   }));
@@ -681,8 +683,9 @@ export const useTripCreateForm = ({ tripId } = {}) => {
   const mapCurrentDayPos = useMemo(() => {
     return (currentDay?.items || [])
       .map(item => ({
-        ...item,
-        lat: Number(item.lat), // 강제 숫자 변환
+        id: item.id,
+        name: item.placeName,
+        lat: Number(item.lat),
         lng: Number(item.lng)
       }))
       .filter(item => !isNaN(item.lat) && !isNaN(item.lng)); // 유효한 좌표만 추출

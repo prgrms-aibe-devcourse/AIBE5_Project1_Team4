@@ -169,8 +169,40 @@
   margin-bottom: 12px;
   padding-bottom: 12px;
   border-bottom: 1px dashed #f1f3f5;
+  cursor: pointer;
+  transition: background-color 0.2s;
 }
 .schedule-item:last-child { border-bottom: none; }
+.schedule-item:hover {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 8px;
+  margin: -8px 0 4px 0;
+}
+.schedule-item.active {
+  background-color: #e7f5ff;
+  border-radius: 8px;
+  padding: 8px;
+  margin: -8px 0 4px 0;
+}
+
+/* 지도 마커와 동일한 번호 배지 스타일 */
+.schedule-number {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
+  background-color: #6e48c6;
+  color: #ffffff;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  font-weight: 700;
+  font-size: 13px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
+}
 
 .schedule-time {
   font-size: 13px;
@@ -178,10 +210,60 @@
   color: #343a40;
   min-width: 45px;
   padding-top: 2px;
+  flex-shrink: 0;
+}
+
+.schedule-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .place-name { font-size: 15px; font-weight: 600; color: #343a40; display: block; }
 .place-category { font-size: 12px; color: #adb5bd; }
+
+/* 이동 시간 표시 스타일 */
+.travel-time-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 12px 38px; /* 번호 배지 너비(26px) + gap(12px) */
+  padding-left: 8px;
+}
+
+.travel-time-line {
+  width: 2px;
+  height: 24px;
+  background: linear-gradient(to bottom, #4A90E2 0%, #4A90E2 50%, transparent 50%, transparent 100%);
+  background-size: 2px 8px;
+  flex-shrink: 0;
+}
+
+.travel-time-info {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #6b7280;
+  background-color: #f8f9fa;
+  padding: 4px 8px;
+  border-radius: 12px;
+}
+
+.travel-icon {
+  font-size: 14px;
+}
+
+.travel-duration {
+  font-weight: 600;
+  color: #4A90E2;
+}
+
+.travel-distance {
+  color: #9ca3af;
+  font-size: 11px;
+}
 
 /* 그룹 멤버 섹션 스타일 */
 .group-members-section {

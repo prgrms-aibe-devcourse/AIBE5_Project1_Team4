@@ -75,6 +75,37 @@ const TripItineraryList = ({
     return currentDay.items;
   }, [currentDay]);
 
+  // 두 지점 간의 이동 시간 계산 (간단한 직선 거리 기반)
+  const calculateTravelTime = (item1, item2) => {
+    if (!item1?.place?.lat || !item1?.place?.lng || !item2?.place?.lat || !item2?.place?.lng) {
+      return null;
+    }
+
+    const lat1 = item1.place.lat;
+    const lng1 = item1.place.lng;
+    const lat2 = item2.place.lat;
+    const lng2 = item2.place.lng;
+
+    // 하버사인 공식으로 두 좌표 간 거리 계산 (km)
+    const R = 6371; // 지구 반지름 (km)
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c; // km
+
+    // 평균 속도 30km/h로 이동 시간 계산 (분)
+    const travelTimeMinutes = Math.round((distance / 30) * 60);
+    
+    return {
+      distance: distance.toFixed(1),
+      duration: travelTimeMinutes
+    };
+  };
+
   // "Day 1", "Day 2" 형식의 레이블 (인덱스 + 1)
   const dayLabel = `Day ${currentDayIndex + 1}`;
   
@@ -131,23 +162,42 @@ const TripItineraryList = ({
             <div className="schedule-list-scroll-area">
               {currentDayItems.length > 0 ? (
                 // 현재 날의 모든 일정 항목을 시간순으로 렌더링
-                currentDayItems.map((item) => (
-                  <div 
-                    key={item.itemId}  // 각 항목의 고유 ID
-                    className={`schedule-item ${selectedId === item.itemId ? 'active' : ''}`}
-                    onClick={() => onScheduleClick && onScheduleClick(item.itemId)}
-                  >
-                    {/* 일정 시간 표시 */}
-                    <div className="schedule-time">{item.time || "-"}</div>
-                    
-                    {/* 장소 정보 및 상세 내용 */}
-                    <div className="schedule-content">
-                      {/* 장소명 (DB place 테이블의 name) */}
-                      <span className="place-name">{item.place?.name || "장소 정보 없음"}</span>
-                      {/* 일정 메모 또는 추가 정보 */}
-                      <span className="place-category">{item.notes || "일정"}</span>
+                currentDayItems.map((item, index) => (
+                  <React.Fragment key={item.itemId}>
+                    <div 
+                      className={`schedule-item ${selectedId === item.itemId ? 'active' : ''}`}
+                      onClick={() => onScheduleClick && onScheduleClick(item.itemId)}
+                    >
+                      {/* 지도 마커 번호와 동일한 번호 표시 */}
+                      <div className="schedule-number">{index + 1}</div>
+                      
+                      {/* 일정 시간 표시 */}
+                      <div className="schedule-time">{item.time || "-"}</div>
+                      
+                      {/* 장소 정보 및 상세 내용 */}
+                      <div className="schedule-content">
+                        {/* 장소명 (DB place 테이블의 name) */}
+                        <span className="place-name">{item.place?.name || "장소 정보 없음"}</span>
+                        {/* 일정 메모 또는 추가 정보 */}
+                        <span className="place-category">{item.notes || "일정"}</span>
+                      </div>
                     </div>
-                  </div>
+
+                    {/* 다음 장소까지의 이동 시간 표시 */}
+                    {index < currentDayItems.length - 1 && (() => {
+                      const travelInfo = calculateTravelTime(item, currentDayItems[index + 1]);
+                      return travelInfo ? (
+                        <div className="travel-time-indicator">
+                          <div className="travel-time-line"></div>
+                          <div className="travel-time-info">
+                            <span className="travel-icon">🚗</span>
+                            <span className="travel-duration">{travelInfo.duration}분</span>
+                            <span className="travel-distance">({travelInfo.distance}km)</span>
+                          </div>
+                        </div>
+                      ) : null;
+                    })()}
+                  </React.Fragment>
                 ))
               ) : (
                 // 선택된 날에 일정이 없을 때 표시

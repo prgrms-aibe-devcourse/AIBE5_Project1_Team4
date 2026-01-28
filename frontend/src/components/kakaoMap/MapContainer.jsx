@@ -135,7 +135,10 @@ const MapContainer = ({
             key={`itinerary-${item.id || i}`}
             position={{ lat: item.lat, lng: item.lng }}
           >
-            <div className="badge">{i + 1}</div>
+            <div className="marker-with-label">
+              <div className="badge">{i + 1}</div>
+              <div className="marker-place-name">{item.name || '장소'}</div>
+            </div>
           </MapMarker>
         ))}
 
