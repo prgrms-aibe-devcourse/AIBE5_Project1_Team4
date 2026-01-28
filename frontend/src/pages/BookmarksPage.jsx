@@ -3,13 +3,15 @@ import { Container, Row, Col, Spinner, Button, ButtonGroup } from 'react-bootstr
 import { useNavigate, Navigate } from 'react-router-dom';
 import { Clock, TrendingUp } from 'lucide-react';
 
+// 토글 함수 추가
+import { toggleTripLike, toggleTripBookmark, getFilterOptions } from '@/services/trips.service';
+
 // 컴포넌트 및 훅 임포트
 import TripCard from '@/components/trip/TripCard';
 import TripFilterPanel from '@/components/trip/TripFilterPanel'; //
 import { useBookmarkedTrips } from '@/hooks/trips/useBookmarkedTrips'; //
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll'; //
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { getFilterOptions } from '@/services/trips.service'; //
 import FloatingActionGroup from '@/components/common/FloatingActionGroup';
 
 // 스타일 임포트
@@ -26,6 +28,9 @@ export default function BookmarksPage() {
   const [sortBy, setSortBy] = useState('latest');
   const [filterOptions, setFilterOptions] = useState({ regions: [], themes: [] });
 
+  // 화면 표시용 로컬 상태
+  const [displayItems, setDisplayItems] = useState([]);
+
   // 2. 날짜 필터 선택값을 SQL 처리를 위한 '일수(days)'로 변환
   const daysLimit = useMemo(() => {
     if (dateFilter === '최근 1주') return 7;
@@ -34,13 +39,18 @@ export default function BookmarksPage() {
   }, [dateFilter]);
 
   // 3. 데이터 로드: 선택된 모든 필터 상태를 훅에 전달 (필터 작동의 핵심)
-  const { items = [], hasMore, status, loadMore } = useBookmarkedTrips({ 
-    limit: 12, 
-    sort: sortBy, 
-    region: selectedRegion, 
-    theme: selectedTheme, 
-    days: daysLimit 
+  const { items = [], hasMore, status, loadMore } = useBookmarkedTrips({
+    limit: 12,
+    sort: sortBy,
+    region: selectedRegion,
+    theme: selectedTheme,
+    days: daysLimit,
   });
+
+  // 훅 결과 → 로컬 표시 상태 동기화
+  useEffect(() => {
+    setDisplayItems(items);
+  }, [items]);
 
   // 4. 무한 스크롤 설정
   const { targetRef: sentinelRef } = useInfiniteScroll({
@@ -56,8 +66,55 @@ export default function BookmarksPage() {
   }, []);
 
   // 인증 상태 확인
-  if (authLoading) return <div className="text-center mt-5"><Spinner animation="border" variant="primary" /></div>;
+  if (authLoading) {
+    return (
+      <div className="text-center mt-5">
+        <Spinner animation="border" variant="primary" />
+      </div>
+    );
+  }
   if (!user) return <Navigate to="/login" replace />;
+
+  // =========================
+  // 토글 핸들러
+  // =========================
+
+  // 좋아요 토글
+  const handleLikeClick = async (tripId) => {
+    try {
+      const { is_liked, like_count } = await toggleTripLike(tripId);
+
+      setDisplayItems((prev) =>
+        prev.map((t) =>
+          t.id === tripId ? { ...t, is_liked, like_count } : t
+        )
+      );
+    } catch (e) {
+      console.error('좋아요 토글 실패:', e);
+    }
+  };
+
+  // 북마크 토글
+  const handleBookmarkClick = async (tripId) => {
+    try {
+      const { is_bookmarked, bookmark_count } =
+        await toggleTripBookmark(tripId);
+
+      // 북마크 해제 시 목록에서 제거
+      if (!is_bookmarked) {
+        setDisplayItems((prev) => prev.filter((t) => t.id !== tripId));
+        return;
+      }
+
+      setDisplayItems((prev) =>
+        prev.map((t) =>
+          t.id === tripId ? { ...t, is_bookmarked, bookmark_count } : t
+        )
+      );
+    } catch (e) {
+      console.error('북마크 토글 실패:', e);
+    }
+  };
 
   return (
     <div className="bookmarks-page">
@@ -65,7 +122,9 @@ export default function BookmarksPage() {
         {/* 헤더 섹션 */}
         <div className="bookmarks-page__header">
           <h1 className="bookmarks-page__title">나의 북마크</h1>
-          <p className="bookmarks-page__subtitle">저장한 여행을 필터링하여 확인해보세요</p>
+          <p className="bookmarks-page__subtitle">
+            저장한 여행을 필터링하여 확인해보세요
+          </p>
         </div>
 
         {/* 필터 패널 섹션 */}
@@ -84,18 +143,16 @@ export default function BookmarksPage() {
 
         {/* 결과 요약 및 정렬 바 */}
         <div className="bookmarks-page__result-header mt-4 d-flex justify-content-end">
-
-
           <ButtonGroup size="sm">
-            <Button 
-              variant={sortBy === 'latest' ? 'primary' : 'outline-secondary'} 
+            <Button
+              variant={sortBy === 'latest' ? 'primary' : 'outline-secondary'}
               onClick={() => setSortBy('latest')}
               className="d-flex align-items-center gap-1"
             >
               <Clock size={14} /> 최신순
             </Button>
-            <Button 
-              variant={sortBy === 'popular' ? 'primary' : 'outline-secondary'} 
+            <Button
+              variant={sortBy === 'popular' ? 'primary' : 'outline-secondary'}
               onClick={() => setSortBy('popular')}
               className="d-flex align-items-center gap-1"
             >
@@ -105,25 +162,32 @@ export default function BookmarksPage() {
         </div>
 
         {/* 콘텐츠 영역: 로딩 / 빈 화면 / 카드 그리드 분기 */}
-        {status === 'loading' && items.length === 0 ? (
-          <div className="text-center py-5"><Spinner animation="border" variant="primary" /></div>
-        ) : items.length === 0 ? (
-          /* ✅ 북마크 빈 화면 UI */
+        {status === 'loading' && displayItems.length === 0 ? (
+          <div className="text-center py-5">
+            <Spinner animation="border" variant="primary" />
+          </div>
+        ) : displayItems.length === 0 ? (
+          /* 북마크 빈 화면 UI */
           <div className="bookmarks-page__empty">
             <span style={{ fontSize: '3rem' }}>🔖</span>
             <h5 className="mt-3">북마크한 여행이 없습니다</h5>
-            <Button variant="link" onClick={() => navigate('/trips')} className="mt-2">
+            <Button
+              variant="link"
+              onClick={() => navigate('/trips')}
+              className="mt-2"
+            >
               여행 탐색하러 가기
             </Button>
           </div>
         ) : (
           <Row xs={1} sm={2} md={3} lg={4} className="g-4 mt-2">
-            {items.map((trip) => (
+            {displayItems.map((trip) => (
               <Col key={trip.id}>
-                <TripCard 
-                  trip={trip} 
+                <TripCard
+                  trip={{ ...trip, is_bookmarked: true }}
                   onCardClick={(id) => navigate(`/trips/${id}`)}
-                  isBookmarked={true} // 북마크 페이지이므로 항상 true
+                  onLikeClick={handleLikeClick}
+                  onBookmarkClick={handleBookmarkClick}
                 />
               </Col>
             ))}
@@ -132,11 +196,12 @@ export default function BookmarksPage() {
 
         {/* 무한 스크롤 트리거 요소 */}
         <div ref={sentinelRef} className="bookmarks-page__sentinel">
-          {status === 'loading' && items.length > 0 && (
+          {status === 'loading' && displayItems.length > 0 && (
             <Spinner animation="border" size="sm" variant="secondary" />
           )}
         </div>
       </Container>
+
       <FloatingActionGroup />
     </div>
   );
