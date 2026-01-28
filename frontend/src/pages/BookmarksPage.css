@@ -1,53 +1,82 @@
+/* BookmarksPage.css - Clean & White Style */
+
+/* 1. 페이지 전체 배경: 화이트로 통일 */
 .bookmarks-page {
+  background-color: #fff; /* 회색 그라데이션 제거 */
   min-height: 100vh;
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-  padding: 2rem 0 3rem;
+  padding: 4rem 0 6rem;
 }
 
+/* 2. 헤더 섹션 */
 .bookmarks-page__header {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 3rem;
 }
 
 .bookmarks-page__title {
-  font-size: 2.25rem;
-  font-weight: 700;
+  font-size: 2.5rem;
+  font-weight: 800;
   color: #1e293b;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
+  letter-spacing: -0.5px;
 }
 
 .bookmarks-page__subtitle {
   color: #64748b;
   font-size: 1.1rem;
-  margin-bottom: 1.5rem;
 }
 
+/* 3. 필터 패널 래퍼 */
 .bookmarks-page__filter {
-  margin-bottom: 1.5rem;
-  border-radius: 16px;
-  background-color: var(--bs-gray-600);
-  overflow: hidden;
+  background: transparent !important; /* 칙칙한 회색 박스 제거 */
+  padding: 0;
+  margin-top: 1rem;
+  margin-bottom: 4rem;
+  border-radius: 0;
+  overflow: visible; /* 그림자가 잘리지 않게 설정 */
 }
 
+/* 4. 결과 헤더 */
 .bookmarks-page__result-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
-  gap: 0.75rem;
+  margin-bottom: 1.5rem;
 }
 
-.bookmarks-page__count { color: #64748b; font-size: 0.95rem; }
+.bookmarks-page__count {
+  color: #64748b;
+  font-size: 1rem;
+  font-weight: 500;
+}
 
+/* 5. 빈 상태 (Wishlist가 비었을 때) */
 .bookmarks-page__empty {
   text-align: center;
-  padding: 4rem 2rem;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  padding: 6rem 2rem;
+  background: #f8fafc;
+  border-radius: 24px;
+  box-shadow: none;
+  border: 1px dashed #e2e8f0; /* 비어있을 땐 점선 테두리로 센스 있게 */
 }
 
-.bookmarks-page__empty-icon { font-size: 3rem; margin-bottom: 1rem; }
-.bookmarks-page__empty h5 { color: #475569; margin-bottom: 0.5rem; }
-.bookmarks-page__sentinel { padding: 2rem 0; text-align: center; }
+.bookmarks-page__empty-icon {
+  font-size: 3.5rem;
+  margin-bottom: 1.5rem;
+  display: block;
+}
+
+.bookmarks-page__empty h5 {
+  font-weight: 700;
+  color: #475569;
+  margin-bottom: 0.5rem;
+}
+
+/* 6. 무한 스크롤 센티널 */
+.bookmarks-page__sentinel {
+  padding: 3rem 0;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

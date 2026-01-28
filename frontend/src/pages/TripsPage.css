@@ -1,117 +1,115 @@
-/* TripsPage 스타일 */
+/* TripsPage.css - Clean & White Style */
 
+/* 1. 페이지 전체 배경: 깨끗한 화이트로 통일 */
 .trips-page {
+  background-color: #fff; /* 회색 그라데이션 제거 */
   min-height: 100vh;
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-  padding: 2rem 0 3rem;
+  padding-bottom: 6rem;
 }
 
-/* 헤더 섹션 */
+/* 2. 헤더 섹션 */
 .trips-page__header {
   text-align: center;
-  margin-bottom: 2rem;
+  padding: 4rem 0 2rem;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
 .trips-page__title {
-  font-size: 2.25rem;
-  font-weight: 700;
+  font-size: 2.5rem;
+  font-weight: 800;
   color: #1e293b;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
+  letter-spacing: -0.5px;
 }
 
 .trips-page__subtitle {
   color: #64748b;
   font-size: 1.1rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2.5rem;
 }
 
+/* 검색 결과 텍스트 */
 .trips-page__search-result {
-  margin-top: 1rem;
-  padding: 0.5rem 1rem;
-  background: white;
-  border-radius: 8px;
-  color: #64748b;
-  font-size: 0.9rem;
-  display: inline-block;
+  margin-top: 1.5rem;
+  color: #0061ff;
+  font-size: 1rem;
+  font-weight: 600;
 }
 
-/* 필터 패널 */
+/* 3. 필터 패널 래퍼 (⭐ 여기가 핵심!) */
+/* 기존의 회색 박스를 날려버리고 투명하게 만듭니다 */
 .trips-page__filter {
-  margin-bottom: 1.5rem;
-  border-radius: 16px;
-  background-color: var(--bs-gray-600);
-  overflow: hidden;
-}
-
-/* 결과 헤더 */
-.trips-page__result-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.trips-page__count {
-  color: #64748b;
-  font-size: 0.95rem;
-}
-
-.trips-page__sort .btn {
-  padding: 0.375rem 0.75rem;
-  font-size: 0.85rem;
-  border-radius: 8px;
-}
-
-.trips-page__sort .btn-group > .btn:first-child {
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-}
-
-.trips-page__sort .btn-group > .btn:last-child {
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-}
-
-/* 로딩 상태 */
-.trips-page__loading {
-  text-align: center;
-  padding: 4rem 0;
-}
-
-.trips-page__loading p {
+  background: transparent; /* 배경 제거 */
+  padding: 0;
   margin-top: 1rem;
-  color: #64748b;
+  margin-bottom: 4rem;
+  border-radius: 0; /* 기존 둥글기 제거 (컴포넌트 자체 둥글기 사용) */
+  box-shadow: none; /* 기존 그림자 제거 */
 }
 
-/* 빈 상태 */
+/* 4. 결과 헤더 & 정렬 버튼 */
+.trips-page__result-header {
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: flex-end; /* 우측 정렬 */
+}
+
+/* 정렬 버튼 스타일 업그레이드 */
+.trips-page__sort button {
+  border-radius: 20px !important; /* 둥근 알약 모양 */
+  padding: 0.4rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1px solid #e2e8f0;
+}
+
+/* 활성화된 버튼 (파란색) */
+.trips-page__sort button.btn-primary {
+  background-color: #0061ff;
+  border-color: #0061ff;
+}
+
+/* 비활성화된 버튼 (회색) */
+.trips-page__sort button.btn-outline-secondary {
+  color: #64748b;
+  background-color: transparent;
+  border-color: transparent;
+}
+
+.trips-page__sort button.btn-outline-secondary:hover {
+  background-color: #f1f5f9;
+  color: #1e293b;
+}
+
+/* 5. 로딩 및 빈 상태 */
+.trips-page__loading,
 .trips-page__empty {
   text-align: center;
-  padding: 4rem 2rem;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  padding: 6rem 0;
+  color: #94a3b8;
+  background: #f8fafc; /* 리스트 없을 때만 박스 처리 */
+  border-radius: 24px;
+  margin-top: 2rem;
 }
 
 .trips-page__empty-icon {
   font-size: 3rem;
   margin-bottom: 1rem;
+  opacity: 0.5;
 }
 
 .trips-page__empty h5 {
+  font-weight: 700;
   color: #475569;
   margin-bottom: 0.5rem;
 }
 
-.trips-page__empty p {
-  color: #94a3b8;
-  font-size: 0.9rem;
-  margin: 0;
-}
-
-/* 무한 스크롤 센티널 */
+/* 6. 무한 스크롤 센티널 */
 .trips-page__sentinel {
-  padding: 2rem 0;
-  text-align: center;
+  height: 60px;
+  margin-top: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
