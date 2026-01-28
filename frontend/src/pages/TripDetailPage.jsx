@@ -30,8 +30,8 @@ const EMPTY_SUMMARY = {
  * URL 파라미터로 받은 ID를 이용해 여행 정보를 로드하고 화면에 표시합니다.
  */
 const TripDetailPage = () => {
-const { id } = useParams();
-const [selectedId, setSelectedId] = useState(null);
+  const { id } = useParams();
+  const [selectedId, setSelectedId] = useState(null);
 
   // 진입 시 스크롤 위치 초기화 (이전 페이지 스크롤 유지되는 이슈 대응)
   useEffect(() => {
@@ -62,6 +62,7 @@ const [selectedId, setSelectedId] = useState(null);
     const viewer = summaryPayload.viewer ?? {}; // ✅ 여기 추가
 
     return {
+      id: trip.id ?? '',
       title: trip.title ?? '',
       description: trip.summary ?? '',
       start_date: trip.startDate ?? trip.start_date ?? '',
@@ -132,7 +133,9 @@ const [selectedId, setSelectedId] = useState(null);
 
   // 에러 / 데이터 없음 처리
   if (error || !tripData) {
-    return <div className="text-center mt-5">데이터를 불러올 수 없습니다. 😢</div>;
+    return (
+      <div className="text-center mt-5">데이터를 불러올 수 없습니다. 😢</div>
+    );
   }
 
   return (
