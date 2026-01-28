@@ -7,13 +7,9 @@ import { LogOut } from 'lucide-react';
 // 🧱 마이페이지를 구성하는 독립된 컴포넌트들
 import ProfileCard from '../components/mypage/ProfileCard';
 import StatGroup from '../components/mypage/StatGroup';
-import RecentTrips from '../components/mypage/RecentTrips';
-import StatDetailModal from '../components/mypage/StatDetailModal';
+import ProfileTripList from '../components/mypage/ProfileTripList'; // ✅ RecentTrips 대신 동적 리스트 사용
 import FloatingActionGroup from '@/components/common/FloatingActionGroup';
 
-// 📡 DB 조회를 위한 공통 서비스 함수
-import { getQuickStatsList } from '../services/profiles.service';
-import { listLikedTrips, listMyTrips } from '../services/trips.service';
 
 const MyPage = () => {
   const navigate = useNavigate();
@@ -22,8 +18,8 @@ const MyPage = () => {
   // 🔢 상단 카드의 실시간 수치를 관리하는 상태
   const [stats, setStats] = useState({ likes: 0, trips: 0, bookmarks: 0 });
   
-  // 🔍 상세 목록 모달의 노출 상태와 데이터를 관리하는 상태
-  const [modal, setModal] = useState({ show: false, title: '', list: [] });
+  // 📍 탭 상태 관리 (모달 상태 제거 후 추가)
+  const [activeTab, setActiveTab] = useState('trips');
 
   /**
    * 컴포넌트 마운트 시 유저 정보 및 초기 실시간 수치 로드
@@ -64,43 +60,12 @@ const MyPage = () => {
     }, []);
 
   /**
-   * 📊 통계 카드 클릭 시 상세 리스트 모달 오픈 (Likes 패턴과 100% 일치)
+   * 📊 통계 카드 클릭 시 리스트 영역 전환 (모달 대신 탭 전환으로 변경)
    */
-  const handleStatClick = async (title, type) => {
-    if (!currentUser) return;
-    setModal({ show: true, title, list: [], loading: true });
-
-    try {
-      let result;
-      
-      // 1. 타입에 따른 RPC 호출
-      if (type === 'likes') {
-        result = await listLikedTrips({ limit: 5 });
-      } else if (type === 'trips') {
-        result = await listMyTrips({ limit: 5 }); // ✅ 이제 400 에러 없이 호출됩니다.
-      } else {
-        // 북마크 등 기타 처리
-        result = await getQuickStatsList(currentUser.id, type);
-      }
-
-      // 2. 데이터 가공 (mapRowToCard에서 이미 summary -> description으로 바뀜)
-      // 찜(Likes)에서 쓰신 trip.summary 대신 trip.description을 써야 실제 내용이 나옵니다.
-      const rawItems = Array.isArray(result) ? result : (result?.items || []);
-      
-      const data = rawItems.map(trip => ({
-        id: trip.id,
-        title: trip.title,
-        // DB의 summary가 NULL이면 날짜를 대신 보여주어 UI 보강
-        description: trip.description || (trip.start_date ? `${trip.start_date} ~ ${trip.end_date}` : '상세 정보가 없습니다.'),
-        date: `${trip.start_date} ~ ${trip.end_date}`
-      }));
-
-      setModal({ show: true, title, list: data, loading: false });
-    } catch (error) {
-      console.error(`${title} 조회 실패:`, error);
-      setModal({ show: true, title, list: [], loading: false });
-    }
+  const handleStatClick = (title, type) => {
+    setActiveTab(type); // 탭 상태만 변경하여 하단 리스트 교체
   };
+
   /**
    * 🚪 로그아웃 처리 핸들러
    * 세션 종료 후 피드백대로 메인/로그인 페이지로 네비게이션 처리
@@ -137,26 +102,24 @@ const MyPage = () => {
           </Col>
           
           <Col lg={8}>
-            {/* 📈 실시간 통계 영역 (클릭 시 모달 열림) */}
+            {/* 📈 실시간 통계 영역 (클릭 시 하단 리스트 전환) */}
             <StatGroup 
               stats={stats} 
               onStatClick={(title, type) => handleStatClick(title, type)} 
             />
             
-            {/* ✈️ 최근 여행 목록 영역 */}
-            <RecentTrips />
+            {/* ✈️ 동적 여행 목록 영역 (RecentTrips 대체) */}
+            <div className="mt-4">
+              <h5 className="fw-bold mb-3 px-1">
+                {activeTab === 'trips' ? '최근 나의 여행' : activeTab === 'likes' ? '내가 찜한 여행' : '북마크 리스트'}
+              </h5>
+              {/* key를 통해 탭 변경 시 컴포넌트를 새로 고침하여 데이터를 다시 로드함 */}
+              <ProfileTripList key={activeTab} type={activeTab} />
+            </div>
           </Col>
         </Row>
       </Container>
 
-      {/* 팝업 모달: 상세 찜/북마크 목록 표시 */}
-      <StatDetailModal 
-        show={modal.show} 
-        onHide={() => setModal({ ...modal, show: false })}
-        title={modal.title}
-        data={modal.list}
-        loading={modal.loading}
-      />
       <FloatingActionGroup />
     </div>
     
