@@ -149,14 +149,23 @@ export default function HomePage() {
     }
   };
 
+  const [creating, setCreating] = useState(false);
+
   const handleCreateTrip = async () => {
-    if (isAuthLoading) return;
-    if (!user) {
-      setReturnToIfEmpty(location.pathname + location.search);
-      navigate('/login', { replace: true });
-      return;
+    if (creating) return;
+    setCreating(true);
+
+    try {
+      if (isAuthLoading) return;
+      if (!user) {
+        setReturnToIfEmpty(location.pathname + location.search);
+        navigate('/login', { replace: true });
+        return;
+      }
+      navigate('/trips/create');
+    } finally {
+      setCreating(false);
     }
-    navigate('/trips/create');
   };
 
   return (
@@ -167,9 +176,7 @@ export default function HomePage() {
           <Badge bg="primary" className="home-hero__badge">
             Trip Planner
           </Badge>
-          <h1 className="home-hero__title">
-            당신의 다음 여행은 어디인가요?
-          </h1>
+          <h1 className="home-hero__title">당신의 다음 여행은 어디인가요?</h1>
           <Row className="justify-content-center">
             <Col md={8} lg={6}>
               <SearchBar
@@ -242,9 +249,7 @@ export default function HomePage() {
               onClick={handleCreateTrip}
               disabled={isAuthLoading}
             >
-              {isAuthLoading
-                ? '로그인 확인 중...'
-                : '여행 일정 만들기'}
+              {isAuthLoading ? '로그인 확인 중...' : '여행 일정 만들기'}
             </button>
           </div>
           <div className="home-cta__circle home-cta__circle--1" />
