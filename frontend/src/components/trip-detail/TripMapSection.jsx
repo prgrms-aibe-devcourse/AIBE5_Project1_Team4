@@ -17,6 +17,7 @@ import './TripMapSection.css';
 const TripMapSection = ({ schedules = [], members = [], selectedId = null }) => {
   // 지도 줌 레벨 상태 (향후 지도 라이브러리 연동용)
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [routeSummary, setRouteSummary] = useState(null);
 
   const mapCurrentDayPos = useMemo(() => {
     const points = [];
@@ -62,11 +63,26 @@ const TripMapSection = ({ schedules = [], members = [], selectedId = null }) => 
         <MapContainer
           mapCurrentDayPos={mapCurrentDayPos}
           mapSearchPlacePos={[]}
+          onRouteData={(data) => {
+            if (data?.path?.length > 0) {
+              setRouteSummary({
+                totalDuration: data.totalDuration,
+                totalDistance: data.totalDistance,
+              });
+            } else {
+              setRouteSummary(null);
+            }
+          }}
         />
       </div>
       
       {/* 일정 리스트 컴포넌트: schedules, members, selectedId props를 전달 */}
-      <TripItineraryList schedules={schedules} members={members} selectedId={selectedId} />
+      <TripItineraryList
+        schedules={schedules}
+        members={members}
+        selectedId={selectedId}
+        routeSummary={routeSummary}
+      />
       
       {/* 줌 컨트롤 */}
       <div className="map-zoom-controls">

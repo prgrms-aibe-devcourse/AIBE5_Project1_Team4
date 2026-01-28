@@ -9,7 +9,11 @@ import { useKakaoRoute } from '../../hooks/kakaoMap/useKakaoRoute';
 import { useKakaoMap } from '../../hooks/kakaoMap/useKakaoMap';
 import './map.css';
 
-const MapContainer = ({ mapCurrentDayPos = [], mapSearchPlacePos = [] }) => {
+const MapContainer = ({
+  mapCurrentDayPos = [],
+  mapSearchPlacePos = [],
+  onRouteData,
+}) => {
   // 1. 카카오 지도 SDK 로드 (JS API 키를 통해 지도를 실제 호출)
   const [loading, error] = useKakaoMap();
 
@@ -47,7 +51,11 @@ const MapContainer = ({ mapCurrentDayPos = [], mapSearchPlacePos = [] }) => {
       console.log('⏱ 구간 정보:', routeData.sections);
       console.groupEnd();
     }
-  }, [routeData]);
+
+    if (typeof onRouteData === 'function') {
+      onRouteData(routeData);
+    }
+  }, [routeData, onRouteData]);
   //------------------------------------------------------------------------
 
   // 4. 경로 계산 트리거

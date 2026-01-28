@@ -150,6 +150,18 @@
   padding-top: 12px; /* 멤버 섹션과의 간격 조정 */
 }
 
+.trip-route-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid #f1f3f5;
+  background-color: #f8fafc;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
 .schedule-item {
   display: flex;
   align-items: flex-start;

@@ -41,7 +41,13 @@ import './TripItineraryList.css';
  *   - onScheduleClick: 일정 항목 클릭 시 실행될 콜백 함수 (itemId 전달)
  *   - selectedId: 현재 선택된 일정의 ID (UI 강조용)
  */
-const TripItineraryList = ({ schedules = [], members = [], onScheduleClick, selectedId }) => {
+const TripItineraryList = ({
+  schedules = [],
+  members = [],
+  onScheduleClick,
+  selectedId,
+  routeSummary,
+}) => {
   // 패널 열림/닫힘 상태 (초기값: false로 닫혀있음)
   const [isOpen, setIsOpen] = useState(false);
   
@@ -150,6 +156,13 @@ const TripItineraryList = ({ schedules = [], members = [], onScheduleClick, sele
                 </div>
               )}
             </div>
+
+            {routeSummary && (
+              <div className="trip-route-summary">
+                <span>총 이동 시간 {routeSummary.totalDuration ?? '-'}분</span>
+                <span>총 거리 {routeSummary.totalDistance ?? '-'}km</span>
+              </div>
+            )}
           </>
         ) : (
           // 전체 여행에 일정 데이터가 없을 때 표시하는 빈 상태 (Empty State)

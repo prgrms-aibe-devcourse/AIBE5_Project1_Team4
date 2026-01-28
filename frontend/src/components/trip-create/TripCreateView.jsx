@@ -67,6 +67,8 @@ const TripCreateView = ({ tripId, onInvite }) => {
     saveTripChanges,
     toggleVisibility,
     deleteTripPlan,
+    mapCurrentDayPos,
+    mapSearchPlacePos,
   } = useTripCreateForm({ tripId });
 
   const [transferTarget, setTransferTarget] = useState(null);
@@ -292,6 +294,8 @@ const TripCreateView = ({ tripId, onInvite }) => {
           onClosePanel={() => setIsPanelOpen(false)}
           onCloseSearch={() => setIsSearchOpen(false)}
           onMapClick={closeMenus}
+          mapCurrentDayPos={mapCurrentDayPos}
+          mapSearchPlacePos={mapSearchPlacePos}
           searchPanel={
             <TripSearchPanel
               isOpen={isSearchOpen}
