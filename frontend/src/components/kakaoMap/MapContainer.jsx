@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
 import {
   Map,
   MapMarker,
@@ -14,6 +14,7 @@ const MapContainer = ({
   mapSearchPlacePos = [],
   onRouteData,
   drawSimplePath = false,
+  selectedLocation = null,
 }) => {
   // 1. 카카오 지도 SDK 로드 (JS API 키를 통해 지도를 실제 호출)
   const [loading, error] = useKakaoMap();
@@ -25,8 +26,16 @@ const MapContainer = ({
     loading: isRouteLoading,
   } = useKakaoRoute();
 
-  // 3. 지도 중심 좌표 결정
+  // 3. 지도 인스턴스 참조
+  const mapRef = useRef(null);
+
+  // 4. 지도 중심 좌표 결정
   const center = useMemo(() => {
+    // 선택된 위치가 있으면 우선적으로 사용
+    if (selectedLocation) {
+      return { lat: selectedLocation.lat, lng: selectedLocation.lng };
+    }
+
     const firstSearch = mapSearchPlacePos[0];
     const firstItinerary = mapCurrentDayPos[0];
 
@@ -35,7 +44,7 @@ const MapContainer = ({
       return { lat: firstItinerary.lat, lng: firstItinerary.lng };
 
     return { lat: 37.5665, lng: 126.978 }; // 기본값: 서울시청
-  }, [mapSearchPlacePos, mapCurrentDayPos]);
+  }, [mapSearchPlacePos, mapCurrentDayPos, selectedLocation]);
 
   const simplePath = useMemo(() => {
     return (mapCurrentDayPos || [])
@@ -45,6 +54,18 @@ const MapContainer = ({
       }))
       .filter((point) => !Number.isNaN(point.lat) && !Number.isNaN(point.lng));
   }, [mapCurrentDayPos]);
+
+  // 선택된 위치가 변경되면 지도 중심을 부드럽게 이동
+  useEffect(() => {
+    if (selectedLocation && mapRef.current) {
+      const map = mapRef.current;
+      const moveLatLng = new window.kakao.maps.LatLng(
+        selectedLocation.lat,
+        selectedLocation.lng
+      );
+      map.panTo(moveLatLng);
+    }
+  }, [selectedLocation]);
 
   //데이터 잘 들어오는지 확인-----------------------------------------------
   useEffect(() => {
@@ -114,7 +135,10 @@ const MapContainer = ({
         center={center}
         style={{ width: '100%', height: '100%' }}
         level={6}
-        onCreate={(map) => map.relayout()}
+        onCreate={(map) => {
+          mapRef.current = map;
+          map.relayout();
+        }}
       >
         {/* --- [1] 검색 결과 마킹 --- */}
         {mapSearchPlacePos.map((place, i) => (
