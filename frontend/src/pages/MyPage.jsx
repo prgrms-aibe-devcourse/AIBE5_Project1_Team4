@@ -7,13 +7,9 @@ import { LogOut } from 'lucide-react';
 // 🧱 마이페이지를 구성하는 독립된 컴포넌트들
 import ProfileCard from '../components/mypage/ProfileCard';
 import StatGroup from '../components/mypage/StatGroup';
-import RecentTrips from '../components/mypage/RecentTrips';
-import StatDetailModal from '../components/mypage/StatDetailModal';
+import ProfileTripList from '../components/mypage/ProfileTripList'; // ✅ RecentTrips 대신 동적 리스트 사용
 import FloatingActionGroup from '@/components/common/FloatingActionGroup';
 
-// 📡 DB 조회를 위한 공통 서비스 함수
-import { getQuickStatsList } from '../services/profiles.service';
-import { listLikedTrips } from '../services/trips.service';
 
 const MyPage = () => {
   const navigate = useNavigate();
@@ -22,8 +18,8 @@ const MyPage = () => {
   // 🔢 상단 카드의 실시간 수치를 관리하는 상태
   const [stats, setStats] = useState({ likes: 0, trips: 0, bookmarks: 0 });
   
-  // 🔍 상세 목록 모달의 노출 상태와 데이터를 관리하는 상태
-  const [modal, setModal] = useState({ show: false, title: '', list: [] });
+  // 📍 탭 상태 관리 (모달 상태 제거 후 추가)
+  const [activeTab, setActiveTab] = useState('trips');
 
   /**
    * 컴포넌트 마운트 시 유저 정보 및 초기 실시간 수치 로드
@@ -41,74 +37,33 @@ const MyPage = () => {
           email: user.email,
           avatar_url: user.user_metadata?.avatar_url || null 
         });
+      try {
+        // ⚡️ 중요: 데이터를 가져오지 않고(head: true), 숫자만 정확히 세어옴(count: 'exact')
+        const [likesCount, tripsCount, bookmarksCount] = await Promise.all([
+          supabase.from('trip_likes').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
+          supabase.from('trips').select('*', { count: 'exact', head: true }).eq('created_by', user.id),
+          supabase.from('trip_bookmarks').select('*', { count: 'exact', head: true }).eq('user_id', user.id)
+        ]);
 
-        // 3. ⚡️ 실시간 DB 데이터 개수(Count) 반영 로직
-        try {
-          // DB에서 실제 저장된 리스트를 가져와서 길이를 기반으로 숫자 세팅
-          const likesData = await getQuickStatsList(user.id, 'likes');
-          const bookmarksData = await getQuickStatsList(user.id, 'bookmarks');
-          
-          setStats({
-            likes: likesData ? likesData.length : 0, 
-            trips: 0, // 피드백 반영: '내 여행' 카운트 로직은 추후 확장 예정
-            bookmarks: bookmarksData ? bookmarksData.length : 0
-          });
-        } catch (error) {
-          console.error("실시간 수치 로드 실패:", error);
-        }
+        setStats({
+          // .length 대신 .count를 사용합니다.
+          likes: likesCount.count || 0, 
+          trips: tripsCount.count || 0,    // ✅ 이제 5를 넘어 10, 20 등 실제 전체 개수가 표시됩니다.
+          bookmarks: bookmarksCount.count || 0
+        });
+      } catch (error) {
+        console.error("실시간 수치 로드 실패:", error);
       }
-    };
-    loadUserDataAndStats();
-  }, []);
+        }
+      };
+      loadUserDataAndStats();
+    }, []);
 
   /**
-   * 📊 통계 카드(찜/북마크) 클릭 시 상세 리스트 모달 오픈
-   * @param {string} title - 모달 상단에 표시할 한글 제목 (예: 찜)
-   * @param {string} type - DB 조회를 위한 영어 타입 (예: likes, bookmarks)
+   * 📊 통계 카드 클릭 시 리스트 영역 전환 (모달 대신 탭 전환으로 변경)
    */
-  const handleStatClick = async (title, type) => {
-    if (!currentUser) return;
-    
-    setModal({
-      show: true,
-      title: title,
-      list: [],
-      loading: true
-    });
-
-    try {
-      let data = [];
-      
-      // "찜(likes)" 타입일 때는 새로운 listLikedTrips RPC 함수 사용
-      // 이 함수는 좋아요한 여행들의 상세 정보를 반환하고, 간단한 형식으로 변환해서 모달에 전달
-      if (type === 'likes') {
-        const result = await listLikedTrips({ limit: 20 });
-        // RPC에서 반환된 여행 객체들을 간단한 형식으로 변환
-        data = (result.items || []).map(trip => ({
-          id: trip.id,
-          title: trip.title,
-          date: `${trip.start_date} ~ ${trip.end_date}`
-        }));
-      } else {
-        // "북마크(bookmarks)" 타입은 기존 로직 유지
-        data = await getQuickStatsList(currentUser.id, type);
-      }
-      
-      setModal({
-        show: true,
-        title: title,
-        list: data || [],
-        loading: false
-      });
-    } catch (error) {
-      console.error("통계 리스트 조회 실패:", error);
-      setModal({
-        show: true,
-        title: title,
-        list: [],
-        loading: false
-      });
-    }
+  const handleStatClick = (title, type) => {
+    setActiveTab(type); // 탭 상태만 변경하여 하단 리스트 교체
   };
 
   /**
@@ -147,26 +102,21 @@ const MyPage = () => {
           </Col>
           
           <Col lg={8}>
-            {/* 📈 실시간 통계 영역 (클릭 시 모달 열림) */}
+            {/* 📈 실시간 통계 영역 (클릭 시 하단 리스트 전환) */}
             <StatGroup 
               stats={stats} 
               onStatClick={(title, type) => handleStatClick(title, type)} 
             />
             
-            {/* ✈️ 최근 여행 목록 영역 */}
-            <RecentTrips />
+            {/* ✈️ 동적 여행 목록 영역 (RecentTrips 대체) */}
+            <div className="mt-4">
+              {/* key를 통해 탭 변경 시 컴포넌트를 새로 고침하여 데이터를 다시 로드함 */}
+              <ProfileTripList key={activeTab} type={activeTab} />
+            </div>
           </Col>
         </Row>
       </Container>
 
-      {/* 팝업 모달: 상세 찜/북마크 목록 표시 */}
-      <StatDetailModal 
-        show={modal.show} 
-        onHide={() => setModal({ ...modal, show: false })}
-        title={modal.title}
-        data={modal.list}
-        loading={modal.loading}
-      />
       <FloatingActionGroup />
     </div>
     

@@ -51,36 +51,31 @@ function mapRowToCard(row) {
     regions: row.regions ?? [],
     themes: row.themes ?? [],
   };
-}
-
-/**
- * 내 여행 목록 조회 (최신순 + 커서 페이지네이션)
- * @param {{ limit?: number, cursor?: { createdAt: string, id: string } }} params
+}/**
+ * 사용자가 직접 생성한 여행 목록 조회
  */
 export async function listMyTrips(params = {}) {
   const { limit = 10, cursor } = params;
   const context = 'tripsService.listMyTrips';
 
   try {
-    // RPC 호출
     const result = await supabase.rpc('list_my_trips', {
       p_limit: limit,
       p_cursor_created_at: cursor?.createdAt ?? null,
       p_cursor_id: cursor?.id ?? null,
-      // p_user_id는 전달하지 않으면 RPC 내부에서 auth.uid()를 사용함
     });
 
     const rows = unwrap(result, context) || [];
-    
-    // 기존에 만들어둔 매퍼(mapRowToCard)를 재사용해 DTO 변환
     const items = rows.map(mapRowToCard);
 
-    // 다음 페이지 커서 계산
     const last = items[items.length - 1];
-    const nextCursor =
-      last && rows.length === limit
-        ? { createdAt: last.created_at, id: last.id }
-        : null;
+    const nextCursor = last && rows.length === limit
+      ? { 
+          // SQL에서 t.created_at(생성일)을 반환하므로 이를 createdAt으로 사용
+          createdAt: rows[rows.length - 1].created_at, 
+          id: last.id 
+        }
+      : null;
 
     return { items, nextCursor };
   } catch (e) {
@@ -89,6 +84,40 @@ export async function listMyTrips(params = {}) {
     throw appErr;
   }
 }
+/**
+ * 사용자가 북마크한 여행 목록 조회 (신규 RPC list_bookmarked_trips 연동)
+ */
+export async function listBookmarkedTrips(params = {}) {
+  const { limit = 10, cursor } = params;
+  const context = 'tripsService.listBookmarkedTrips';
+
+  try {
+    const result = await supabase.rpc('list_bookmarked_trips', {
+      p_limit: limit,
+      p_cursor_created_at: cursor?.createdAt ?? null,
+      p_cursor_id: cursor?.id ?? null,
+    });
+
+    const rows = unwrap(result, context) || [];
+    const items = rows.map(mapRowToCard);
+
+    const last = items[items.length - 1];
+    const nextCursor = last && rows.length === limit
+      ? { 
+          // SQL에서 정렬 기준인 tb.created_at(북마크일)을 createdAt으로 넘깁니다.
+          createdAt: rows[rows.length - 1].created_at, 
+          id: last.id 
+        }
+      : null;
+
+    return { items, nextCursor };
+  } catch (e) {
+    const appErr = toAppError(e, context);
+    logError(appErr);
+    throw appErr;
+  }
+}
+
 
 /**
  * 공개 Trip 리스트 조회 (RPC 기반)
@@ -237,16 +266,13 @@ export async function deleteTrip({ tripId }) {
 }
 
 /**
- * 사용자가 좋아요한 여행 목록 조회 (최신순 + 커서 페이지네이션)
- * @param {{ limit?: number, cursor?: { createdAt: string, id: string } }} params
- * @returns {Promise<{ items: PublicTripCard[], nextCursor: ({ createdAt: string, id: string } | null) }>}
+ * 사용자가 좋아요(찜)한 여행 목록 조회
  */
 export async function listLikedTrips(params = {}) {
   const { limit = 10, cursor } = params;
   const context = 'tripsService.listLikedTrips';
 
   try {
-    // RPC 호출
     const result = await supabase.rpc('list_liked_trips', {
       p_limit: limit,
       p_cursor_created_at: cursor?.createdAt ?? null,
@@ -254,16 +280,16 @@ export async function listLikedTrips(params = {}) {
     });
 
     const rows = unwrap(result, context) || [];
-    
-    // 기존에 만들어둔 매퍼(mapRowToCard)를 재사용해 DTO 변환
     const items = rows.map(mapRowToCard);
 
-    // 다음 페이지 커서 계산
     const last = items[items.length - 1];
-    const nextCursor =
-      last && rows.length === limit
-        ? { createdAt: last.created_at, id: last.id }
-        : null;
+    const nextCursor = last && rows.length === limit
+      ? { 
+          // SQL에서 tl.created_at(좋아요일)을 반환하므로 이를 createdAt으로 사용
+          createdAt: rows[rows.length - 1].created_at, 
+          id: last.id 
+        }
+      : null;
 
     return { items, nextCursor };
   } catch (e) {
