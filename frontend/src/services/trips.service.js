@@ -214,7 +214,7 @@ export async function adjustTripDates({ tripId, startDate, endDate }) {
   });
   const data = unwrap(result, 'trips.adjustTripDates');
 
-  const id = data?.[0]?.trip_id;
+  const id = data?.[0]?.trip_id ?? tripId;
   return requireRow(
     id,
     'trips.adjustTripDates',

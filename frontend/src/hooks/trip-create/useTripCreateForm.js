@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { formatLocalDate, getTodayString } from '@/utils/date';
-import { getTripMembers, updateTripMemberRole } from '@/services/trip-members.service';
+import { getTripMembers, updateTripMemberRole, upsertTripMember } from '@/services/trip-members.service';
 import { updateTripMeta, deleteTrip, adjustTripDates } from '@/services/trips.service';
 import { getTripDetail } from '@/services/trips.detail.service';
 import { usePlaceSearch } from '@/hooks/usePlaceSearch';
 import { useAddScheduleItem } from '@/hooks/useAddScheduleItem';
 import { toast } from '@/shared/ui/overlay';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 // Consolidated trip-create state and actions.
 
 const addDays = (value, days) => {
@@ -76,17 +77,42 @@ const computeSummary = (items) => {
   };
 };
 
+const daysBetweenInclusive = (startDate, endDate) => {
+  const [sy, sm, sd] = startDate.split('-').map(Number);
+  const [ey, em, ed] = endDate.split('-').map(Number);
+  const start = new Date(sy, sm - 1, sd);
+  const end = new Date(ey, em - 1, ed);
+  const diff = end.getTime() - start.getTime();
+  if (Number.isNaN(diff)) return 1;
+  return Math.max(1, Math.floor(diff / (1000 * 60 * 60 * 24)) + 1);
+};
+
+const buildDaysFromRange = (startDate, endDate, prevDays = []) => {
+  const totalDays = daysBetweenInclusive(startDate, endDate);
+  return Array.from({ length: totalDays }, (_, index) => {
+    const prev = prevDays[index];
+    return {
+      id: prev?.id ?? `day-${index + 1}`,
+      label: `${index + 1}일차`,
+      date: addDays(startDate, index),
+      items: Array.isArray(prev?.items) ? prev.items : [],
+    };
+  });
+};
+
 export const useTripCreateForm = ({ tripId } = {}) => {
+  const { user } = useAuth();
   const today = getTodayString();
   const [form, setForm] = useState({
     title: '',
     startDate: today,
     endDate: addDays(today, 2),
     region: '서울',
-    visibility: 'public',
+    isPublic: true,
   });
   const [days, setDays] = useState([]);
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
+  const [isLoaded, setIsLoaded] = useState(!tripId);
 
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -100,6 +126,7 @@ export const useTripCreateForm = ({ tripId } = {}) => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [members, setMembers] = useState([]);
+  const [viewerRole, setViewerRole] = useState(null);
 
   const currentDay =
     days[currentDayIndex] ??
@@ -134,6 +161,10 @@ export const useTripCreateForm = ({ tripId } = {}) => {
     if (resetDayIndex) {
       setCurrentDayIndex(0);
     }
+    if (summary?.viewer?.role) {
+      setViewerRole(summary.viewer.role);
+    }
+    return { summary, schedule };
   }, [tripId, today]);
 
   useEffect(() => {
@@ -146,6 +177,10 @@ export const useTripCreateForm = ({ tripId } = {}) => {
       } catch (error) {
         if (!isMounted) return;
         console.error('Failed to load trip detail:', error);
+      } finally {
+        if (isMounted) {
+          setIsLoaded(true);
+        }
       }
     };
 
@@ -226,6 +261,18 @@ export const useTripCreateForm = ({ tripId } = {}) => {
     [currentDay.id, addPlaceToServer],
   );
 
+  const getUserDisplayName = useCallback((currentUser) => {
+    if (!currentUser) return 'Member';
+    const meta = currentUser.user_metadata ?? {};
+    return (
+      meta.full_name ||
+      meta.name ||
+      meta.username ||
+      currentUser.email ||
+      'Member'
+    );
+  }, []);
+
   useEffect(() => {
     if (!tripId) return;
     let isMounted = true;
@@ -234,7 +281,34 @@ export const useTripCreateForm = ({ tripId } = {}) => {
       try {
         const result = await getTripMembers({ tripId });
         const list = result?.data?.members ?? [];
-        if (!isMounted || list.length === 0) return;
+        if (!isMounted) return;
+
+        if (list.length === 0 && user) {
+          const role = viewerRole ?? 'owner';
+          setMembers([
+            {
+              id: user.id,
+              name: getUserDisplayName(user),
+              selected: true,
+              isOwner: role === 'owner',
+              isSelf: true,
+              avatarUrl: user.user_metadata?.avatar_url ?? null,
+            },
+          ]);
+          if (viewerRole) {
+            try {
+              await upsertTripMember({
+                tripId,
+                userId: user.id,
+                role,
+              });
+            } catch (error) {
+              console.error('Failed to upsert trip member:', error);
+            }
+          }
+          return;
+        }
+        if (list.length === 0) return;
 
         setMembers(
           list.map((member) => ({
@@ -256,7 +330,7 @@ export const useTripCreateForm = ({ tripId } = {}) => {
     return () => {
       isMounted = false;
     };
-  }, [tripId]);
+  }, [getUserDisplayName, tripId, user, viewerRole]);
 
   const currentMember = useMemo(
     () => members.find((member) => member.isSelf) ?? null,
@@ -266,7 +340,7 @@ export const useTripCreateForm = ({ tripId } = {}) => {
     ? currentMember.isOwner
       ? 'owner'
       : 'editor'
-    : null;
+    : viewerRole ?? null;
   const canManageMembers = currentUserRole === 'owner';
 
   const setFormField = useCallback((field, value) => {
@@ -292,11 +366,22 @@ export const useTripCreateForm = ({ tripId } = {}) => {
 
   const updateCurrentDayDate = useCallback(
     (value) => {
-      setDays((prev) =>
-        prev.map((day, index) =>
+      setDays((prev) => {
+        const nextDays = prev.map((day, index) =>
           index === currentDayIndex ? { ...day, date: value } : day,
-        ),
-      );
+        );
+        const dates = nextDays.map((day) => day.date).filter(Boolean);
+        if (dates.length > 0) {
+          const nextStart = dates.reduce((min, date) => (date < min ? date : min), dates[0]);
+          const nextEnd = dates.reduce((max, date) => (date > max ? date : max), dates[0]);
+          setForm((prevForm) => ({
+            ...prevForm,
+            startDate: nextStart,
+            endDate: nextEnd,
+          }));
+        }
+        return nextDays;
+      });
     },
     [currentDayIndex],
   );
@@ -307,12 +392,11 @@ export const useTripCreateForm = ({ tripId } = {}) => {
       startDate: startDateValue,
       endDate: endDateValue,
     }));
-    setDays((prev) =>
-      prev.map((day, index) => ({
-        ...day,
-        date: addDays(startDateValue, index),
-      })),
-    );
+    setDays((prev) => buildDaysFromRange(startDateValue, endDateValue, prev));
+    setCurrentDayIndex((prev) => {
+      const totalDays = daysBetweenInclusive(startDateValue, endDateValue);
+      return Math.min(prev, totalDays - 1);
+    });
   }, []);
 
   const addDay = useCallback(() => {
@@ -552,11 +636,23 @@ export const useTripCreateForm = ({ tripId } = {}) => {
       title: safeTitle,
       visibility: form.isPublic ? 'public' : 'private',
     });
-    await adjustTripDates({
-      tripId,
-      startDate: form.startDate,
-      endDate: form.endDate,
-    });
+    try {
+      await adjustTripDates({
+        tripId,
+        startDate: form.startDate,
+        endDate: form.endDate,
+      });
+    } catch (error) {
+      const errorCode = error?.detail?.code ?? error?.code ?? null;
+      if (errorCode === '42702') {
+        const detail = await loadTripDetail();
+        const trip = detail?.summary?.trip;
+        if (trip?.startDate === form.startDate && trip?.endDate === form.endDate) {
+          return true;
+        }
+      }
+      throw error;
+    }
     await loadTripDetail();
     return true;
   }, [form.endDate, form.isPublic, form.startDate, form.title, loadTripDetail, tripId]);
@@ -605,6 +701,7 @@ export const useTripCreateForm = ({ tripId } = {}) => {
 
   return {
     form,
+    isLoaded,
     setFormField,
     days,
     currentDayIndex,

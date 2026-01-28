@@ -22,3 +22,17 @@ export async function getTripMembers({ tripId }) {
   });
   return unwrap(result, 'tripMembers.getTripMembers');
 }
+
+export async function upsertTripMember({ tripId, userId, role }) {
+  const result = await supabase
+    .from('trip_members')
+    .upsert(
+      {
+        trip_id: tripId,
+        user_id: userId,
+        role,
+      },
+      { onConflict: 'trip_id,user_id' },
+    );
+  return unwrap(result, 'tripMembers.upsertTripMember');
+}

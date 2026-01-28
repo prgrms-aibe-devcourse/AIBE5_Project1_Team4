@@ -1,17 +1,22 @@
 import '../../pages/trip-create.css';
 import TripCreateFrame from './TripCreateFrame';
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import TripSearchPanel from './TripSearchPanel';
 import TripSidePanel from './TripSidePanel';
 import TripCreateTitle from './TripCreateTitle';
 import TripTopActions from './TripTopActions';
 import TripOwnerTransferModal from './TripOwnerTransferModal';
 import { useTripCreateForm } from '../../hooks/trip-create/useTripCreateForm';
+import { alert, confirm, toast } from '@/shared/ui/overlay';
 
 // ✅ [수정 1] 부모(TripCreate)에게서 onInvite를 받아옵니다.
 const TripCreateView = ({ tripId, onInvite }) => {
+  const navigate = useNavigate();
   const {
     form,
+    isLoaded,
+    days,
     setFormField,
     currentDay,
     currentDayIndex,
@@ -58,12 +63,46 @@ const TripCreateView = ({ tripId, onInvite }) => {
     transferOwner,
     removeMember,
     canManageMembers,
+    isOwner,
+    saveTripChanges,
+    toggleVisibility,
+    deleteTripPlan,
   } = useTripCreateForm({ tripId });
 
   const [transferTarget, setTransferTarget] = useState(null);
   const [removeTarget, setRemoveTarget] = useState(null);
+  const [saveState, setSaveState] = useState(tripId ? 'saved' : 'dirty');
+  const lastSavedSignature = useRef('');
+  const pendingSaveRef = useRef(false);
+  const hasInitialized = useRef(false);
   const transferMember = members.find((member) => member.id === transferTarget);
   const removeMemberTarget = members.find((member) => member.id === removeTarget);
+
+  const signature = useMemo(
+    () => JSON.stringify({ form, days }),
+    [form, days],
+  );
+
+  useEffect(() => {
+    if (!hasInitialized.current) {
+      if (!isLoaded) return;
+      lastSavedSignature.current = signature;
+      setSaveState(tripId ? 'saved' : 'dirty');
+      hasInitialized.current = true;
+      return;
+    }
+
+    if (pendingSaveRef.current) {
+      lastSavedSignature.current = signature;
+      pendingSaveRef.current = false;
+      setSaveState('saved');
+      return;
+    }
+
+    if (signature !== lastSavedSignature.current) {
+      setSaveState('dirty');
+    }
+  }, [signature, tripId, isLoaded]);
 
   const closeMenus = () => {
     setIsDayMenuOpen(false);
@@ -99,6 +138,88 @@ const TripCreateView = ({ tripId, onInvite }) => {
     setCalendarMonth(currentDay.date);
     setIsCalendarOpen((prev) => !prev);
   };
+
+  const handleSave = useCallback(async () => {
+    if (!tripId) return;
+    setSaveState('saving');
+    try {
+      const result = await saveTripChanges();
+      if (result) {
+        pendingSaveRef.current = true;
+        toast('저장되었습니다.', { icon: 'success' });
+      } else {
+        setSaveState('dirty');
+      }
+    } catch (error) {
+      console.error('Failed to save trip:', error);
+      setSaveState('dirty');
+      toast('저장에 실패했습니다.', { icon: 'error' });
+    }
+  }, [saveTripChanges, tripId]);
+
+  const handleToggleVisibility = useCallback(async () => {
+    try {
+      const nextVisibility = await toggleVisibility();
+      pendingSaveRef.current = true;
+      toast(
+        nextVisibility === 'public' ? '공개로 전환했습니다.' : '비공개로 전환했습니다.',
+        { icon: 'success' },
+      );
+    } catch (error) {
+      console.error('Failed to toggle visibility:', error);
+      toast('공개 설정 변경에 실패했습니다.', { icon: 'error' });
+    }
+  }, [toggleVisibility]);
+
+  const handleDelete = useCallback(async () => {
+    if (!tripId) return;
+    if (!isOwner) {
+      await alert({
+        title: '삭제 권한이 없습니다',
+        text: '그룹장만 삭제할 수 있습니다.',
+        icon: 'error',
+      });
+      return;
+    }
+
+    const isConfirmed = await confirm({
+      title: '여행을 삭제할까요?',
+      text: '삭제하면 되돌릴 수 없습니다.',
+      confirmText: '삭제',
+      cancelText: '취소',
+      danger: true,
+    });
+
+    if (!isConfirmed) return;
+
+    try {
+      await deleteTripPlan();
+      toast('삭제되었습니다.', { icon: 'success' });
+      navigate('/');
+    } catch (error) {
+      console.error('Failed to delete trip:', error);
+      await alert({
+        title: '삭제에 실패했습니다',
+        text: '잠시 후 다시 시도해주세요.',
+        icon: 'error',
+      });
+    }
+  }, [deleteTripPlan, isOwner, navigate, tripId]);
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
+        event.preventDefault();
+        void handleSave();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleSave]);
+
+  const saveLabel =
+    saveState === 'saving' ? '저장중' : saveState === 'saved' ? '저장됨' : '저장';
 
   const scheduleProps = {
     items: currentDay.items,
@@ -145,6 +266,11 @@ const TripCreateView = ({ tripId, onInvite }) => {
                     setActivePanelTab('members');
                     setIsPanelOpen(true);
                   }}
+                  onToggleVisibility={handleToggleVisibility}
+                  isPublic={form.isPublic}
+                  onSave={handleSave}
+                  saveLabel={saveLabel}
+                  onDelete={handleDelete}
                 />
               }
               isRangeCalendarOpen={isRangeCalendarOpen}
