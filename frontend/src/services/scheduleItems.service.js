@@ -9,6 +9,7 @@ function requireRow(value, context, message = 'RPC returned empty result') {
 
 function normalizeTime(t) {
   if (t == null) return null;
+  if (typeof t === 'string' && t.trim() === '') return null;
   if (/^\d{2}:\d{2}$/.test(t)) return `${t}:00`;
   return t;
 }

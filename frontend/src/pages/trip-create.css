@@ -373,6 +373,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  min-height: 0;
   transform: translateX(110%);
   opacity: 0;
   pointer-events: none;
@@ -698,6 +699,20 @@
 }
 
 /* List and editor */
+.trip-schedule-editor {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.trip-schedule-list-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
 .trip-panel-list {
   list-style: none;
   padding: 0;
@@ -715,6 +730,7 @@
 
 .trip-panel-item {
   align-items: center;
+  min-width: 0;
 }
 
 .trip-schedule-list {
@@ -728,6 +744,11 @@
   gap: 12px;
   padding-bottom: 12px;
   border-bottom: 1px dashed #f1f3f5;
+}
+
+.trip-schedule-item.is-editing {
+  flex-wrap: wrap;
+  align-items: flex-start;
 }
 
 .trip-schedule-list li:last-child {
@@ -780,17 +801,18 @@
 }
 
 .trip-schedule-time-text {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: #343a40;
   white-space: nowrap;
 }
 
 .trip-schedule-place-text {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: #343a40;
-  word-break: break-word;
+  word-break: keep-all;
+  overflow-wrap: normal;
   white-space: normal;
 }
 
@@ -810,6 +832,9 @@
   padding: 8px 10px;
   font-size: 14px;
   font-family: 'Noto Sans KR', sans-serif;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .trip-schedule-time-input::placeholder,
@@ -822,12 +847,12 @@
   border: 1px solid #e9ecef;
   background: #f8f9fa;
   border-radius: 6px;
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   line-height: 1;
   padding: 0;
   color: #495057;
@@ -845,6 +870,14 @@
   display: inline-flex;
   gap: 6px;
   justify-content: center;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.trip-schedule-item.is-editing .trip-panel-item-actions {
+  width: 100%;
+  justify-content: flex-end;
+  margin-left: 0;
 }
 
 .trip-panel-add {
