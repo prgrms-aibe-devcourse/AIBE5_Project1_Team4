@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect, useRef } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import {
   Map,
   MapMarker,
@@ -15,8 +15,9 @@ const MapContainer = ({
   onRouteData,
   drawSimplePath = false,
   selectedLocation = null,
+  mapRef, // 👈 [수정됨] 부모에게서 리모컨(ref)을 받아옵니다!
 }) => {
-  // 1. 카카오 지도 SDK 로드 (JS API 키를 통해 지도를 실제 호출)
+  // 1. 카카오 지도 SDK 로드
   const [loading, error] = useKakaoMap();
 
   // 2. 경로 계산 훅
@@ -26,10 +27,7 @@ const MapContainer = ({
     loading: isRouteLoading,
   } = useKakaoRoute();
 
-  // 3. 지도 인스턴스 참조
-  const mapRef = useRef(null);
-
-  // 4. 지도 중심 좌표 결정
+  // 3. 지도 중심 좌표 결정
   const center = useMemo(() => {
     // 선택된 위치가 있으면 우선적으로 사용
     if (selectedLocation) {
@@ -57,7 +55,7 @@ const MapContainer = ({
 
   // 선택된 위치가 변경되면 지도 중심을 부드럽게 이동
   useEffect(() => {
-    if (selectedLocation && mapRef.current) {
+    if (selectedLocation && mapRef?.current) {
       const map = mapRef.current;
       const moveLatLng = new window.kakao.maps.LatLng(
         selectedLocation.lat,
@@ -65,14 +63,14 @@ const MapContainer = ({
       );
       map.panTo(moveLatLng);
     }
-  }, [selectedLocation]);
+  }, [selectedLocation, mapRef]);
 
-  //데이터 잘 들어오는지 확인-----------------------------------------------
+  // 데이터 확인 로그
   useEffect(() => {
-    console.group('📍 MapContainer 데이터 유입 확인');
-    console.log('📅 현재 일정 (mapCurrentDayPos):', mapCurrentDayPos);
-    console.log('🔍 검색 장소 (mapSearchPlacePos):', mapSearchPlacePos);
-    console.groupEnd();
+    // console.group('📍 MapContainer 데이터 유입 확인');
+    // console.log('📅 현재 일정 (mapCurrentDayPos):', mapCurrentDayPos);
+    // console.log('🔍 검색 장소 (mapSearchPlacePos):', mapSearchPlacePos);
+    // console.groupEnd();
   }, [mapCurrentDayPos, mapSearchPlacePos]);
   //------------------------------------------------------------------------
 
@@ -123,7 +121,8 @@ const MapContainer = ({
         style={{ width: '100%', height: '100%' }}
         level={6}
         onCreate={(map) => {
-          mapRef.current = map;
+          // 👈 [수정됨] 부모가 준 ref에 지도 객체 연결
+          if (mapRef) mapRef.current = map;
           map.relayout();
         }}
       >
