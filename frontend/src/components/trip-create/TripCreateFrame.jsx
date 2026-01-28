@@ -28,6 +28,7 @@ const TripCreateFrame = ({
           <MapContainer
               mapCurrentDayPos = {mapCurrentDayPos}
               mapSearchPlacePos = {mapSearchPlacePos}
+              drawSimplePath={true}
           />
         </div>
 
