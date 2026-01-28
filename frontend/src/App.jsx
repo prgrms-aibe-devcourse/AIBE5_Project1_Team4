@@ -6,8 +6,9 @@ import { Route, Routes } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import TripsPage from './pages/TripsPage';
 import MyPage from './pages/MyPage';
-import BookmarksPage from './pages/BookmarksPage'; // ✅ 1. 페이지 임포트 추가
+import BookmarksPage from './pages/BookmarksPage'; 
 import LikedListPage from './pages/LikedListPage';
+import TripAccept from './pages/TripAccept'; // ✅ 1. 초대 수락 페이지 임포트 추가
 
 // 기존 개발용 컴포넌트
 import AuthCallbackPage from './pages/AuthCallbackPage';
@@ -29,16 +30,18 @@ function App() {
           {/* 1. 메인 기능 라우트 */}
           <Route index element={<HomePage />} />
           <Route path="/trips" element={<TripsPage />} />
-          {/* ✅ 2. 북마크 전용 라우트 추가 */}
           <Route path="/trips/bookmarks" element={<BookmarksPage />} />
           <Route path="/trips/likedList" element={<LikedListPage />} />
-
+          {/* TripAceept 페이지 라우트 */}
+          <Route path="/invite" element={<TripAccept />} /> 
           {/* TripCreate 페이지 라우트 */}
           <Route path="/trips/create" element={<TripCreateEntry />} />
           <Route path="/trips/:id/edit" element={<TripCreate />} />
+          
           {/* TripDetailPage 페이지 라우트 */}
           <Route path="/trips/:id" element={<TripDetailPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
+          
           {/* MyPage 페이지 라우트*/}
           <Route path="/me" element={<MyPage />} />
 
@@ -50,7 +53,7 @@ function App() {
               {/* 개발용 UI 쇼룸 */}
               <Route path="/preview" element={<UiPreview />} />
 
-              {/* Supabase Health Checkl */}
+              {/* Supabase Health Check */}
               <Route path="/health" element={<Health />} />
 
               <Route path="/search-preview" element={<ExplorePreviewPage />} />
