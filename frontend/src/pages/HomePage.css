@@ -169,16 +169,18 @@
   gap: 0.5rem;
 }
 
-/* CTA Section */
+/* CTA Section - ⭐ 여기만 바꿨습니다! */
 .home-cta {
   margin-top: 3rem;
   padding: 4rem 2rem;
   border-radius: 16px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  /* ✨ 하늘색 그라데이션 적용 */
+  background: linear-gradient(135deg, #89c4f4 0%, #4a90e2 100%);
   text-align: center;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(118, 75, 162, 0.3);
+  /* 그림자 색상도 파란색 계열로 맞춰서 자연스럽게 */
+  box-shadow: 0 10px 30px rgba(74, 144, 226, 0.3);
 }
 
 .home-cta__content {
@@ -196,7 +198,8 @@
   display: inline-block;
   padding: 0.875rem 2.5rem;
   background: white;
-  color: #667eea;
+  /* 버튼 텍스트 색상을 배경의 파란색과 어울리게 변경 */
+  color: #4a90e2; 
   font-weight: 600;
   border-radius: 50px;
   text-decoration: none;
@@ -209,7 +212,8 @@
 .home-cta__btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-  color: #764ba2;
+  /* 호버 시 버튼 텍스트 색상을 조금 더 진하게 */
+  color: #357abd;
 }
 
 .home-cta__btn:disabled {
