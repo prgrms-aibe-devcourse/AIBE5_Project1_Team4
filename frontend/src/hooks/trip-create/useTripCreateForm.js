@@ -3,6 +3,9 @@ import { formatLocalDate, getTodayString } from '@/utils/date';
 import { getTripMembers, updateTripMemberRole } from '@/services/trip-members.service';
 import { updateTripMeta, deleteTrip, adjustTripDates } from '@/services/trips.service';
 import { getTripDetail } from '@/services/trips.detail.service';
+import { usePlaceSearch } from '@/hooks/usePlaceSearch';
+import { useAddScheduleItem } from '@/hooks/useAddScheduleItem';
+import { toast } from '@/shared/ui/overlay';
 // Consolidated trip-create state and actions.
 
 const addDays = (value, days) => {
@@ -108,7 +111,7 @@ export const useTripCreateForm = ({ tripId } = {}) => {
     };
   const todayString = today;
 
-  const loadTripDetail = useCallback(async () => {
+  const loadTripDetail = useCallback(async ({ resetDayIndex = true } = {}) => {
     if (!tripId) return;
     const { summary, schedule } = await getTripDetail(tripId);
 
@@ -128,7 +131,9 @@ export const useTripCreateForm = ({ tripId } = {}) => {
       trip?.startDate ?? today,
     );
     setDays(nextDays);
-    setCurrentDayIndex(0);
+    if (resetDayIndex) {
+      setCurrentDayIndex(0);
+    }
   }, [tripId, today]);
 
   useEffect(() => {
@@ -171,7 +176,55 @@ export const useTripCreateForm = ({ tripId } = {}) => {
     return { year, month, cells: [...blanks, ...dayNumbers] };
   }, [form.startDate, rangeCalendarMonth]);
 
-  const searchResults = useMemo(() => [], []);
+  // 장소 검색
+  const {
+    places: searchResults,
+    isLoading: isSearchLoading,
+    canLoadMore: canSearchLoadMore,
+    loadMore: searchLoadMore,
+  } = usePlaceSearch(searchQuery, { enabled: isSearchOpen });
+
+  // 일정에 장소 추가
+  // 전략: optimistic insert (즉시 로컬 반영) + server reload (데이터 일관성)
+  const {
+    add: addPlaceToServer,
+    isAdding: isAddingPlace,
+    addingPlaceId,
+  } = useAddScheduleItem(currentDay.id, {
+    onSuccess: (_result, place) => {
+      // 1) 로컬 상태에 즉시 반영 (optimistic)
+      addScheduleItem(place);
+      toast(`${place.name} 추가됨`, { icon: 'success' });
+      // 2) 서버에서 최신 데이터 갱신 (현재 day 유지)
+      loadTripDetail({ resetDayIndex: false }).catch(() => {});
+    },
+    onError: (error, place) => {
+      const kind = error?.kind ?? 'unknown';
+      const messages = {
+        auth: '로그인이 필요합니다.',
+        forbidden: '편집 권한이 없습니다.',
+        validation: '잘못된 요청입니다.',
+      };
+      toast(messages[kind] ?? `${place.name} 추가에 실패했습니다.`, { icon: 'error' });
+    },
+  });
+
+  // tripDayId 유효성 검증을 포함한 래퍼
+  const isValidUuid = (value) =>
+    typeof value === 'string' &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+
+  const addPlaceToSchedule = useCallback(
+    (place, options) => {
+      if (!isValidUuid(currentDay.id)) {
+        console.warn('[addPlaceToSchedule] invalid tripDayId:', currentDay.id);
+        toast('일정을 먼저 저장해주세요.', { icon: 'error' });
+        return null;
+      }
+      return addPlaceToServer(place, options);
+    },
+    [currentDay.id, addPlaceToServer],
+  );
 
   useEffect(() => {
     if (!tripId) return;
@@ -543,8 +596,8 @@ export const useTripCreateForm = ({ tripId } = {}) => {
     return (searchResults || [])
       .map(place => ({
         ...place,
-        lat: Number(place.lat),
-        lng: Number(place.lng)
+        lat: Number(place.latitude ?? place.lat),
+        lng: Number(place.longitude ?? place.lng),
       }))
       .filter(place => !isNaN(place.lat) && !isNaN(place.lng));
   }, [searchResults]);
@@ -587,7 +640,13 @@ export const useTripCreateForm = ({ tripId } = {}) => {
     searchQuery,
     setSearchQuery,
     searchResults,
+    isSearchLoading,
+    canSearchLoadMore,
+    searchLoadMore,
     addScheduleItem,
+    addPlaceToSchedule,
+    isAddingPlace,
+    addingPlaceId,
     updateScheduleItem,
     removeScheduleItem,
     members,
