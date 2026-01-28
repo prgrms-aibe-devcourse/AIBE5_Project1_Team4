@@ -5,6 +5,7 @@ export function usePublicTrips({ q = '', limit = 20, sort = 'latest' } = {}) {
   const [items, setItems] = useState([]);
   const [cursor, setCursor] = useState(null);
   const [hasMore, setHasMore] = useState(true);
+  const [popularLimit, setPopularLimit] = useState(limit);
 
   const [status, setStatus] = useState('idle'); // idle | loading | success | error
   const [error, setError] = useState(null);
@@ -23,7 +24,12 @@ export function usePublicTrips({ q = '', limit = 20, sort = 'latest' } = {}) {
       const res = await listPublicTrips({ q, limit, cursor: null, sort });
       setItems(res.items);
       setCursor(res.nextCursor);
-      setHasMore(!!res.nextCursor);
+      setPopularLimit(limit);
+      if (sort === 'popular') {
+        setHasMore(res.items.length === limit && limit < 50);
+      } else {
+        setHasMore(!!res.nextCursor);
+      }
       setStatus('success');
     } catch (e) {
       setError(e);
@@ -44,10 +50,24 @@ export function usePublicTrips({ q = '', limit = 20, sort = 'latest' } = {}) {
     setStatus((prev) => (prev === 'idle' ? 'loading' : prev));
 
     try {
-      const res = await listPublicTrips({ q, limit, cursor, sort });
-      setItems((prev) => [...prev, ...res.items]);
-      setCursor(res.nextCursor);
-      setHasMore(!!res.nextCursor);
+      if (sort === 'popular') {
+        const nextLimit = Math.min(popularLimit + limit, 50);
+        if (nextLimit === popularLimit) {
+          setHasMore(false);
+          setStatus('success');
+          return;
+        }
+
+        const res = await listPublicTrips({ q, limit: nextLimit, cursor: null, sort });
+        setItems(res.items);
+        setPopularLimit(nextLimit);
+        setHasMore(res.items.length === nextLimit && nextLimit < 50);
+      } else {
+        const res = await listPublicTrips({ q, limit, cursor, sort });
+        setItems((prev) => [...prev, ...res.items]);
+        setCursor(res.nextCursor);
+        setHasMore(!!res.nextCursor);
+      }
       setStatus('success');
     } catch (e) {
       setError(e);
@@ -55,7 +75,7 @@ export function usePublicTrips({ q = '', limit = 20, sort = 'latest' } = {}) {
     } finally {
       loadingRef.current = false;
     }
-  }, [q, limit, cursor, hasMore, sort]);
+  }, [q, limit, cursor, hasMore, sort, popularLimit]);
 
   // q 또는 sort 변경 시 자동 새로고침
   useEffect(() => {
