@@ -7,6 +7,10 @@ const TripSearchPanel = ({
   dayLabel,
   onQueryChange,
   onSelectPlace,
+  isLoading,
+  canLoadMore,
+  onLoadMore,
+  addingPlaceId,
 }) => {
   return (
     <aside className={`trip-map-search ${isOpen ? 'is-open' : ''}`}>
@@ -41,27 +45,60 @@ const TripSearchPanel = ({
         </div>
       </div>
       <ul className="trip-search-list">
-        {results.map((item, index) => (
-          <li key={`${item.name}-${index}`} className="trip-search-item">
-            <div>
-              <div className="trip-search-title">{item.name}</div>
-            </div>
-            {item.selected ? (
-              <span className="trip-search-check" aria-label="추가됨">
-                ✓
-              </span>
-            ) : (
-              <button
-                className="trip-search-add"
-                type="button"
-                onClick={() => onSelectPlace(item.name)}
-              >
-                + {dayLabel}
-              </button>
-            )}
-          </li>
-        ))}
+        {results.map((item) => {
+          const placeId = item.provider_place_id;
+          const isThisAdding = addingPlaceId === placeId;
+
+          return (
+            <li key={placeId} className="trip-search-item">
+              <div>
+                <div className="trip-search-title">{item.name}</div>
+                {(item.road_address || item.address) && (
+                  <div className="trip-search-address">
+                    {item.road_address || item.address}
+                  </div>
+                )}
+                {item.category && (
+                  <div className="trip-search-category">{item.category}</div>
+                )}
+              </div>
+              {item.selected ? (
+                <span className="trip-search-check" aria-label="추가됨">
+                  ✓
+                </span>
+              ) : (
+                <button
+                  className="trip-search-add"
+                  type="button"
+                  disabled={!!addingPlaceId}
+                  onClick={() => onSelectPlace(item)}
+                >
+                  {isThisAdding ? '추가 중...' : `+ ${dayLabel}`}
+                </button>
+              )}
+            </li>
+          );
+        })}
       </ul>
+
+      {isLoading && results.length === 0 && (
+        <div className="trip-search-status">검색 중...</div>
+      )}
+
+      {!isLoading && query?.trim() && results.length === 0 && (
+        <div className="trip-search-status">검색 결과가 없습니다.</div>
+      )}
+
+      {canLoadMore && (
+        <button
+          className="trip-search-more"
+          type="button"
+          disabled={isLoading}
+          onClick={onLoadMore}
+        >
+          {isLoading ? '불러오는 중...' : '더보기'}
+        </button>
+      )}
     </aside>
   );
 };

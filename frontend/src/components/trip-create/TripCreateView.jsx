@@ -44,7 +44,13 @@ const TripCreateView = ({ tripId, onInvite }) => {
     searchQuery,
     setSearchQuery,
     searchResults,
+    isSearchLoading,
+    canSearchLoadMore,
+    searchLoadMore,
     addScheduleItem,
+    addPlaceToSchedule,
+    isAddingPlace,
+    addingPlaceId,
     updateScheduleItem,
     removeScheduleItem,
     members,
@@ -168,7 +174,11 @@ const TripCreateView = ({ tripId, onInvite }) => {
               results={searchResults}
               dayLabel={currentDay.label}
               onQueryChange={setSearchQuery}
-              onSelectPlace={(place) => addScheduleItem(place)}
+              onSelectPlace={(place) => addPlaceToSchedule(place)}
+              isLoading={isSearchLoading}
+              canLoadMore={canSearchLoadMore}
+              onLoadMore={searchLoadMore}
+              addingPlaceId={addingPlaceId}
             />
           }
           sidePanel={({ isOpen, onClose }) => (
