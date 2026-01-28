@@ -61,7 +61,7 @@ const ProfileTripList = ({ type }) => {
    */
   const handleMoreClick = () => {
     if (type === 'trips') {
-      navigate('/trips/myList');
+      navigate('/trips/myTrips');
     } else if (type === 'likes') {
       navigate('/trips/likedList');
     } else if (type === 'bookmarks') {
