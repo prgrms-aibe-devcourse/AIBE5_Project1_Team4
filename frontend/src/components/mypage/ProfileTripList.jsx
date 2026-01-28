@@ -10,6 +10,16 @@ const ProfileTripList = ({ type }) => {
   const [cursor, setCursor] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // 🏷️ 타입에 따른 제목 매핑 함수
+  const getTitle = () => {
+    switch (type) {
+      case 'trips': return '최근 나의 여행';
+      case 'likes': return '내가 찜한 여행';
+      case 'bookmarks': return '북마크 리스트';
+      default: return '';
+    }
+  };
+
   // 🗓️ 날짜 포맷팅 함수
   const formatDateRange = (start, end) => {
     if (!start || !end) return '날짜 정보 없음';
@@ -22,7 +32,7 @@ const ProfileTripList = ({ type }) => {
       const params = { limit: 5, cursor: isMore ? cursor : null };
 
       let result;
-      // ✅ 타입별 분기 처리 완성
+      // ✅ 서비스 함수 호출 분기 처리
       if (type === 'trips') {
         result = await listMyTrips(params);
       } else if (type === 'likes') {
@@ -47,15 +57,15 @@ const ProfileTripList = ({ type }) => {
   }, [type]);
 
   /**
-   * ✅ '더보기' 클릭 시 이동할 경로 설정 (trips 케이스 포함)
+   * ✅ '더보기' 클릭 시 이동할 경로 설정
    */
   const handleMoreClick = () => {
     if (type === 'trips') {
-      navigate('/trips/myList'); // 🚀 내 여행 전체 목록 페이지 (제작 예정)
+      navigate('/trips/myList');
     } else if (type === 'likes') {
-      navigate('/trips/likedList'); // 찜한 목록 페이지
+      navigate('/trips/likedList');
     } else if (type === 'bookmarks') {
-      navigate('/trips/bookmarks'); // 북마크 목록 페이지
+      navigate('/trips/bookmarks');
     }
   };
 
@@ -69,11 +79,14 @@ const ProfileTripList = ({ type }) => {
 
   return (
     <div>
-      <div className="d-flex justify-content-end mb-2">
+      {/* ✅ [개선] 제목과 더보기 버튼을 한 줄(Flexbox)로 정렬 */}
+      <div className="d-flex justify-content-between align-items-center mb-3 px-1">
+        <h5 className="fw-bold mb-0">{getTitle()}</h5>
+        
         {(type === 'trips' || type === 'likes' || type === 'bookmarks') && (
           <Button 
             variant="link" 
-            className="text-decoration-none text-muted p-0 me-1 small d-flex align-items-center"
+            className="text-decoration-none text-muted p-0 small d-flex align-items-center"
             onClick={handleMoreClick}
           >
             더보기 <Plus size={14} className="ms-1" />
@@ -87,7 +100,6 @@ const ProfileTripList = ({ type }) => {
             key={item.id} 
             className="border-0 shadow-sm mb-3" 
             style={{ cursor: 'pointer' }}
-            // ✅ 각 여행 클릭 시 상세 페이지로 이동
             onClick={() => navigate(`/trips/${item.id}`)} 
           >
             <Card.Body className="d-flex align-items-center py-3">
@@ -99,7 +111,9 @@ const ProfileTripList = ({ type }) => {
                 <div className="fw-bold fs-6 text-dark">{item.title}</div>
                 <div className="text-muted small d-flex align-items-center mt-1">
                   <Calendar size={14} className="me-1" />
-                  {item.date || formatDateRange(item.start_date, item.end_date)}
+                  {/* description에 저장된 요약 정보나 날짜 범위를 표시 */}
+                  {formatDateRange(item.start_date, item.end_date)}
+                  {/* ✅ 지역 배지 표시 로직 */}
                   {item.regions && item.regions.length > 0 && (
                     <Badge bg="light" text="dark" className="ms-2 fw-normal border">
                       {item.regions[0]}
@@ -118,6 +132,7 @@ const ProfileTripList = ({ type }) => {
         </div>
       )}
 
+      {/* ✅ 커서 기반 추가 로드 버튼 */}
       {cursor && (
         <div className="text-center mt-2">
           <Button 

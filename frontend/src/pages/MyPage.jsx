@@ -110,9 +110,6 @@ const MyPage = () => {
             
             {/* ✈️ 동적 여행 목록 영역 (RecentTrips 대체) */}
             <div className="mt-4">
-              <h5 className="fw-bold mb-3 px-1">
-                {activeTab === 'trips' ? '최근 나의 여행' : activeTab === 'likes' ? '내가 찜한 여행' : '북마크 리스트'}
-              </h5>
               {/* key를 통해 탭 변경 시 컴포넌트를 새로 고침하여 데이터를 다시 로드함 */}
               <ProfileTripList key={activeTab} type={activeTab} />
             </div>
