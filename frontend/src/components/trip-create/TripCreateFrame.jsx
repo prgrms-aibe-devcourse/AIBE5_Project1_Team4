@@ -14,7 +14,8 @@ const TripCreateFrame = ({
   currentDay,
   searchResults,
   mapCurrentDayPos,
-  mapSearchPlacePos
+  mapSearchPlacePos,
+  selectedLocation,
 }) => {
   return (
     <section className="trip-create-map">
@@ -29,6 +30,7 @@ const TripCreateFrame = ({
               mapCurrentDayPos = {mapCurrentDayPos}
               mapSearchPlacePos = {mapSearchPlacePos}
               drawSimplePath={true}
+              selectedLocation={selectedLocation}
           />
         </div>
 
