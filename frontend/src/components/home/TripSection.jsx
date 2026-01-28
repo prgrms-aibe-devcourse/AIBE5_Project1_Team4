@@ -72,8 +72,6 @@ const TripSection = ({
                   onCardClick={onCardClick}
                   onLikeClick={onLike}
                   onBookmarkClick={onBookmark}
-                  isLiked={trip.isLiked || false}
-                  isBookmarked={trip.isBookmarked || false}
                 />
               </div>
             ))

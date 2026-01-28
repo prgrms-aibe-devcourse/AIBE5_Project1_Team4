@@ -18,8 +18,6 @@ const TripCard = ({
   onCardClick, // 카드 클릭 시 호출되는 콜백 함수
   onLikeClick, // 좋아요 버튼 클릭 시 호출되는 콜백 함수
   onBookmarkClick, // 북마크 버튼 클릭 시 호출되는 콜백 함수
-  isLiked = false, // 현재 여행이 좋아요 상태인지 표시
-  isBookmarked = false, // 현재 여행이 북마크 상태인지 표시
 }) => {
   // 필수 데이터가 없으면 아무것도 렌더링하지 않음
   if (!trip) return null;
@@ -37,6 +35,10 @@ const TripCard = ({
     bookmark_count = 0, // 북마크 개수
     member_count = 1, // 여행 참가자 수
     created_at, // 여행 생성 시간
+
+    // 통일: 좋아요/북마크 상태는 trip 안의 snake_case만 사용
+    is_liked = false,
+    is_bookmarked = false,
   } = trip;
 
   // 첫 번째 지역 표시
@@ -45,6 +47,9 @@ const TripCard = ({
   // 여행 기간 계산 및 포맷팅
   // 예: "2월 15 - 2월 18"
   const tripDuration = formatDateRangeWithLocale(start_date, end_date);
+
+  // 디버그 로그 (필요 없으면 나중에 삭제)
+  // console.log('[TripCard]', { id, is_liked, is_bookmarked, like_count, bookmark_count });
 
   return (
     // Bootstrap Card: 섀도우 효과와 함께 카드 레이아웃
@@ -84,8 +89,8 @@ const TripCard = ({
           >
             <Heart
               size={18}
-              fill={isLiked ? '#e74c3c' : 'none'} // 좋아요 상태에 따라 채움 여부
-              color={isLiked ? '#e74c3c' : '#999'} // 색상 변경
+              fill={is_liked ? '#e74c3c' : 'none'} // 좋아요 상태에 따라 채움 여부
+              color={is_liked ? '#e74c3c' : '#999'} // 색상 변경
               strokeWidth={2}
             />
           </Button>
@@ -102,8 +107,8 @@ const TripCard = ({
           >
             <Bookmark
               size={18}
-              fill={isBookmarked ? '#667eea' : 'none'} // 북마크 상태에 따라 채움 여부
-              color={isBookmarked ? '#667eea' : '#999'} // 색상 변경
+              fill={is_bookmarked ? '#667eea' : 'none'} // 북마크 상태에 따라 채움 여부
+              color={is_bookmarked ? '#667eea' : '#999'} // 색상 변경
               strokeWidth={2}
             />
           </Button>

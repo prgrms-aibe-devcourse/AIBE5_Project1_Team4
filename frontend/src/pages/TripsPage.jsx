@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Container, Row, Col, Spinner, ButtonGroup, Button } from 'react-bootstrap';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Clock, TrendingUp } from 'lucide-react';
@@ -8,7 +8,7 @@ import TripFilterPanel from '@/components/trip/TripFilterPanel';
 import { usePublicTrips } from '@/hooks/trips/usePublicTrips';
 import { useAiSuggest } from '@/hooks/useAiSuggest';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
-import { getFilterOptions } from '@/services/trips.service';
+import { getFilterOptions, toggleTripLike } from '@/services/trips.service';
 import FloatingActionGroup from '@/components/common/FloatingActionGroup';
 import './TripsPage.css';
 
@@ -18,11 +18,18 @@ export default function TripsPage() {
 
   // 1. URL에서 검색어('q')와 정렬 기준('sort') 가져오기
   const urlQuery = searchParams.get('q') || '';
-  const urlSort = searchParams.get('sort'); // ✅ [추가] URL에서 sort 값 읽기
+  const urlSort = searchParams.get('sort'); // URL에서 sort 값 읽기
 
   // 입력 상태
   const [inputValue, setInputValue] = useState(urlQuery);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [likeOverride, setLikeOverride] = useState({});
+
+  // 좋아요 연타/응답 꼬임 방지용 pending
+  const [pendingLike, setPendingLike] = useState({}); // { [tripId]: true/false }
+
+  // 마지막 요청 토큰(응답 역전 방지)
+  const likeReqSeq = useRef({}); // { [tripId]: number }
 
   // URL 쿼리가 변경되면 입력값도 동기화
   useEffect(() => {
@@ -32,14 +39,14 @@ export default function TripsPage() {
   const searchQuery = urlQuery;
 
   // 2. 정렬 상태 초기화 (URL 값이 있으면 그걸 쓰고, 없으면 'latest')
-  const [sortBy, setSortBy] = useState(urlSort || 'latest'); // ✅ [수정] 초기값 설정
+  const [sortBy, setSortBy] = useState(urlSort || 'latest'); // 초기값 설정
 
   // 3. URL의 sort 파라미터가 바뀌면 상태도 업데이트 (필수)
   useEffect(() => {
     if (urlSort) {
       setSortBy(urlSort);
     }
-  }, [urlSort]); // ✅ [추가] URL 변경 감지
+  }, [urlSort]); // URL 변경 감지
 
   // 필터 상태
   const [selectedRegion, setSelectedRegion] = useState('전체');
@@ -128,9 +135,69 @@ export default function TripsPage() {
     navigate(`/trips/${id}`);
   };
 
-  // 좋아요/북마크는 나중에 구현 (placeholder)
-  const handleLike = (id) => {
-    console.log('Like:', id);
+  // 좋아요 override를 trip에 합쳐서 카드에 내려주는 함수
+  // likeOverride[trip.id]가 { is_liked, like_count } 형태라서 그대로 덮어쓰면 됨
+  const mergeTripLike = (trip) => {
+    const likeRow = likeOverride[trip.id];
+    if (!likeRow) return trip;
+    return { ...trip, ...likeRow };
+  };
+
+  // 좋아요: UI 즉시 반영(낙관적) + 연타 방지 + 실패 롤백 + 응답 역전 방지
+  const handleLike = async (id) => {
+    // 이미 요청중이면 무시(연타 방지)
+    if (pendingLike[id]) return;
+
+    // 현재 화면에 보여줄 "기준값" 계산:
+    // - override가 있으면 그 값이 최신(우리 UI 기준)
+    // - 없으면 items에서 값을 찾아서 사용
+    const baseTrip = items.find((t) => t.id === id);
+    const baseLiked = Boolean(likeOverride[id]?.is_liked ?? baseTrip?.is_liked);
+    const baseCount = Number(
+      likeOverride[id]?.like_count ?? baseTrip?.like_count ?? 0,
+    );
+
+    // 1) 낙관적 업데이트(즉시 UI 반영)
+    const optimisticLiked = !baseLiked;
+    const optimisticCount = baseCount + (baseLiked ? -1 : 1);
+
+    setLikeOverride((prev) => ({
+      ...prev,
+      [id]: { is_liked: optimisticLiked, like_count: optimisticCount },
+    }));
+
+    // pending + 요청 토큰
+    setPendingLike((prev) => ({ ...prev, [id]: true }));
+    const seq = (likeReqSeq.current[id] ?? 0) + 1;
+    likeReqSeq.current[id] = seq;
+
+    // 2) 서버 반영
+    try {
+      const row = await toggleTripLike(id); // { is_liked, like_count }
+
+      // 응답 역전 방지: 가장 최신 요청만 반영
+      if (likeReqSeq.current[id] !== seq) return;
+
+      setLikeOverride((prev) => ({
+        ...prev,
+        [id]: row,
+      }));
+    } catch (e) {
+      console.error('[TripsPage] toggleTripLike error:', e);
+
+      // 실패 시 롤백 (원래 값으로 되돌림)
+      if (likeReqSeq.current[id] === seq) {
+        setLikeOverride((prev) => ({
+          ...prev,
+          [id]: { is_liked: baseLiked, like_count: baseCount },
+        }));
+      }
+    } finally {
+      // pending 해제
+      if (likeReqSeq.current[id] === seq) {
+        setPendingLike((prev) => ({ ...prev, [id]: false }));
+      }
+    }
   };
 
   const handleBookmark = (id) => {
@@ -192,15 +259,13 @@ export default function TripsPage() {
           />
         </div>
 
-        {/* 결과 헤더: 카운트 + 정렬 */}
+        {/* 결과 헤더: 정렬 */}
         <div className="trips-page__result-header d-flex justify-content-end mb-3">
-
           <ButtonGroup size="sm" className="trips-page__sort">
             <Button
               variant={sortBy === 'latest' ? 'primary' : 'outline-secondary'}
               onClick={() => {
                 setSortBy('latest');
-                // 필요 시 URL 업데이트: navigate(`/trips?sort=latest&q=${encodeURIComponent(searchQuery)}`)
               }}
               className="d-flex align-items-center gap-1"
             >
@@ -211,7 +276,6 @@ export default function TripsPage() {
               variant={sortBy === 'popular' ? 'primary' : 'outline-secondary'}
               onClick={() => {
                 setSortBy('popular');
-                // 필요 시 URL 업데이트: navigate(`/trips?sort=popular&q=${encodeURIComponent(searchQuery)}`)
               }}
               className="d-flex align-items-center gap-1"
             >
@@ -238,12 +302,10 @@ export default function TripsPage() {
             {filteredItems.map((trip) => (
               <Col key={trip.id}>
                 <TripCard
-                  trip={trip}
+                  trip={mergeTripLike(trip)}
                   onCardClick={handleCardClick}
                   onLikeClick={handleLike}
                   onBookmarkClick={handleBookmark}
-                  isLiked={trip.isLiked}
-                  isBookmarked={trip.isBookmarked}
                 />
               </Col>
             ))}

@@ -88,9 +88,12 @@
 /* Slider */
 .home-section__slider {
   position: relative;
+  isolation: isolate;
 }
 
 .home-section__cards {
+  position: relative;
+  z-index: 20;
   display: flex;
   gap: 1rem;
   overflow-x: auto;
@@ -123,7 +126,7 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 10;
+  z-index: 30;
   transition: all 0.2s;
 }
 
@@ -133,11 +136,11 @@
 }
 
 .home-section__nav--left {
-  left: -20px;
+  left: 0px;
 }
 
 .home-section__nav--right {
-  right: -20px;
+  right: 0px;
 }
 
 .home-section__loading,

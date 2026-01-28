@@ -50,6 +50,8 @@ function mapRowToCard(row) {
     member_count: Number(row.member_count) || 1,
     regions: row.regions ?? [],
     themes: row.themes ?? [],
+
+    is_liked: Boolean(row.is_liked),
   };
 }/**
  * 사용자가 직접 생성한 여행 목록 조회
@@ -66,6 +68,8 @@ export async function listMyTrips(params = {}) {
     });
 
     const rows = unwrap(result, context) || [];
+
+    // 기존에 만들어둔 매퍼(mapRowToCard)를 재사용해 DTO 변환
     const items = rows.map(mapRowToCard);
 
     const last = items[items.length - 1];
@@ -119,11 +123,6 @@ export async function listBookmarkedTrips(params = {}) {
 }
 
 
-/**
- * 공개 Trip 리스트 조회 (RPC 기반)
- * @param {ListPublicTripsParams} params
- * @returns {Promise<{ items: PublicTripCard[], nextCursor: ({ createdAt: string, id: string } | null) }>}
- */
 /**
  * 필터 옵션 (지역/테마) 조회 - 여행 수 많은 순
  */
@@ -280,6 +279,8 @@ export async function listLikedTrips(params = {}) {
     });
 
     const rows = unwrap(result, context) || [];
+
+    // 기존에 만들어둔 매퍼(mapRowToCard)를 재사용해 DTO 변환
     const items = rows.map(mapRowToCard);
 
     const last = items[items.length - 1];
@@ -292,6 +293,44 @@ export async function listLikedTrips(params = {}) {
       : null;
 
     return { items, nextCursor };
+  } catch (e) {
+    const appErr = toAppError(e, context);
+    logError(appErr);
+    throw appErr;
+  }
+}
+
+export async function toggleTripLike(tripId) {
+  const context = 'tripsService.toggleTripLike';
+
+  try {
+    const result = await supabase.rpc('toggle_trip_like', {
+      p_trip_id: tripId,
+    });
+
+    // 1) RPC 자체 에러를 제일 먼저 까보기 (RLS/권한/제약조건 에러가 여기로 옴)
+    if (result?.error) {
+      console.error('[toggleTripLike] rpc error=', result.error);
+      throw result.error;
+    }
+
+    // 2) 여기서부터 기존 로직 그대로
+    const data = unwrap(result, context);
+    const row = Array.isArray(data) ? data[0] : data;
+
+    requireRow(row, context, 'toggle_trip_like returned empty result');
+    console.log('[toggleTripLike] row=', row);
+
+    const rawIsLiked =
+      row.is_liked ?? row.isLiked ?? row.liked ?? row.result_is_liked;
+
+    const rawLikeCount =
+      row.like_count ?? row.likeCount ?? row.likes_count ?? row.result_like_count;
+
+    return {
+      is_liked: Boolean(rawIsLiked),
+      like_count: Number(rawLikeCount) || 0,
+    };
   } catch (e) {
     const appErr = toAppError(e, context);
     logError(appErr);

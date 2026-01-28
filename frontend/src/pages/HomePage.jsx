@@ -3,7 +3,7 @@ import { Container, Row, Col, Badge } from 'react-bootstrap';
 import { useLocation, useNavigate } from 'react-router-dom';
 import SearchBar from '@/components/SearchBar';
 import { useAiSuggest } from '@/hooks/useAiSuggest';
-import { listPublicTrips } from '@/services/trips.service';
+import { listPublicTrips, toggleTripLike } from '@/services/trips.service';
 import TripSection from '@/components/home/TripSection';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { setReturnToIfEmpty } from '@/features/auth/auth.feature';
@@ -48,10 +48,20 @@ export default function HomePage() {
           listPublicTrips({ limit: 8, sort: 'popular' }),
         ]);
 
+        const normalizeTrips = (items = []) =>
+          items.map((t) => ({
+            ...t,
+            is_liked: Boolean(t.is_liked ?? t.isLiked),
+            is_bookmarked: Boolean(t.is_bookmarked ?? t.isBookmarked),
+          }));
+
+        const latestItems = normalizeTrips(latestResult.items || []);
+        const popularItems = normalizeTrips(popularResult.items || []);
+
         // 받아온 데이터 상태 업데이트
-        setRecentTrips(latestResult.items || []);
-        setPopularTrips(popularResult.items || []);
-        setRecommendTrips(popularResult.items || []); // 추천 로직 개발 전까지 인기순 사용
+        setRecentTrips(latestItems);
+        setPopularTrips(popularItems);
+        setRecommendTrips(popularItems); // 추천 로직 개발 전까지 인기순 사용
       } catch (error) {
         console.error('Failed to load home trips:', error);
       } finally {
@@ -65,45 +75,76 @@ export default function HomePage() {
   // 네비게이션 핸들러
   const handleCardClick = (id) => navigate(`/trips/${id}`); // 상세 페이지로 이동
 
-  // UI 업데이트 헬퍼 함수 (낙관적 업데이트)
-  // API 응답을 기다리지 않고 화면의 좋아요/북마크 숫자를 즉시 변경해주는 함수
   const updateTripList = (list, id, field, countField) => {
     return list.map((t) => {
       if (t.id !== id) return t;
-      const currentVal = t[field];
+      const currentVal = Boolean(t[field]);
+      const currentCount = Number(t[countField] ?? 0);
+
       return {
         ...t,
         [field]: !currentVal,
-        [countField]: !currentVal
-          ? (t[countField] || 0) + 1
-          : (t[countField] || 0) - 1,
+        [countField]: currentCount + (currentVal ? -1 : 1),
       };
     });
   };
 
-  // 인터랙션 핸들러 (좋아요/북마크)
-  // 현재는 UI 상태만 변경하고, 실제 DB 연동은 추후 API 개발 후 적용 예정
-  const handleLike = (id) => {
-    setRecentTrips((prev) => updateTripList(prev, id, 'isLiked', 'like_count'));
-    setPopularTrips((prev) =>
-      updateTripList(prev, id, 'isLiked', 'like_count'),
-    );
-    setRecommendTrips((prev) =>
-      updateTripList(prev, id, 'isLiked', 'like_count'),
-    );
-    console.log('좋아요 클릭 (API 미연동):', id);
+  const handleLike = async (id) => {
+    // 1) UI 먼저 토글(낙관적 업데이트)
+    const optimistic = (list) =>
+      list.map((t) => {
+        if (t.id !== id) return t;
+
+        const prevLiked = Boolean(t.is_liked);
+        const prevCount = Number(t.like_count ?? 0);
+
+        return {
+          ...t,
+          is_liked: !prevLiked,
+          like_count: prevCount + (prevLiked ? -1 : 1),
+        };
+      });
+
+    setRecentTrips((prev) => optimistic(prev));
+    setPopularTrips((prev) => optimistic(prev));
+    setRecommendTrips((prev) => optimistic(prev));
+
+    // 2) 서버 반영
+    try {
+      const { is_liked, like_count } = await toggleTripLike(id);
+
+      const applyServer = (list) =>
+        list.map((t) => (t.id !== id ? t : { ...t, is_liked, like_count }));
+
+      setRecentTrips((prev) => applyServer(prev));
+      setPopularTrips((prev) => applyServer(prev));
+      setRecommendTrips((prev) => applyServer(prev));
+    } catch (e) {
+      console.error('좋아요 토글 실패:', e);
+
+      // 실패 시 원복(옵션)
+      const rollback = (list) =>
+        list.map((t) => {
+          if (t.id !== id) return t;
+          const prevLiked = Boolean(t.is_liked);
+          const prevCount = Number(t.like_count ?? 0);
+          return {
+            ...t,
+            is_liked: !prevLiked,
+            like_count: prevCount + (prevLiked ? -1 : 1),
+          };
+        });
+
+      setRecentTrips((prev) => rollback(prev));
+      setPopularTrips((prev) => rollback(prev));
+      setRecommendTrips((prev) => rollback(prev));
+    }
   };
 
   const handleBookmark = (id) => {
-    setRecentTrips((prev) =>
-      updateTripList(prev, id, 'isBookmarked', 'bookmark_count'),
-    );
-    setPopularTrips((prev) =>
-      updateTripList(prev, id, 'isBookmarked', 'bookmark_count'),
-    );
-    setRecommendTrips((prev) =>
-      updateTripList(prev, id, 'isBookmarked', 'bookmark_count'),
-    );
+    setRecentTrips((prev) => updateTripList(prev, id, 'is_bookmarked', 'bookmark_count'));
+    setPopularTrips((prev) => updateTripList(prev, id, 'is_bookmarked', 'bookmark_count'));
+    setRecommendTrips((prev) => updateTripList(prev, id, 'is_bookmarked', 'bookmark_count'));
     console.log('북마크 클릭 (API 미연동):', id);
   };
 
