@@ -61,7 +61,7 @@ const MapContainer = ({
       const map = mapRef.current;
       const moveLatLng = new window.kakao.maps.LatLng(
         selectedLocation.lat,
-        selectedLocation.lng
+        selectedLocation.lng,
       );
       map.panTo(moveLatLng);
     }
@@ -74,19 +74,6 @@ const MapContainer = ({
     console.log('🔍 검색 장소 (mapSearchPlacePos):', mapSearchPlacePos);
     console.groupEnd();
   }, [mapCurrentDayPos, mapSearchPlacePos]);
-
-  useEffect(() => {
-    if (routeData.path.length > 0) {
-      console.group('🚗 경로 계산 결과 (calculateRoute)');
-      console.log('🛣 전체 경로 좌표 수:', routeData.path.length);
-      console.log('⏱ 구간 정보:', routeData.sections);
-      console.groupEnd();
-    }
-
-    if (typeof onRouteData === 'function') {
-      onRouteData(routeData);
-    }
-  }, [routeData, onRouteData]);
   //------------------------------------------------------------------------
 
   // 4. 경로 계산 트리거
@@ -167,7 +154,8 @@ const MapContainer = ({
         ))}
 
         {/* --- [3] 경로선 --- */}
-        {(routeData.path.length > 0 || (drawSimplePath && simplePath.length > 1)) && (
+        {(routeData.path.length > 0 ||
+          (drawSimplePath && simplePath.length > 1)) && (
           <Polyline
             path={routeData.path.length > 0 ? routeData.path : simplePath}
             strokeWeight={5}
