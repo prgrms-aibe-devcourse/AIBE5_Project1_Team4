@@ -36,7 +36,7 @@ export async function upsertScheduleItem({
   });
   const data = unwrap(result, 'scheduleItems.upsertScheduleItem');
 
-  const itemId = data?.[0]?.id;
+  const itemId = data?.[0]?.out_id ?? data?.[0]?.id;
   return requireRow(
     itemId,
     'scheduleItems.upsertScheduleItem',
@@ -50,7 +50,7 @@ export async function deleteScheduleItem(id) {
   });
   const data = unwrap(result, 'scheduleItems.deleteScheduleItem');
 
-  const deletedId = data?.[0]?.id;
+  const deletedId = data?.[0]?.out_id ?? data?.[0]?.id;
   return requireRow(
     deletedId,
     'scheduleItems.deleteScheduleItem',

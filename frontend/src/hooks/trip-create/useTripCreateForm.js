@@ -5,6 +5,8 @@ import { updateTripMeta, deleteTrip, adjustTripDates } from '@/services/trips.se
 import { getTripDetail } from '@/services/trips.detail.service';
 import { usePlaceSearch } from '@/hooks/usePlaceSearch';
 import { useAddScheduleItem } from '@/hooks/useAddScheduleItem';
+import { upsertScheduleItem, deleteScheduleItem } from '@/services/scheduleItems.service';
+import { updatePlaceName } from '@/services/places.service';
 import { toast } from '@/shared/ui/overlay';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 // Consolidated trip-create state and actions.
@@ -470,7 +472,18 @@ export const useTripCreateForm = ({ tripId } = {}) => {
   );
 
   const updateScheduleItem = useCallback(
-    (itemId, patch) => {
+    async (itemId, patch) => {
+      const target = currentDay.items.find((item) => item.id === itemId);
+      if (!target) return;
+
+      const nextPlaceName = patch.placeName ?? patch.place ?? target.placeName;
+      const nextTime = patch.time ?? target.time;
+      const timeChanged =
+        typeof patch.time !== 'undefined' && patch.time !== target.time;
+      const placeChanged =
+        typeof patch.placeName !== 'undefined' &&
+        patch.placeName !== target.placeName;
+
       setDays((prev) =>
         prev.map((day, index) => {
           if (index !== currentDayIndex) {
@@ -483,18 +496,50 @@ export const useTripCreateForm = ({ tripId } = {}) => {
               return {
                 ...item,
                 ...patch,
-                placeName: patch.placeName ?? patch.place ?? item.placeName,
+                placeName: nextPlaceName,
+                time: nextTime,
               };
             }),
           };
         }),
       );
+
+      const tasks = [];
+      const isItemIdValid = isValidUuid(itemId);
+      const dayId = target.tripDayId ?? currentDay.id ?? null;
+      const isDayIdValid = isValidUuid(dayId);
+
+      if (timeChanged && isItemIdValid) {
+        tasks.push(
+          upsertScheduleItem({
+            id: itemId,
+            tripDayId: isDayIdValid ? dayId : null,
+            placeId: target.placeId ?? null,
+            time: nextTime,
+          }),
+        );
+      }
+
+      if (placeChanged && target.placeId && isValidUuid(target.placeId)) {
+        tasks.push(updatePlaceName({ placeId: target.placeId, name: nextPlaceName }));
+      }
+
+      if (tasks.length === 0) return;
+
+      try {
+        await Promise.all(tasks);
+        await loadTripDetail({ resetDayIndex: false });
+      } catch (error) {
+        console.error('Failed to update schedule item:', error);
+        toast('저장에 실패했습니다.', { icon: 'error' });
+        await loadTripDetail({ resetDayIndex: false });
+      }
     },
-    [currentDayIndex],
+    [currentDay.id, currentDay.items, currentDayIndex, loadTripDetail],
   );
 
   const removeScheduleItem = useCallback(
-    (itemId) => {
+    async (itemId) => {
       setDays((prev) =>
         prev.map((day, index) => {
           if (index !== currentDayIndex) {
@@ -503,8 +548,19 @@ export const useTripCreateForm = ({ tripId } = {}) => {
           return { ...day, items: day.items.filter((item) => item.id !== itemId) };
         }),
       );
+
+      if (!isValidUuid(itemId)) return;
+
+      try {
+        await deleteScheduleItem(itemId);
+        await loadTripDetail({ resetDayIndex: false });
+      } catch (error) {
+        console.error('Failed to delete schedule item:', error);
+        toast('저장에 실패했습니다.', { icon: 'error' });
+        await loadTripDetail({ resetDayIndex: false });
+      }
     },
-    [currentDayIndex],
+    [currentDayIndex, loadTripDetail],
   );
 
   const shiftCalendarMonth = useCallback(
