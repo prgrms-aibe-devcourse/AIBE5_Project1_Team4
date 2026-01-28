@@ -129,9 +129,9 @@ const TripScheduleEditor = ({
           );
         })}
       </ul>
-      <button className="trip-panel-add" type="button" onClick={onAddItem}>
+      {/* <button className="trip-panel-add" type="button" onClick={onAddItem}>
         + 일정 추가
-      </button>
+      </button> */}
       <div className="trip-panel-footer">
         {typeof summary === 'string' ? (
           summary

@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabaseClient';
-import { unwrap } from '@/services/_core/errors';
+import { unwrap, isConflictError } from '@/services/_core/errors';
 
 /**
  * Update a trip member role (owner/editor).
@@ -24,15 +24,17 @@ export async function getTripMembers({ tripId }) {
 }
 
 export async function upsertTripMember({ tripId, userId, role }) {
-  const result = await supabase
-    .from('trip_members')
-    .upsert(
-      {
-        trip_id: tripId,
-        user_id: userId,
-        role,
-      },
-      { onConflict: 'trip_id,user_id' },
-    );
-  return unwrap(result, 'tripMembers.upsertTripMember');
+  const result = await supabase.rpc('rpc_upsert_trip_member', {
+    p_trip_id: tripId,
+    p_user_id: userId,
+    p_role: role,
+  });
+  try {
+    return unwrap(result, 'tripMembers.upsertTripMember');
+  } catch (error) {
+    if (isConflictError(error)) {
+      return null;
+    }
+    throw error;
+  }
 }
